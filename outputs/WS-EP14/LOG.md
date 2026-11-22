@@ -15,3 +15,4 @@
 - `cover.png` di folder ini = frame 0 video (pembuka standar seri), **bukan** THUMBNAIL posting.
 - Draf `caption.txt` buatan Claude dihapus. Caption, judul posting, hashtag, dan thumbnail menjadi wewenang creator.
 - Untuk dipublikasikan, EP14 masih butuh THUMBNAIL.png + POST.md dari creator, dan keputusan soal klaim "2 jam / 1 jam bila > 32 °C". Statusnya menurut kontrak baru: **NEEDS_CREATOR_FIX** (untuk publikasi).
+- 22 Nov 19.35 WIB: stem FLAC, still QC, contact sheet, dan cover.png (frame 0) dikeluarkan dari ujung branch agar tidak ikut ke `main` (tidak dibutuhkan routine/publisher). Semuanya tetap ada di commit `3f181af` dan bisa diambil dengan `git checkout 3f181af -- outputs/WS-EP14/stems`.

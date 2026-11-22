@@ -35,3 +35,9 @@ Status **NEEDS_CREATOR_FIX**:
 4. `VO_SCRIPT.md` tidak ada (lihat catatan di tabel atas).
 
 EP14 **belum terjadwal dan belum tayang** di platform mana pun. Tidak ada bukti dari platform.
+
+## Pembaruan 22 Nov 2026 19.31 WIB: thumbnail + instruksi pilot
+- **Thumbnail diterima** lewat chat sebagai gambar **WebP 941×1672** (sha256 `780c4135…46c0b7`), disimpan apa adanya: `THUMBNAIL_received_via_chat.webp`. Kemungkinan ini salinan yang sudah dikompres ulang oleh chat. File `THUMBNAIL.png` aslinya belum diterima. Claude tidak mengonversi atau membuat PNG pengganti sebagai "file creator"; konversi format untuk upload hanya dilakukan publisher dan dilaporkan.
+- Cek judul thumbnail (OCR) vs POST: **1,0** ("MAKANAN BISA BASI DI KULKAS?" = "Makanan Bisa Basi di Kulkas?") ✅. Gambar berisi wordmark WHYSCAPE + Mpi + kulkas: konsisten dengan episode ini.
+- **Instruksi creator di chat** (POST.md belum memuatnya, file tidak diubah): platform = Facebook Page Reels, Instagram Reels, YouTube Shorts; tayang **2026-11-22 21:00 WIB** (= 14:00Z, unix 1795356000).
+- Kit unggah: `outputs/WS-EP14/PUBLISH_KIT.md`.
