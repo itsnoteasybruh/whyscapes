@@ -13,22 +13,11 @@
     "publish_at_wib": null,
     "platforms": [
       "facebook",
-      "instagram",
-      "youtube"
+      "instagram"
     ],
     "note": "slot 22 Nov 21:00 WIB lewat dan dibatalkan; menunggu tanggal/jam baru + persetujuan konten final dari creator"
   },
   "platforms": {
-    "youtube": {
-      "enabled": true,
-      "category_id": null,
-      "declarations": {
-        "made_for_kids": null,
-        "contains_synthetic_media": null,
-        "has_paid_product_placement": null,
-        "source": "belum diberikan creator"
-      }
-    },
     "facebook": {
       "enabled": true,
       "page_id": "1421016024432912",
@@ -47,5 +36,6 @@
       "auth": "network secret on graph.facebook.com (user token)"
     }
   },
-  "hold": "creator 22 Nov 2026: MP4 112,47 s melebihi format baku 90 s; jangan dijadwalkan, diunggah, atau dipublikasikan. Naskah dan render direvisi dulu (tidak dipercepat)."
+  "hold": "creator 22 Nov 2026: MP4 112,47 s melebihi format baku 90 s; jangan dijadwalkan, diunggah, atau dipublikasikan. Naskah dan render direvisi dulu (tidak dipercepat).",
+  "scope_note": "Pilot automation: Facebook Reels + Instagram Reels saja (keputusan creator 22 Nov 2026). YouTube dikelola manual di YouTube Studio."
 }

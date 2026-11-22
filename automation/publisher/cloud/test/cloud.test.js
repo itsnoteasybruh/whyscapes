@@ -3,7 +3,8 @@
 const test = require('node:test'), assert = require('node:assert'), fs = require('fs'), os = require('os'), path = require('path'), crypto = require('crypto');
 const { execFileSync } = require('child_process');
 const C = require('../../core'), G = require('../gcp'), { CloudState, acquireLease, releaseLease } = require('../state'), { plan } = require('../planner');
-const S = require('../support'), J = require('../job'), O = require('../oauth_server');
+const S = require('../support'), J = require('../job');
+// Pilot scope: Meta only (Facebook Reels + Instagram Reels). YouTube is managed manually in YouTube Studio.
 
 // ---------- fake GCS + metadata (+ IAM signBlob with a local RSA key) ----------
 function fakeCloud() {
@@ -48,29 +49,32 @@ test('lease: one live holder per episode; expired lease is taken over; release f
 });
 
 test('CloudState: intent is durable in GCS BEFORE the platform create call', async () => {
-  const f = fakeCloud(), st = await new CloudState(f.store, 'E').load(), YT = require('../../youtube');
+  const f = fakeCloud(), st = await new CloudState(f.store, 'E').load(), FB = require('../../facebook');
   const d = fs.mkdtempSync(path.join(os.tmpdir(), 'c-')), v = path.join(d, 'v.mp4'), th = path.join(d, 't.png'); fs.writeFileSync(v, Buffer.alloc(500)); fs.writeFileSync(th, Buffer.alloc(10));
   let seenIntent = null;
   const plat = async (method, url, opt) => {
-    if (url.includes('uploadType=resumable')) { seenIntent = JSON.parse(f.objs.get('state/E/publish_state.json').data).platforms.youtube.state; return { ok: false, status: 400, json: { error: { message: 'stop here' } }, headers: {} }; }
+    if (url.includes('fields=access_token')) return { ok: true, status: 200, json: { access_token: 'PAGE_TOKEN_SECRET_0123456789' }, headers: {} };
+    if (method === 'POST' && url.endsWith('/video_reels')) { seenIntent = JSON.parse(f.objs.get('state/E/publish_state.json').data).platforms.facebook.state; return { ok: false, status: 400, json: { error: { message: 'stop here' } }, headers: {} }; }
     return f.http(method, url, opt);
   };
-  const ctx = { cfg: { declarations: { made_for_kids: false, contains_synthetic_media: false, has_paid_product_placement: false } }, http: plat, post: { title: 'T', text: 'X' }, video: { path: v, size: 500, duration: 80, width: 1080, height: 1920 }, videoSha: 's', publishAt: new Date(Date.now() + 864e5), now: new Date(), thumb: { path: th, ext: 'png', mime: 'image/png' }, sleep: async () => {} };
-  await YT.schedule(ctx, st);
-  assert.equal(seenIntent, 'CREATING'); assert.equal(st.p('youtube').state, 'FAILED_DEFINITE');
+  const ctx = { cfg: { page_id: 'PAGE', declarations: { is_ai_generated: true } }, http: plat, post: { title: 'T', text: 'X' }, video: { path: v, size: 500, duration: 80, width: 1080, height: 1920 }, videoSha: 's', publishAt: new Date(Date.now() + 864e5), now: new Date(), thumb: { path: th, ext: 'png', mime: 'image/png' }, sleep: async () => {} };
+  await FB.schedule(ctx, st);
+  assert.equal(seenIntent, 'CREATING'); assert.equal(st.p('facebook').state, 'FAILED_DEFINITE');
+  assert.ok(!f.objs.get('state/E/publish_state.json').data.toString().includes('PAGE_TOKEN_SECRET'));
 });
 
-test('planner: windows for YouTube early upload, Facebook ≤ 28 d, Instagram prepare/publish, missed alerts, hold', () => {
-  const at = new Date('2026-12-01T14:00:00Z'), ap = { publish_at_utc: at.toISOString(), platforms: ['youtube', 'facebook', 'instagram'] };
+test('planner: windows for Facebook ≤ 28 d, Instagram prepare/publish, missed alerts, hold', () => {
+  const at = new Date('2026-12-01T14:00:00Z'), ap = { publish_at_utc: at.toISOString(), platforms: ['facebook', 'instagram'] };
   const acts = (now, states = {}, mode = 'tick') => plan({ approval: ap, states, now: new Date(now), mode }).map(a => `${a.platform}:${a.action}`);
-  assert.deepEqual(acts('2026-11-01T00:00:00Z'), ['youtube:schedule', 'facebook:wait']);                    // 30 d ahead: YT early, FB waits
-  assert.deepEqual(acts('2026-11-30T14:00:00Z'), ['youtube:schedule', 'facebook:schedule']);                // 1 d ahead
+  assert.deepEqual(acts('2026-11-01T00:00:00Z'), ['facebook:wait']);                                        // 30 d ahead: FB waits
+  assert.deepEqual(acts('2026-11-30T14:00:00Z'), ['facebook:schedule']);                                    // 1 d ahead
   assert.ok(acts('2026-12-01T09:00:00Z').includes('instagram:prepare'));                                   // 5 h ahead
   const prepared = { instagram: { state: 'CREATED', container_id: 'C', container_status: 'FINISHED' } };
   assert.ok(acts('2026-12-01T14:02:00Z', prepared, 'publish-window').includes('instagram:publish'));
   assert.ok(!acts('2026-12-01T13:58:00Z', prepared, 'publish-window').includes('instagram:publish'));        // never early
   assert.ok(!acts('2026-12-01T14:02:00Z', prepared, 'tick').includes('instagram:publish'));                  // only the publish-window trigger
-  assert.ok(acts('2026-12-01T15:00:00Z', { youtube: { state: 'CREATED', remote_id: 'V' } }).includes('youtube:alert'));
+  assert.ok(acts('2026-12-01T15:00:00Z', { facebook: { state: 'CREATED', remote_id: 'V' } }).includes('facebook:alert'));
+  assert.ok(!plan({ approval: { ...ap, platforms: ['youtube'] }, states: {}, now: new Date('2026-11-30T14:00:00Z') }).length);   // not a pilot platform: nothing planned
   assert.ok(acts('2026-11-30T14:00:00Z', { facebook: { state: 'AMBIGUOUS' } }).includes('facebook:alert'));
   assert.deepEqual(plan({ approval: { ...ap, hold: 'x' }, states: {}, now: new Date() }).map(a => a.action), ['skip']);
 });
@@ -92,41 +96,11 @@ test('graph auth injector: adds Bearer only on graph.facebook.com and never over
   assert.equal(seen[0][1], 'Bearer META_TOKEN_SECRET'); assert.equal(seen[1][1], 'OAuth PAGE'); assert.equal(seen[2][1], undefined);
 });
 
-test('YouTube token source: refresh grant cached in memory; invalid_grant explains the 7-day Testing expiry; no token in errors', async () => {
-  let n = 0; const http = async (m, u, o) => { n++; const p = new URLSearchParams(o.body); assert.equal(p.get('grant_type'), 'refresh_token'); return { ok: true, status: 200, json: { access_token: 'ya29.ACCESS_SECRET', expires_in: 3600 } }; };
-  const ts = S.youtubeTokenSource(http, { web: { client_id: 'c', client_secret: 's', token_uri: 'https://oauth2.googleapis.com/token' } }, 'REFRESH_SECRET');
-  assert.equal(await ts(), 'ya29.ACCESS_SECRET'); await ts(); assert.equal(n, 1);
-  const bad = S.youtubeTokenSource(async () => ({ ok: false, status: 400, json: { error: 'invalid_grant' } }), { web: { client_id: 'c', client_secret: 's' } }, 'REFRESH_SECRET');
-  await assert.rejects(bad(), e => /7 days/.test(e.message) && !/REFRESH_SECRET|client_secret/.test(e.message));
-});
-
 test('logger: secrets never reach Cloud Logging', () => {
   const orig = process.stdout.write.bind(process.stdout); let out = '';
   process.stdout.write = s => { out += s; return true; };
   try { S.logger({ c: 1 }).error('boom', { url: 'https://x/?access_token=EAAB1234567890&upload_id=zz', authorization: 'Bearer ya29.abc' }); } finally { process.stdout.write = orig; }
   const j = JSON.parse(out); assert.equal(j.severity, 'ERROR'); assert.ok(!/EAAB1234567890|ya29\.abc|upload_id=zz/.test(out), out);
-});
-
-test('OAuth service: /start uses offline+consent+PKCE+state; bad state refused; success stores a new secret version and shows no token', async () => {
-  const stored = []; const tr = async (m, u, o) => {
-    if (u.includes('/token')) { const p = new URLSearchParams(o.body); assert.ok(p.get('code_verifier')); return { ok: true, status: 200, json: { access_token: 'ya29.A_SECRET', refresh_token: '1//R_SECRET', scope: `${O.UPLOAD} ${O.READONLY}`, expires_in: 3599 } }; }
-    if (u.includes('/channels')) return { ok: true, status: 200, json: { items: [{ id: 'UCwhy', snippet: { title: 'Whyscape' } }] } };
-  };
-  const app = O.makeApp({ client: { web: { client_id: 'cid', client_secret: 'CS_SECRET' } }, redirectUri: 'http://localhost:8080/callback', scopes: [O.UPLOAD, O.READONLY], expectedChannel: 'UCwhy', transport: tr, storeRefresh: async v => { stored.push(v); return '3'; }, log: quiet });
-  const call = async p => { let st, hd = {}, body = ''; await app({ url: p }, { writeHead: (s, h) => { st = s; hd = h || {}; }, end: b => { body = b || ''; } }); return { st, hd, body }; };
-  const s = await call('/start'); assert.equal(s.st, 302);
-  const loc = new URL(s.hd.Location); for (const [k, v] of [['access_type', 'offline'], ['prompt', 'consent'], ['code_challenge_method', 'S256']]) assert.equal(loc.searchParams.get(k), v);
-  assert.equal((await call('/callback?state=nope&code=x')).st, 400);
-  const ok = await call(`/callback?state=${loc.searchParams.get('state')}&code=abc`);
-  assert.equal(ok.st, 200); assert.deepEqual(stored, ['1//R_SECRET']); assert.match(ok.body, /versi <b>3<\/b>/); assert.ok(!/R_SECRET|A_SECRET|CS_SECRET/.test(ok.body));
-  assert.equal((await call(`/callback?state=${loc.searchParams.get('state')}&code=abc`)).st, 400);      // state is single-use
-});
-
-test('OAuth service: no youtube.upload scope → nothing stored', async () => {
-  const stored = []; const app = O.makeApp({ client: { web: { client_id: 'c', client_secret: 's' } }, redirectUri: 'r', transport: async () => ({ ok: true, status: 200, json: { access_token: 'a', refresh_token: 'r', scope: O.READONLY } }), storeRefresh: async v => { stored.push(v); return '1'; }, log: quiet });
-  let loc; await app({ url: '/start' }, { writeHead: (s, h) => { loc = new URL(h.Location); }, end() {} });
-  let st; await app({ url: `/callback?state=${loc.searchParams.get('state')}&code=x` }, { writeHead: s => { st = s; }, end() {} });
-  assert.equal(st, 400); assert.equal(stored.length, 0);
 });
 
 // ---------- full job runs against the fake cloud ----------
@@ -137,54 +111,66 @@ function seed(f, { seconds = 85, hold, approve = true, tamper = false } = {}) {
   mkVideo(seconds, v); execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'lavfi', '-i', 'color=c=teal:s=108x192', '-frames:v', '1', th]);
   f.put('episodes/WS-EP90/v.mp4', fs.readFileSync(v)); f.put('episodes/WS-EP90/POST.md', fs.readFileSync(POST_FILE)); f.put('episodes/WS-EP90/t.png', fs.readFileSync(th));
   const sha = p => C.sha256(p);
-  if (approve) f.put('episodes/WS-EP90/approval.json', { schema: 1, episode: 'WS-EP90', approved_by: 'test', approved_at: 'x', publish_at_wib: '2026-12-01 21:00', platforms: ['youtube'], hold,
+  if (approve) f.put('episodes/WS-EP90/approval.json', { schema: 1, episode: 'WS-EP90', approved_by: 'test', approved_at: 'x', publish_at_wib: '2026-12-01 21:00', platforms: ['facebook'], hold,
     files: { video: { object: 'episodes/WS-EP90/v.mp4', sha256: tamper ? '0'.repeat(64) : sha(v) }, post: { object: 'episodes/WS-EP90/POST.md', sha256: sha(POST_FILE) }, thumbnail: { object: 'episodes/WS-EP90/t.png', sha256: sha(th) } },
-    declarations: { youtube: { made_for_kids: false, contains_synthetic_media: false, has_paid_product_placement: false } }, youtube: {} });
+    declarations: { facebook: { is_ai_generated: true } }, facebook: { page_id: '1421016024432912' } });
 }
-function ytFake(f, calls) {
-  const at = '2026-12-01T14:00:00Z';
-  return async (method, url, opt) => {
-    if (/youtube|googleapis\.com\/upload\/youtube/.test(url) && !url.includes('storage')) {
-      calls.push(`${method} ${url.split('?')[0]}`);
-      if (url.includes('uploadType=resumable')) return { ok: true, status: 200, json: null, headers: { location: 'https://up/s?upload_id=SESSION_SECRET' } };
-      if (url.includes('thumbnails/set')) return { ok: true, status: 200, json: {}, headers: {} };
-      if (method === 'GET') return { ok: true, status: 200, json: { items: [{ status: { privacyStatus: 'private', publishAt: at }, snippet: {}, processingDetails: { processingStatus: 'succeeded' } }] }, headers: {} };
+// fake Graph + rupload: derive Page token → video_reels start → status → rupload bytes → thumbnails → finish SCHEDULED → status
+function fbFake(f, calls) {
+  const at = Math.floor(Date.parse('2026-12-01T14:00:00Z') / 1000); let uploaded = false, finished = false;
+  const ok = json => ({ ok: true, status: 200, json, headers: {} });
+  return async (method, url, opt = {}) => {
+    if (/^https:\/\/(graph|rupload)\.facebook\.com\//.test(url)) {
+      const u = url.split('?')[0]; calls.push(`${method} ${u}`);
+      if (url.includes('fields=access_token')) return ok({ access_token: 'PAGE_TOKEN_SECRET_0123456789' });
+      if (method === 'POST' && u.endsWith('/video_reels')) {
+        const b = new URLSearchParams(opt.body);
+        if (b.get('upload_phase') === 'start') return ok({ video_id: 'FBV90' });
+        finished = b.get('video_state') === 'SCHEDULED' && +b.get('scheduled_publish_time') === at; return ok({ success: true });
+      }
+      if (u.startsWith('https://rupload.facebook.com/')) { uploaded = /^OAuth /.test((opt.headers || {}).Authorization || ''); return ok({ success: true }); }
+      if (u.endsWith('/thumbnails')) return ok({ success: true });
+      if (method === 'GET' && u.endsWith('/FBV90')) return ok({ permalink_url: 'https://www.facebook.com/reel/FBV90', status: { video_status: finished ? 'upcoming' : 'processing',
+        uploading_phase: { status: uploaded ? 'complete' : 'not_started', bytes_transfered: 0 }, publishing_phase: finished ? { publish_status: 'scheduled', publish_time: at } : { status: 'not_started' } } });
+      return { ok: false, status: 400, json: { error: { message: 'unexpected ' + u } }, headers: {} };
     }
-    if (url.startsWith('https://up/s')) { calls.push('PUT upload'); return { ok: true, status: 200, json: { id: 'VID90' }, headers: {} }; }
     return f.http(method, url, opt);
   };
 }
-const run = (f, http, mode = 'tick', now = '2026-11-30T14:00:00Z') => J.runJob({ mode, now: new Date(now), store: f.store, http, httpGraph: http, signer: G.iamSigner(f.http, f.auth), auth: { youtube: async () => 'ya29.X', email: f.auth.email }, log: quiet });
+const run = (f, http, mode = 'tick', now = '2026-11-30T14:00:00Z') => J.runJob({ mode, now: new Date(now), store: f.store, http, httpGraph: http, signer: G.iamSigner(f.http, f.auth), auth: { email: f.auth.email }, log: quiet });
 
-test('job: approved ≤ 90 s episode → YouTube uploaded private + publishAt, SCHEDULED evidence, report written, lease released; 2nd run creates nothing', async () => {
-  const f = fakeCloud(), calls = []; seed(f); const http = ytFake(f, calls);
+test('job: approved ≤ 90 s episode → Facebook Reel uploaded + SCHEDULED at publish_at, evidence, report written, lease released; 2nd run creates nothing', async () => {
+  const f = fakeCloud(), calls = []; seed(f); const http = fbFake(f, calls);
   const r = await run(f, http);
-  const yt = r.reports[0].platforms.youtube;
-  assert.equal(yt.state, 'SCHEDULED'); assert.equal(yt.evidence.video_id, 'VID90'); assert.equal(yt.evidence.publishAt, '2026-12-01T14:00:00Z');
+  const fb = r.reports[0].platforms.facebook;
+  assert.equal(fb.state, 'SCHEDULED', JSON.stringify(r.reports)); assert.equal(fb.evidence.video_id, 'FBV90'); assert.equal(fb.evidence.publish_status, 'scheduled'); assert.equal(fb.evidence.publish_time_matches, true);
+  assert.ok(calls.includes('POST https://rupload.facebook.com/video-upload/v27.0/FBV90') && calls.some(c => c.endsWith('/FBV90/thumbnails')));
   assert.ok(f.objs.has('reports/2026-11-30/WS-EP90_tick.json')); assert.ok(!f.objs.has('locks/WS-EP90.json'));
-  assert.ok(![...f.objs.values()].some(o => /SESSION_SECRET|ya29/.test(o.data.toString('latin1'))), 'no token/session in any stored object except the private sidecar removed after upload');
-  const n = calls.filter(c => c.includes('resumable') || c === 'PUT upload').length; await run(f, http);
-  assert.equal(calls.filter(c => c.includes('resumable') || c === 'PUT upload').length, n);
+  assert.ok(![...f.objs.values()].some(o => /PAGE_TOKEN_SECRET|SA_TOKEN_SECRET/.test(o.data.toString('latin1'))), 'no token in any stored object');
+  const creates = () => calls.filter(c => c.startsWith('POST') && c.endsWith('/video_reels')).length, n = creates();
+  await run(f, http);
+  assert.equal(creates(), n); assert.ok(!calls.slice(-5).some(c => c.includes('rupload')));
 });
 
 test('job: no approval / hold / tampered file / video > 90 s → no platform call at all', async () => {
   for (const [opts, expect] of [[{ approve: false }, null], [{ hold: 'EP on hold' }, /hold/], [{ tamper: true }, /does not match the approved sha256/], [{ seconds: 92 }, /above the 90 s Whyscape format/]]) {
     const f = fakeCloud(), calls = []; seed(f, opts);
-    const r = await run(f, ytFake(f, calls));
+    const r = await run(f, fbFake(f, calls));
     assert.equal(calls.length, 0, JSON.stringify(opts));
     if (expect) assert.ok(JSON.stringify(r.reports).match(expect), JSON.stringify(r.reports));
   }
 });
 
-test('approve (creator tool): refuses > 90 s, missing declarations, time too close; accepts a complete package', () => {
+test('approve (creator tool): refuses > 90 s, missing declarations, non-pilot platform; accepts a complete Meta package', () => {
   const A = require('../approve'), d = fs.mkdtempSync(path.join(os.tmpdir(), 'ap-')), v = path.join(d, 'v.mp4'), th = path.join(d, 't.png'), long = path.join(d, 'l.mp4');
   mkVideo(84, v); mkVideo(91, long); fs.writeFileSync(th, Buffer.alloc(10));
   const argv = (extra, video = v) => { process.argv = ['n', 'approve.js', '--episode', 'WS-EP90', '--video', video, '--post', POST_FILE, '--thumbnail', th, '--publish-at', '2026-12-01 21:00', '--now', '2026-11-30T00:00:00Z', '--approved-by', 'Elang', ...extra]; delete require.cache[require.resolve('../approve')]; return require('../approve').build(); };
-  assert.match(argv(['--platforms', 'youtube'], long).errs.join(), /above the 90 s/);
-  assert.match(argv(['--platforms', 'youtube']).errs.join(), /YouTube declarations/);
+  assert.match(argv(['--platforms', 'facebook', '--fb-ai-generated', 'true'], long).errs.join(), /above the 90 s/);
   assert.match(argv(['--platforms', 'facebook']).errs.join(), /--fb-ai-generated/);
-  const ok = argv(['--platforms', 'youtube,facebook', '--yt-made-for-kids', 'false', '--yt-synthetic', 'false', '--yt-paid-placement', 'false', '--fb-ai-generated', 'true']);
-  assert.ok(!ok.errs); assert.equal(ok.approval.files.video.sha256, C.sha256(v)); assert.equal(ok.approval.declarations.facebook.is_ai_generated, true);
+  assert.match(argv(['--platforms', 'youtube']).errs.join(), /pilot scope is Meta only/);
+  const ok = argv(['--platforms', 'facebook,instagram', '--fb-ai-generated', 'true', '--ig-share-to-feed', 'true']);
+  assert.ok(!ok.errs, JSON.stringify(ok.errs)); assert.equal(ok.approval.files.video.sha256, C.sha256(v)); assert.equal(ok.approval.declarations.facebook.is_ai_generated, true);
+  assert.equal(ok.approval.youtube, undefined); assert.deepEqual(ok.approval.platforms, ['facebook', 'instagram']);
 });
 
 test('approve: Instagram at any publish time is accepted (no fixed daily window)', () => {
@@ -209,11 +195,11 @@ test('Secret Manager access: value decoded in memory; missing secret/version →
   const http = async (m, u) => u.includes('/secrets/meta-token/') ? { ok: true, status: 200, json: { payload: { data: Buffer.from('EAA_SECRET_VALUE\n').toString('base64') } } } : { ok: false, status: 404, json: { error: { status: 'NOT_FOUND' } } };
   const auth = { header: async () => ({ Authorization: 'Bearer SA' }) };
   assert.equal(await G.accessSecret(http, auth, 'p', 'meta-token'), 'EAA_SECRET_VALUE');
-  assert.equal(await G.accessSecret(http, auth, 'p', 'yt-refresh-token'), null);
+  assert.equal(await G.accessSecret(http, auth, 'p', 'other-secret'), null);
 });
 
 test('job: platform credentials missing in Secret Manager → alert, no platform call', async () => {
-  const f = fakeCloud(), calls = []; seed(f); const http = ytFake(f, calls);
-  const r = await J.runJob({ mode: 'tick', now: new Date('2026-11-30T14:00:00Z'), store: f.store, http, httpGraph: http, signer: G.iamSigner(f.http, f.auth), auth: { email: f.auth.email }, log: quiet, creds: { meta: true, youtube: false } });
+  const f = fakeCloud(), calls = []; seed(f); const http = fbFake(f, calls);
+  const r = await J.runJob({ mode: 'tick', now: new Date('2026-11-30T14:00:00Z'), store: f.store, http, httpGraph: http, signer: G.iamSigner(f.http, f.auth), auth: { email: f.auth.email }, log: quiet, creds: { meta: false } });
   assert.equal(calls.length, 0); assert.match(JSON.stringify(r.reports[0].alerts), /credentials not configured/);
 });

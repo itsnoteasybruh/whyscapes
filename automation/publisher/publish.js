@@ -1,17 +1,18 @@
 #!/usr/bin/env node
 // Whyscape publisher CLI. Default is a DRY plan: nothing is sent to any platform without --execute.
-//   node automation/publisher/publish.js --config outputs/WS-EP14/publish_config.json <mode> [--platform youtube|facebook|instagram] [--execute]
+//   node automation/publisher/publish.js --config outputs/WS-EP14/publish_config.json <mode> [--platform facebook|instagram] [--execute]
 // modes:
 //   plan        gates + exactly what would be sent (redacted), per platform. No network.
 //   check-auth  read-only identity call per platform (proves "account authorised"). No content is created.
-//   schedule    YouTube: upload private + publishAt + thumbnail · Facebook: Reel SCHEDULED · Instagram: prepare container (no native schedule)
+//   schedule    Facebook: Reel SCHEDULED · Instagram: prepare container (no native schedule)
+// Pilot scope (22 Nov 2026): Meta only (Facebook Reels + Instagram Reels). YouTube is managed manually in YouTube Studio.
 //   publish     Instagram only, inside the publish window (the routine calls it at publish_at)
 //   verify      read back every platform that has an ID; updates state with evidence
 //   reconcile   look for an upload this system may already have made (after an AMBIGUOUS outcome); adopts exactly one match, never more
 // State: <outputs>/<id>/publish_state.json (committed) + publish_state.local.json (never committed). Exit 0 ok, 2 blocked/stop, 3 usage.
 const fs = require('fs'), path = require('path');
 const C = require('./core');
-const ADAPTERS = { youtube: require('./youtube'), facebook: require('./facebook'), instagram: require('./instagram') };
+const ADAPTERS = { facebook: require('./facebook'), instagram: require('./instagram') };
 function load(cfgFile, { now = new Date() } = {}) {
   const cfg = JSON.parse(fs.readFileSync(cfgFile, 'utf8')), root = path.resolve(path.dirname(cfgFile), cfg.root || '../..'), R = p => path.resolve(root, p);
   const problems = [];
@@ -37,7 +38,7 @@ function load(cfgFile, { now = new Date() } = {}) {
   const thumbs = {};
   if (thumbSrc) {
     const ext = path.extname(thumbSrc).slice(1).toLowerCase();
-    for (const [p, fmt] of [['youtube', ['png', 'jpg', 'jpeg'].includes(ext) ? null : 'png'], ['facebook', ['png', 'jpg', 'jpeg'].includes(ext) ? null : 'png'], ['instagram', ['jpg', 'jpeg'].includes(ext) ? null : 'jpeg']]) {
+    for (const [p, fmt] of [['facebook', ['png', 'jpg', 'jpeg'].includes(ext) ? null : 'png'], ['instagram', ['jpg', 'jpeg'].includes(ext) ? null : 'jpeg']]) {
       if (!fmt) { thumbs[p] = { path: thumbSrc, ext, mime: ext === 'png' ? 'image/png' : 'image/jpeg', conversion: null }; continue; }
       const dest = path.join(work, `thumbnail_${p}.${fmt === 'jpeg' ? 'jpg' : 'png'}`), conv = C.convertImage(thumbSrc, dest, fmt);
       thumbs[p] = { path: dest, ext: fmt === 'jpeg' ? 'jpg' : 'png', mime: `image/${fmt}`, conversion: conv };
@@ -65,7 +66,7 @@ if (!mode || !cfgFile) { console.error(`usage: publish.js --config <publish_conf
     const blockers = [...L.problems, ...(requested ? [] : [`${p} is not among the creator's platforms`]), ...(L.publishAt ? A.gate(ctx, mode) : [])];
     const out = report.platforms[p] = { requested, blockers, state: st.p(p).state, thumbnail: ctx.thumb ? { file: path.relative(L.root, ctx.thumb.path), conversion: ctx.thumb.conversion && { ...ctx.thumb.conversion, to: path.relative(L.root, ctx.thumb.conversion.to) } } : null };
     if (mode === 'plan') {
-      out.would_send = p === 'youtube' && blockers.length === 0 ? C.redact(A.metadata(ctx)) : { title: L.post.title, text: L.post.text };
+      out.would_send = { title: L.post.title, text: L.post.text };
       continue;
     }
     if (mode === 'check-auth') { if (!flag('--execute')) { out.note = 'dry run: add --execute to call the read-only identity endpoint'; continue; } try { out.auth = await A.checkAuth(ctx); } catch (e) { out.auth = { ok: false, detail: e.message }; } continue; }

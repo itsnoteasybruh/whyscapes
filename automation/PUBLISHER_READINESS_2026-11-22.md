@@ -1,5 +1,7 @@
 # Kesiapan publisher (Facebook, Instagram, YouTube): audit 22 Nov 2026
 
+> **SCOPE DIUBAH 22 Nov 2026 (keputusan creator): pilot automation hanya Facebook Reels + Instagram Reels.** YouTube dikeluarkan dari automation dan dikelola manual di YouTube Studio. Adapter `youtube.js`, helper koneksi `tools/yt_connect.py`, layanan `cloud/oauth_server.js`, tes, secret `yt-*`, SA `whyscape-oauth`, API YouTube di `deploy.sh`, dan salinan sumber `sources/youtube_*` / `sources/google_oauth_*` sudah dihapus (masih ada di riwayat git). Bagian YouTube di bawah adalah catatan historis audit, **bukan** status sistem saat ini.
+
 > **KOREKSI 22 Nov 2026 ±20.00 WIB.** Sumber resmi dibaca langsung (salinan di `automation/publisher/sources/`). Klaim saya sebelumnya dikoreksi sebagai berikut.
 > - **YouTube "proyek API belum diaudit → unggahan dikunci private": SALAH, ditarik.** Revision history YouTube Data API, **2 November 2026**: *"Videos uploaded through the videos.insert method from unverified API projects are no longer restricted to private viewing mode. This change reverses the policy announced on July 28, 2020…"* Audit **bukan** syarat agar unggahan bisa tayang publik. Belum ada hasil uji akun nyata.
 > - **Thumbnail Shorts lewat API: DIDUKUNG.** Revision history, **3 November 2026**: *"The thumbnails.set method now supports uploading custom thumbnails for YouTube Shorts after video processing is complete."* Referensi `thumbnails.set`: dipanggil setelah `processingDetails.processingStatus` = `succeeded`; JPEG/PNG; maks 50 MB. Belum diuji pada akun nyata.

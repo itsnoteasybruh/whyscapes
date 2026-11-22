@@ -97,7 +97,7 @@ function iamSigner(http, auth) {
   };
 }
 
-// ---------- secrets: mounted files (read) and Secret Manager addVersion (write, OAuth service only) ----------
+// ---------- secrets: mounted files (local runs) and the Secret Manager API (Cloud Run job) ----------
 const SECRET_DIR = process.env.WHYSCAPE_SECRET_DIR || '/secrets';
 function readSecret(name, dir = SECRET_DIR) {
   const f = `${dir}/${name}/value`;
@@ -112,10 +112,5 @@ async function accessSecret(http, auth, project, secret, version = 'latest') {
   if (!r.ok) throw new Error(`Secret Manager access ${secret} HTTP ${r.status}`);
   return Buffer.from(r.json.payload.data, 'base64').toString('utf8').trim();
 }
-async function addSecretVersion(http, auth, project, secret, value) {
-  const r = await http('POST', `${SM}/projects/${project}/secrets/${secret}:addVersion`, { headers: { ...(await auth.header()), 'Content-Type': 'application/json' }, body: JSON.stringify({ payload: { data: Buffer.from(value).toString('base64') } }) });
-  if (!r.ok) throw new Error(`Secret Manager addVersion HTTP ${r.status}`);
-  return r.json.name.split('/').pop();                      // version number only
-}
 
-module.exports = { Conflict, metadataAuth, storage, v4Parts, signedUrl, iamSigner, readSecret, accessSecret, addSecretVersion, SECRET_DIR };
+module.exports = { Conflict, metadataAuth, storage, v4Parts, signedUrl, iamSigner, readSecret, accessSecret, SECRET_DIR };

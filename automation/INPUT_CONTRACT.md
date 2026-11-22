@@ -78,6 +78,7 @@ Bentuk heading yang dipakai creator juga dibaca apa adanya, tanpa mengubah file:
 - `## Judul` → judul posting;
 - `## Hashtag` atau `## Hashtags`;
 - `## Platform` → platform tujuan;
+  - catatan (22 Nov 2026): pilot automation hanya `facebook` dan `instagram`. Bila creator menulis `youtube`, preflight tetap menerimanya sebagai target **manual** (YouTube Studio); publisher mengabaikannya dan tidak pernah mengunggah ke YouTube;
 - `## Jadwal` → satu baris `YYYY-MM-DD HH:MM`, WIB.
 
 Bila salah satu tidak ada, statusnya NEEDS_CREATOR_FIX.

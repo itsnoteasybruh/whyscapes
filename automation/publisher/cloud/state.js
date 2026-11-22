@@ -22,7 +22,7 @@ class CloudState {
   }
   // episode-level fields (e.g. verify_triggers), written with the same compare-and-swap
   async setTop(patch) { Object.assign(this.data, redact(patch)); this.gen = await this.store.putJSON(this.name, this.data, this.gen); return this.data; }
-  // private sidecar (YouTube resumable session URI): same bucket, never logged, never part of reports
+  // private sidecar (values that must never be logged, e.g. an upload session URI): same bucket, never part of reports
   async local(key, val) {
     const cur = await this.store.getJSON(this.localName), d = cur ? cur.json : {};
     if (val === undefined) return d[key] || null;

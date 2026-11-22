@@ -1,7 +1,7 @@
 // No-network tests: a fake transport plays the platform. Nothing is ever sent anywhere.
 //   node --test automation/publisher/test/
 const test = require('node:test'), assert = require('node:assert'), fs = require('fs'), os = require('os'), path = require('path');
-const C = require('../core'), YT = require('../youtube'), FB = require('../facebook'), IG = require('../instagram');
+const C = require('../core'), FB = require('../facebook'), IG = require('../instagram');
 
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'pub-'));
 function fixture(dir) {
@@ -30,7 +30,6 @@ function fake(routes) {
   };
   return { http, calls };
 }
-const YCFG = { declarations: { made_for_kids: false, contains_synthetic_media: false, has_paid_product_placement: false } };
 
 test('time: 21:00 WIB = 14:00Z, Asia/Jakarta, rejects invalid dates', () => {
   const d = C.parseWIB('2026-11-22 21:00');
@@ -46,64 +45,15 @@ test('redaction: tokens never survive in logs/state', () => {
   assert.ok(!/ya29|EAAB123|zz|EAABxxxx/.test(s), s);
 });
 
-test('YouTube gate: missing creator declarations block; never guessed', () => {
-  const d = tmp(), c = ctxFor(d, async () => {}, { declarations: {} });
-  const g = YT.gate(c); assert.equal(g.length, 3); assert.match(g[0], /made_for_kids/);
-});
-
-test('YouTube happy path: one upload, private + publishAt, thumbnail after processing, SCHEDULED read back', async () => {
-  const d = tmp(), st = new C.State(path.join(d, 's.json'), 'E');
-  let c; const pa = new Date(Date.now() + 3 * 3600e3);
-  const f = fake([
-    { m: (m, u) => m === 'POST' && u.includes('uploadType=resumable'), res: (m, u, o) => { const b = JSON.parse(o.body); assert.equal(b.status.privacyStatus, 'private'); assert.equal(b.status.publishAt, pa.toISOString()); assert.equal(b.snippet.title, POST.title); assert.equal(b.snippet.description, POST.text); assert.strictEqual(b.paidProductPlacementDetails.hasPaidProductPlacement, false); return { status: 200, headers: { location: 'https://up/session?upload_id=S1' } }; } },
-    { m: (m, u) => m === 'PUT' && u.startsWith('https://up/session'), res: { status: 200, json: { id: 'VID1' } } },
-    { m: (m, u) => m === 'GET' && u.includes('/videos?part=status'), res: { status: 200, json: { items: [{ status: { privacyStatus: 'private', publishAt: pa.toISOString().replace('.000Z', 'Z') }, snippet: { title: POST.title }, processingDetails: { processingStatus: 'succeeded' } }] } } },
-    { m: (m, u) => u.includes('thumbnails/set'), res: { status: 200, json: { items: [] } } },
-  ]);
-  c = ctxFor(d, f.http, YCFG, { publishAt: pa });
-  const r = await YT.schedule(c, st);
-  assert.equal(r.state, 'SCHEDULED'); assert.equal(r.evidence.video_id, 'VID1'); assert.equal(st.p('youtube').thumbnail, 'set');
-  assert.equal(f.calls.filter(x => x.method === 'POST' && x.url.includes('resumable')).length, 1);
-  assert.ok(!fs.readFileSync(path.join(d, 's.json'), 'utf8').includes('upload_id=S1'), 'session URI must not be in the committed state');
-  // second run: only read-back, no new upload
-  const before = f.calls.length; const r2 = await YT.schedule(c, st);
-  assert.equal(r2.state, 'SCHEDULED'); assert.ok(f.calls.slice(before).every(x => x.method === 'GET'));
-});
-
-test('YouTube: byte upload times out but the SAME session says complete → adopt, no duplicate', async () => {
-  const d = tmp(), st = new C.State(path.join(d, 's.json'), 'E');
-  const f = fake([
-    { m: (m, u) => m === 'POST' && u.includes('resumable'), res: { status: 200, headers: { location: 'https://up/s2' } } },
-    { m: (m, u, o) => m === 'PUT' && o.headers['Content-Range'] === 'bytes */1000', res: { status: 201, json: { id: 'VID2' } } },
-    { m: (m) => m === 'PUT', res: new C.TransportError('ambiguous', 'timeout') },
-    { m: (m, u) => m === 'GET', res: { status: 200, json: { items: [{ status: { privacyStatus: 'private', publishAt: null }, snippet: {}, processingDetails: { processingStatus: 'processing' } }] } } },
-  ]);
-  const r = await YT.schedule(ctxFor(d, f.http, YCFG), st);
-  assert.equal(st.p('youtube').remote_id, 'VID2');
-  assert.equal(f.calls.filter(x => x.method === 'POST' && x.url.includes('resumable')).length, 1);
-});
-
-test('YouTube: unknown outcome and the session cannot be asked → AMBIGUOUS, stop, and the next run does NOT retry', async () => {
-  const d = tmp(), st = new C.State(path.join(d, 's.json'), 'E');
-  const f = fake([
-    { m: (m, u) => m === 'POST' && u.includes('resumable'), res: { status: 200, headers: { location: 'https://up/s3' } } },
-    { m: (m) => m === 'PUT', res: new C.TransportError('ambiguous', 'connection reset') },
-  ]);
-  const c = ctxFor(d, f.http, YCFG);
-  const r = await YT.schedule(c, st); assert.ok(r.stop); assert.equal(st.p('youtube').state, 'AMBIGUOUS');
-  const n = f.calls.length, r2 = await YT.schedule(c, st);
-  assert.ok(r2.stop); assert.equal(f.calls.length, n, 'no request at all on the second run');
-});
-
-test('YouTube reconcile: exactly one matching upload after the intent is found; none/many stays ambiguous', async () => {
-  const d = tmp(), intent = new Date().toISOString();
-  const mk = items => fake([
-    { m: (m, u) => u.includes('/channels?'), res: { status: 200, json: { items: [{ id: 'CH', snippet: { title: 'Whyscape' }, contentDetails: { relatedPlaylists: { uploads: 'UU' } } }] } } },
-    { m: (m, u) => u.includes('/playlistItems?'), res: { status: 200, json: { items } } }]);
-  const one = mk([{ snippet: { title: POST.title, publishedAt: new Date().toISOString(), resourceId: { videoId: 'V9' } } }, { snippet: { title: 'lain', publishedAt: new Date().toISOString(), resourceId: { videoId: 'V8' } } }]);
-  assert.deepEqual((await YT.reconcile(ctxFor(d, one.http, YCFG), { intent_at: intent })).matches.map(m => m.id), ['V9']);
-  const old = mk([{ snippet: { title: POST.title, publishedAt: '2026-01-01T00:00:00Z', resourceId: { videoId: 'OLD' } } }]);
-  assert.equal((await YT.reconcile(ctxFor(d, old.http, YCFG), { intent_at: intent })).matches.length, 0);
+test('Facebook reconcile: exactly one Reel created after the intent with the same text is adopted; none/old stays ambiguous', async () => {
+  const d = tmp(), intent = new Date().toISOString(), PT = 'EAAPAGETOKENrrrrrrrrrrrrrrrrrrrrrr';
+  const mk = data => fake([
+    { m: (m, u) => u.endsWith('/P?fields=access_token'), res: { status: 200, json: { access_token: PT } } },
+    { m: (m, u) => u.includes('/P/video_reels?'), res: { status: 200, json: { data } } }]);
+  const one = mk([{ id: 'R9', description: POST.text, created_time: new Date().toISOString() }, { id: 'R8', description: 'lain', created_time: new Date().toISOString() }]);
+  assert.deepEqual((await FB.reconcile(ctxFor(d, one.http, { page_id: 'P' }), { intent_at: intent })).matches.map(m => m.id), ['R9']);
+  const old = mk([{ id: 'OLD', description: POST.text, created_time: '2026-01-01T00:00:00Z' }]);
+  assert.equal((await FB.reconcile(ctxFor(d, old.http, { page_id: 'P' }), { intent_at: intent })).matches.length, 0);
 });
 
 test('Facebook gate: EP14-like 112 s video is blocked on the Reels API (3–90 s); the video is not touched', () => {
@@ -232,16 +182,4 @@ test('publisher: a final MP4 over 90 s is rejected for every platform before any
 test('publisher: the real WS-EP14 config is blocked (112.47 s > 90 s and creator hold)', () => {
   const P = require('../publish'), L = P.load(path.resolve(__dirname, '../../../outputs/WS-EP14/publish_config.json'));
   assert.ok(L.problems.some(p => /112\.47 s, above the 90 s/.test(p))); assert.ok(L.problems.some(p => /ON HOLD/.test(p)));
-});
-
-test('YouTube: SCHEDULED but thumbnail pending → only thumbnails.set + verify, never a new upload', async () => {
-  const d = tmp(), st = new C.State(path.join(d, 's.json'), 'E'), pa = new Date(Date.now() + 3 * 3600e3);
-  st.set('youtube', { state: 'SCHEDULED', remote_id: 'VIDX', thumbnail: 'failed' }, {});
-  const f = fake([
-    { m: (m, u) => m === 'GET' && u.includes('/videos?part=status'), res: { status: 200, json: { items: [{ status: { privacyStatus: 'private', publishAt: pa.toISOString().replace('.000Z', 'Z') }, snippet: {}, processingDetails: { processingStatus: 'succeeded' } }] } } },
-    { m: (m, u) => u.includes('thumbnails/set'), res: { status: 200, json: {} } },
-  ]);
-  const r = await YT.schedule(ctxFor(d, f.http, YCFG, { publishAt: pa }), st);
-  assert.equal(r.state, 'SCHEDULED'); assert.equal(st.p('youtube').thumbnail, 'set');
-  assert.ok(!f.calls.some(c => c.url.includes('uploadType=resumable') || c.method === 'PUT'));
 });

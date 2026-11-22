@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Whyscape publisher — Google Cloud setup in separate phases. NOTHING runs by default: `./deploy.sh plan` only prints the actions.
 # Each phase is run explicitly by the creator (or by Claude only on the creator's explicit instruction):
-#   PROJECT=<id> ./deploy.sh plan | infra | build | deploy-oauth | deploy-job | schedulers | monitoring | status
+#   PROJECT=<id> ./deploy.sh plan | infra | build | deploy-job | schedulers | monitoring | status
+# Pilot scope: Meta only (Facebook Reels + Instagram Reels). YouTube is managed manually in YouTube Studio (no YouTube resources here).
 #   PROJECT=<id> ./deploy.sh enable-schedulers     ← only when credentials, media and approvals are ready (creator decision)
 # Content is never scheduled by this script: the job acts only on episodes with a creator approval.json in the bucket.
 # No secret VALUE is read, printed or stored here; secrets are created empty and filled by the creator.
@@ -11,11 +12,10 @@ PHASE="${1:-plan}"
 REGION="${REGION:-asia-southeast2}"                     # Jakarta: Cloud Run, Cloud Scheduler and Cloud Tasks are available there
 BUCKET="${BUCKET:-${PROJECT}-whyscape-publisher}"
 TAG="${TAG:-v1}"; IMAGE="${REGION}-docker.pkg.dev/${PROJECT}/whyscape/publisher:${TAG}"
-JOB=whyscape-publisher; QUEUE=whyscape-triggers; OAUTH_SVC=whyscape-oauth
+JOB=whyscape-publisher; QUEUE=whyscape-triggers
 JOB_SA="whyscape-publisher@${PROJECT}.iam.gserviceaccount.com"      # runs the job: bucket, read secrets, sign URLs, enqueue tasks
-OAUTH_SA="whyscape-oauth@${PROJECT}.iam.gserviceaccount.com"        # runs the OAuth service: read client JSON, ADD refresh-token versions
 TRIG_SA="whyscape-trigger@${PROJECT}.iam.gserviceaccount.com"       # identity of Scheduler + Tasks calls: may only run the job with overrides
-SECRETS=(meta-token yt-oauth-client yt-refresh-token)
+SECRETS=(meta-token)
 
 say() { printf '\n== %s\n' "$*"; }
 run() { if [ "$PHASE" = plan ]; then printf '   %s\n' "$*"; else "$@"; fi; }
@@ -25,9 +25,9 @@ pnum() { gcloud projects describe "$PROJECT" --format='value(projectNumber)'; }
 phase_infra() {
   say "infra: APIs"
   run gcloud services enable run.googleapis.com cloudscheduler.googleapis.com cloudtasks.googleapis.com secretmanager.googleapis.com storage.googleapis.com \
-    iamcredentials.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com youtube.googleapis.com logging.googleapis.com monitoring.googleapis.com --project "$PROJECT"
-  say "infra: service accounts (3, least privilege)"
-  for sa in whyscape-publisher whyscape-oauth whyscape-trigger; do
+    iamcredentials.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com logging.googleapis.com monitoring.googleapis.com --project "$PROJECT"
+  say "infra: service accounts (2, least privilege)"
+  for sa in whyscape-publisher whyscape-trigger; do
     exists gcloud iam service-accounts describe "${sa}@${PROJECT}.iam.gserviceaccount.com" --project "$PROJECT" || run gcloud iam service-accounts create "$sa" --project "$PROJECT" --display-name "Whyscape $sa"
   done
   run gcloud iam service-accounts add-iam-policy-binding "$JOB_SA" --project "$PROJECT" --member "serviceAccount:$JOB_SA" --role roles/iam.serviceAccountTokenCreator   # signBlob for V4 URLs (own key, no file)
@@ -38,8 +38,6 @@ phase_infra() {
   say "infra: secrets created EMPTY (values are added by the creator, never by this script)"
   for s in "${SECRETS[@]}"; do exists gcloud secrets describe "$s" --project "$PROJECT" || run gcloud secrets create "$s" --project "$PROJECT" --replication-policy automatic; done
   for s in "${SECRETS[@]}"; do run gcloud secrets add-iam-policy-binding "$s" --project "$PROJECT" --member "serviceAccount:$JOB_SA" --role roles/secretmanager.secretAccessor; done
-  run gcloud secrets add-iam-policy-binding yt-oauth-client --project "$PROJECT" --member "serviceAccount:$OAUTH_SA" --role roles/secretmanager.secretAccessor
-  run gcloud secrets add-iam-policy-binding yt-refresh-token --project "$PROJECT" --member "serviceAccount:$OAUTH_SA" --role roles/secretmanager.secretVersionAdder
   say "infra: Artifact Registry + Cloud Tasks queue (one-shot Instagram publish + post-publish verify triggers)"
   exists gcloud artifacts repositories describe whyscape --location "$REGION" --project "$PROJECT" || run gcloud artifacts repositories create whyscape --project "$PROJECT" --repository-format docker --location "$REGION"
   exists gcloud tasks queues describe "$QUEUE" --location "$REGION" --project "$PROJECT" || run gcloud tasks queues create "$QUEUE" --project "$PROJECT" --location "$REGION" --max-attempts 3 --min-backoff 60s
@@ -52,16 +50,10 @@ phase_build() {
   if [ "$PHASE" = plan ]; then CTX='<tmp>'; else CTX="$(mktemp -d)"; fi
   run mkdir -p "$CTX/automation/publisher/cloud"
   run cp automation/format_rules.js "$CTX/automation/"
-  run cp automation/publisher/core.js automation/publisher/youtube.js automation/publisher/facebook.js automation/publisher/instagram.js "$CTX/automation/publisher/"
-  run cp automation/publisher/cloud/gcp.js automation/publisher/cloud/state.js automation/publisher/cloud/planner.js automation/publisher/cloud/support.js automation/publisher/cloud/tasks.js automation/publisher/cloud/job.js automation/publisher/cloud/oauth_server.js automation/publisher/cloud/Dockerfile "$CTX/automation/publisher/cloud/"
+  run cp automation/publisher/core.js automation/publisher/facebook.js automation/publisher/instagram.js "$CTX/automation/publisher/"
+  run cp automation/publisher/cloud/gcp.js automation/publisher/cloud/state.js automation/publisher/cloud/planner.js automation/publisher/cloud/support.js automation/publisher/cloud/tasks.js automation/publisher/cloud/job.js automation/publisher/cloud/Dockerfile "$CTX/automation/publisher/cloud/"
   run cp automation/publisher/cloud/Dockerfile "$CTX/Dockerfile"
   run gcloud builds submit "$CTX" --project "$PROJECT" --region "$REGION" --tag "$IMAGE"
-}
-phase_deploy_oauth() {
-  say "deploy-oauth: private Cloud Run service (no public access, 1 instance), opened only via: gcloud run services proxy $OAUTH_SVC --region $REGION --port 8080"
-  run gcloud run deploy "$OAUTH_SVC" --project "$PROJECT" --region "$REGION" --image "$IMAGE" --service-account "$OAUTH_SA" --no-allow-unauthenticated \
-    --max-instances 1 --command node --args automation/publisher/cloud/oauth_server.js \
-    --set-env-vars "GCP_PROJECT=$PROJECT,REDIRECT_URI=http://localhost:8080/callback"
 }
 phase_deploy_job() {
   say "deploy-job: Cloud Run Job, no task retries (idempotent state + alerts), 1 vCPU / 1 GiB, 30 min; secrets read via API at runtime"
@@ -98,9 +90,9 @@ phase_status() {
 }
 
 case "$PHASE" in
-  plan) for f in phase_infra phase_build phase_deploy_oauth phase_deploy_job phase_schedulers phase_monitoring; do $f; done
+  plan) for f in phase_infra phase_build phase_deploy_job phase_schedulers phase_monitoring; do $f; done
         say "(enable-schedulers is a separate command, only on the creator's decision)"; phase_enable ;;
-  infra) phase_infra ;; build) phase_build ;; deploy-oauth) phase_deploy_oauth ;; deploy-job) phase_deploy_job ;;
+  infra) phase_infra ;; build) phase_build ;; deploy-job) phase_deploy_job ;;
   schedulers) phase_schedulers ;; monitoring) phase_monitoring ;; status) phase_status ;; enable-schedulers) phase_enable ;;
   *) echo "unknown phase $PHASE"; exit 2 ;;
 esac

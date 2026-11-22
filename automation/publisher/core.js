@@ -37,7 +37,7 @@ class State {
     const p = this.p(name); if (patch.state && !PLATFORM_STATES.includes(patch.state)) throw new Error('bad state ' + patch.state);
     Object.assign(p, redact(patch)); p.history.push({ at: new Date().toISOString(), ...(redact(event || {})), state: p.state }); this.save(); return p;
   }
-  // sidecar for values that must survive a restart but never go to git or logs (YouTube resumable session URI)
+  // sidecar for values that must survive a restart but never go to git or logs (e.g. an upload session URI)
   local(key, val) {
     const f = this.file.replace(/\.json$/, '.local.json'), d = fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : {};
     if (val === undefined) return d[key] || null;

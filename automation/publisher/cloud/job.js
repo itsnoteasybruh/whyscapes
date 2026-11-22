@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Whyscape publisher — Cloud Run Job entrypoint. Triggered ONLY by Cloud Scheduler (time zone Asia/Jakarta), never by a Claude session.
-//   node cloud/job.js tick            every 30 min: YouTube early private upload + publishAt, Facebook schedule, Instagram prepare, verify
+//   node cloud/job.js tick            every 30 min: Facebook Reels schedule, Instagram prepare, verify
+// Pilot scope: Meta only (Facebook Reels + Instagram Reels). YouTube is managed manually in YouTube Studio.
 //   node cloud/job.js publish-window [--episode ID]  started by one-shot Cloud Tasks at publish_at (+5 min backup): Instagram media_publish
 //                     inside [publish_at, +20 min]. Any publish time works; there is no fixed daily window.
 //   node cloud/job.js report [--episode ID]  one-shot Cloud Tasks at publish_at + 15 / + 60 min, plus a daily summary (23:55 WIB):
@@ -11,7 +12,7 @@
 const fs = require('fs'), os = require('os'), path = require('path');
 const C = require('../core'), F = require('../../format_rules');
 const T = require('./tasks'), G = require('./gcp'), { CloudState, acquireLease, releaseLease } = require('./state'), { plan } = require('./planner'), S = require('./support');
-const ADAPTERS = { youtube: require('../youtube'), facebook: require('../facebook'), instagram: require('../instagram') };
+const ADAPTERS = { facebook: require('../facebook'), instagram: require('../instagram') };
 const PLATFORMS = Object.keys(ADAPTERS);
 
 // ---------- approval (written by the creator with cloud/approve.js; Claude never writes one) ----------
@@ -21,12 +22,12 @@ function validateApproval(a, id) {
   if (a.episode !== id) p.push(`approval is for ${a.episode}, not ${id}`);
   for (const k of ['approved_by', 'approved_at', 'publish_at_wib']) if (!a[k]) p.push(`approval has no ${k}`);
   const at = C.parseWIB(a.publish_at_wib); if (!at) p.push(`publish_at_wib "${a.publish_at_wib}" is not "YYYY-MM-DD HH:MM" WIB`);
-  if (!Array.isArray(a.platforms) || !a.platforms.length || a.platforms.some(x => !PLATFORMS.includes(x))) p.push('approval.platforms must be a subset of youtube, facebook, instagram');
+  if (!Array.isArray(a.platforms) || !a.platforms.length || a.platforms.some(x => !PLATFORMS.includes(x))) p.push('approval.platforms must be a subset of facebook, instagram (pilot scope: Meta only)');
   for (const k of ['video', 'post', 'thumbnail']) if (!a.files || !a.files[k] || !a.files[k].object || !/^[0-9a-f]{64}$/.test(a.files[k].sha256 || '')) p.push(`approval.files.${k} needs object + sha256`);
   return p;
 }
 
-async function runEpisode({ id, approval, mode, now, store, http, httpGraph, signer, auth, log, tmp, tasksCfg = null, tasksAuth = null, creds = { meta: true, youtube: true } }) {
+async function runEpisode({ id, approval, mode, now, store, http, httpGraph, signer, auth, log, tmp, tasksCfg = null, tasksAuth = null, creds = { meta: true } }) {
   const L = log.child({ episode: id }), report = { episode: id, mode, at: C.timeEvidence(now), platforms: {}, alerts: [] };
   const alert = (platform, reason) => { report.alerts.push({ platform, reason }); L.error('alert', { platform, reason }); };
   const probs = validateApproval(approval, id);
@@ -54,14 +55,14 @@ async function runEpisode({ id, approval, mode, now, store, http, httpGraph, sig
     const post = C.readPost(local.post);
     if (!post.title || !post.caption) { alert('*', 'POST.md has no title or caption'); return report; }
     const thumbs = {
-      youtube: thumbFor(local.thumbnail, dir, ['png', 'jpg', 'jpeg'], 'png'), facebook: thumbFor(local.thumbnail, dir, ['png', 'jpg', 'jpeg'], 'png'),
+      facebook: thumbFor(local.thumbnail, dir, ['png', 'jpg', 'jpeg'], 'png'),
       instagram: thumbFor(local.thumbnail, dir, ['jpg', 'jpeg'], 'jpeg') };
     const st0 = st;
     for (const a of work) {
       const A = ADAPTERS[a.platform], PL = L.child({ platform: a.platform, action: a.action });
-      if (!creds[a.platform === 'youtube' ? 'youtube' : 'meta']) { alert(a.platform, `credentials not configured in Secret Manager (${a.platform === 'youtube' ? 'yt-oauth-client + yt-refresh-token' : 'meta-token'}); nothing sent`); continue; }
+      if (!creds.meta) { alert(a.platform, 'credentials not configured in Secret Manager (meta-token); nothing sent'); continue; }
       const cfg = { ...(approval[a.platform] || {}), declarations: (approval.declarations || {})[a.platform] };
-      const ctx = { cfg, video, videoSha: approval.files.video.sha256, post, publishAt, now, thumb: thumbs[a.platform], http: a.platform === 'youtube' ? http : httpGraph,
+      const ctx = { cfg, video, videoSha: approval.files.video.sha256, post, publishAt, now, thumb: thumbs[a.platform], http: httpGraph,
         auth, sleep: ms => new Promise(r => setTimeout(r, ms)) };
       if (a.platform === 'instagram' && a.action === 'prepare') {           // Meta fetches both by URL: short-lived V4 signed URLs, bucket stays private
         const coverObj = `work/${id}/cover_instagram.jpg`; await store.putBytes(coverObj, fs.readFileSync(thumbs.instagram.path), 'image/jpeg');
@@ -107,7 +108,7 @@ function thumbFor(src, dir, okExt, fmt) {
   return { path: conv.to, ext: fmt === 'jpeg' ? 'jpg' : fmt, mime: `image/${fmt}`, conversion: conv };
 }
 
-async function runJob({ mode, now = new Date(), store, http, httpGraph, signer, auth, log, tmp = os.tmpdir(), only = null, tasksCfg = null, tasksAuth = null, creds = { meta: true, youtube: true } }) {
+async function runJob({ mode, now = new Date(), store, http, httpGraph, signer, auth, log, tmp = os.tmpdir(), only = null, tasksCfg = null, tasksAuth = null, creds = { meta: true } }) {
   if (!['tick', 'publish-window', 'report'].includes(mode)) throw new Error('mode must be tick | publish-window | report');
   const items = await store.list('episodes/');
   const ids = items.map(i => (i.name.match(/^episodes\/([^/]+)\/approval\.json$/) || [])[1]).filter(Boolean).filter(x => !only || x === only);
@@ -133,12 +134,12 @@ if (require.main === module) {
     if (!process.env.WHYSCAPE_BUCKET) throw new Error('WHYSCAPE_BUCKET not set');
     const http = C.makeTransport({ timeoutMs: 600000 }), auth = G.metadataAuth(http), store = G.storage(http, auth, process.env.WHYSCAPE_BUCKET);
     const P = process.env.GCP_PROJECT, sec = n => G.accessSecret(http, auth, P, n);
-    const [meta, ytClient, ytRefresh] = [await sec('meta-token'), await sec('yt-oauth-client'), await sec('yt-refresh-token')];
-    for (const [n, v] of [['meta-token', meta], ['yt-oauth-client', ytClient], ['yt-refresh-token', ytRefresh]]) if (!v) log.warn('secret not configured yet', { secret: n });
-    const ytAuth = { youtube: ytClient && ytRefresh ? S.youtubeTokenSource(http, JSON.parse(ytClient), ytRefresh) : null, email: auth.email };
+    const meta = await sec('meta-token');
+    if (!meta) log.warn('secret not configured yet', { secret: 'meta-token' });
+    const jobAuth = { email: auth.email };
     const i = process.argv.indexOf('--episode'), only = i > 0 ? process.argv[i + 1] : null;
     const E = process.env, tasksCfg = E.TASKS_QUEUE ? { project: E.GCP_PROJECT, region: E.GCP_REGION, queue: E.TASKS_QUEUE, job: E.JOB_NAME || 'whyscape-publisher', triggerSa: E.TRIGGER_SA } : null;
-    const res = await runJob({ mode, store, http, httpGraph: S.withGraphAuth(http, meta), signer: G.iamSigner(http, auth), auth: ytAuth, log, only, tasksCfg, tasksAuth: auth, creds: { meta: !!meta, youtube: !!(ytClient && ytRefresh) } });
+    const res = await runJob({ mode, store, http, httpGraph: S.withGraphAuth(http, meta), signer: G.iamSigner(http, auth), auth: jobAuth, log, only, tasksCfg, tasksAuth: auth, creds: { meta: !!meta } });
     process.exitCode = res.alerts ? 1 : 0;                 // a failed execution is visible in Cloud Run + alerting; max-retries is 0
   })().catch(e => { log.error('run crashed', { error: C.redact(String(e && e.stack || e)) }); process.exitCode = 1; });
 }
