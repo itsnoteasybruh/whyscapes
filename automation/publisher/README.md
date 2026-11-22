@@ -14,6 +14,13 @@ node --test automation/publisher/test/publisher.test.js                         
 ```
 Tanpa `--execute`, tidak ada request yang dikirim.
 
+## Format baku (gerbang pertama, semua platform)
+Sebelum request apa pun, `publish.js` mengukur durasi **file MP4 final** dengan ffprobe:
+- di atas **90 s** → ditolak dengan pesan *"final MP4 is … s, above the 90 s Whyscape format: rejected before upload. Revise the script and re-render; do not speed the video up"*;
+- di luar target 80–85 s → info saja.
+
+Konfigurasi episode dengan `hold` juga ditolak.
+
 ## Sumber kebenaran per episode
 `outputs/<ID>/publish_config.json` hanya berisi:
 - path video + md5 dari QC PASS;

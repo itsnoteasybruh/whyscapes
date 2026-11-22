@@ -13,7 +13,7 @@ const authHeaders = () => process.env.YT_ACCESS_TOKEN ? { Authorization: `Bearer
 function gate(ctx) {
   const r = [], d = ctx.cfg.declarations || {};
   for (const k of ['made_for_kids', 'contains_synthetic_media', 'has_paid_product_placement']) if (typeof d[k] !== 'boolean') r.push(`creator declaration "${k}" (true/false) is missing: the channel owner must state it, Claude does not guess`);
-  if (ctx.video.duration > 180) r.push(`video is ${ctx.video.duration}s; Shorts are ≤ 3 min`);
+  if (ctx.video.duration > 180) r.push(`video is ${ctx.video.duration}s; Shorts are ≤ 3 min`);   // platform limit; the 90 s Whyscape format is enforced earlier in publish.js
   if (ctx.video.height <= ctx.video.width) r.push('video is not vertical/square (Shorts)');
   if (!ctx.thumb) r.push('no thumbnail file from the creator');
   if (ctx.publishAt <= ctx.now) r.push('publish time is not in the future');

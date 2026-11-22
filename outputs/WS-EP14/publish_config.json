@@ -10,13 +10,13 @@
   "expected_post_sha256": "8edd1436274e8ac777aae488e47655fcef80ef64d77127db2c5ecc1601aa8779",
   "thumbnail_file": "episodes/ep14_kulkas/creator/THUMBNAIL_received_via_chat.webp",
   "schedule": {
-    "publish_at_wib": "2026-11-22 21:00",
+    "publish_at_wib": null,
     "platforms": [
       "facebook",
       "instagram",
       "youtube"
     ],
-    "creator_instruction": "Untuk pilot EP14, coba jadwalkan tayang pukul 21.00 WIB HANYA pada platform yang koneksi, thumbnail, caption, dan jadwalnya sudah terverifikasi (Facebook Page Reels, Instagram Reels, YouTube Shorts; 'malam ini', pesan 22 Nov 2026)"
+    "note": "slot 22 Nov 21:00 WIB lewat dan dibatalkan; menunggu tanggal/jam baru + persetujuan konten final dari creator"
   },
   "platforms": {
     "youtube": {
@@ -46,5 +46,6 @@
       "share_to_feed": null,
       "auth": "network secret on graph.facebook.com (user token)"
     }
-  }
+  },
+  "hold": "creator 22 Nov 2026: MP4 112,47 s melebihi format baku 90 s; jangan dijadwalkan, diunggah, atau dipublikasikan. Naskah dan render direvisi dulu (tidak dipercepat)."
 }

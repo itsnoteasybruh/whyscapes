@@ -103,7 +103,8 @@ WHISPER_DIR=… node automation/preflight.js forecast_batch_01 [--queue queue/qu
 | # | Cek | Gagal → |
 |---|---|---|
 | 1 | Kelima file ada dengan nama persis | NEEDS_CREATOR_FIX (per file) |
-| 2 | Bisa dibaca: MP3 terdekode, durasi 30–180 s; MD UTF-8 dan tidak kosong; PNG valid | NEEDS_CREATOR_FIX |
+| 2 | Bisa dibaca: MP3 terdekode; MD UTF-8 dan tidak kosong; PNG valid | NEEDS_CREATOR_FIX |
+| 2b | **Format baku:** VO ≤ 86,7 s, sehingga MP4 final ≤ 90 s (VO + 1,0 s cover + 2,3 s ekor). Target VO 76,7–81,7 s → video 80–85 s (`format_rules.js`). VO tidak pernah dipercepat | > 86,7 s: NEEDS_CREATOR_FIX · di luar target: info |
 | 3 | Milik episode yang sama: `episode:` di POST.md dan VO_SCRIPT.md = nama folder; BRIEF menyebut episode/judul; judul VO_SCRIPT tidak bertentangan | NEEDS_CREATOR_FIX |
 | 4 | Judul THUMBNAIL.png ↔ judul POST.md konsisten (OCR tesseract, skor ≥ 0,85). Thumbnail **tidak** dibandingkan dengan frame video | NEEDS_CREATOR_FIX (creator memperbaiki atau mengonfirmasi) |
 | 5 | Judul video dari BRIEF dicatat; boleh beda dari judul posting | info |

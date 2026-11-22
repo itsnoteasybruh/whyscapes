@@ -21,7 +21,7 @@ const ROOT = path.join(__dirname, '..');
 const queueFile = opt('--queue', 'queue/queue.json'), epRoot = opt('--episodes-root', path.join(ROOT, 'episodes'));
 const reportFile = opt('--report', path.join('queue', 'preflight', path.basename(path.resolve(batchDir)) + '_report.md'));
 const NOW = new Date(opt('--now', new Date().toISOString()));
-const RULES = { files: ['VO.mp3', 'VO_SCRIPT.md', 'BRIEF.md', 'THUMBNAIL.png', 'POST.md'], voSeconds: [30, 180],
+const RULES = { files: ['VO.mp3', 'VO_SCRIPT.md', 'BRIEF.md', 'THUMBNAIL.png', 'POST.md'],   // VO length: automation/format_rules.js (final MP4 ≤ 90 s)
   titleOcrPass: .85, scriptPass: .90, scriptFail: .80, minGapHours: 12, leadHours: 28, produceOffsetDays: 1, produceAt: '17:00',
   platforms: { instagram: { max: 2200, tags: 30 }, facebook: { max: 63206, tags: 30 }, youtube: { titleMax: 100, max: 5000, tags: 15 }, tiktok: { max: 2200, tags: 30 } } };
 
@@ -96,7 +96,7 @@ for (const name of pk) {
   for (const f of ['VO_SCRIPT.md', 'BRIEF.md', 'POST.md'].filter(has)) { const b = fs.readFileSync(F[f]); txt[f] = b.toString('utf8'); if (Buffer.compare(Buffer.from(txt[f], 'utf8'), b) !== 0) add('FIX', 'readable', `${f} is not valid UTF-8 text`, f); if (!txt[f].trim()) add('FIX', 'readable', `${f} is empty`, f); }
   if (has('VO.mp3')) try { r.vo_seconds = +(+execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', F['VO.mp3']]).toString().trim()).toFixed(2); }
   catch { add('FIX', 'readable', 'VO.mp3 cannot be decoded (ffprobe)', 'VO.mp3'); }
-  if (r.vo_seconds != null && !(r.vo_seconds >= RULES.voSeconds[0] && r.vo_seconds <= RULES.voSeconds[1])) add('FIX', 'readable', `VO is ${r.vo_seconds}s, outside the series range ${RULES.voSeconds.join('–')}s`, 'VO.mp3');
+  if (r.vo_seconds != null) { const f = require('./format_rules').checkVO(r.vo_seconds); r.est_final_seconds = require('./format_rules').finalFromVO(r.vo_seconds); if (f.severity) add(f.severity, 'format', f.msg, f.severity === 'FIX' ? 'VO.mp3 / VO_SCRIPT.md' : null); }
   r.sha256 = Object.fromEntries([['vo', 'VO.mp3'], ['vo_script', 'VO_SCRIPT.md'], ['brief', 'BRIEF.md'], ['thumbnail', 'THUMBNAIL.png'], ['post', 'POST.md']].map(([k, f]) => [k, has(f) ? sha(F[f]) : null]));
   // 3. POST.md (creator's editorial decision: validated, never edited)
   const P = frontMatter(txt['POST.md'] || ''), S = frontMatter(txt['VO_SCRIPT.md'] || '');

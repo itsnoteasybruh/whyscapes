@@ -19,6 +19,10 @@ function load(cfgFile, { now = new Date() } = {}) {
   const videoMd5 = C.md5(videoPath), videoSha = C.sha256(videoPath);
   if (cfg.video.expected_md5 && videoMd5 !== cfg.video.expected_md5) problems.push(`video md5 ${videoMd5} ≠ the QC-passed ${cfg.video.expected_md5}`);
   if (cfg.video.qc !== 'PASS') problems.push('video has no QC PASS recorded');
+  // FORMAT BAKU: duration measured from the final MP4 file itself (ffprobe), before any upload, for every platform
+  const fmt = require('../format_rules').checkFinal(video.duration);
+  if (!fmt.ok) problems.push(fmt.msg);
+  if (cfg.hold) problems.push(`episode is ON HOLD by the creator: ${cfg.hold}`);
   const post = C.readPost(R(cfg.post_file));
   if (cfg.expected_post_sha256 && post.sha256 !== cfg.expected_post_sha256) problems.push('POST.md changed since it was validated');
   if (post.episode && post.episode.toUpperCase() !== cfg.episode.toUpperCase()) problems.push(`POST.md is for ${post.episode}, not ${cfg.episode}`);

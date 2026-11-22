@@ -209,3 +209,27 @@ test('transport: a proxy CONNECT refusal is not_sent (safe), a timeout is ambigu
   const h2 = C.makeTransport({ timeoutMs: 20, fetchImpl: (u, o) => new Promise((_, rej) => o.signal.addEventListener('abort', () => rej(Object.assign(new Error('aborted'), { name: 'AbortError' })))) });
   await assert.rejects(h2('POST', 'https://x'), e => e.kind === 'ambiguous');
 });
+
+// ---------- FORMAT BAKU: final MP4 ≤ 90 s (target 80–85 s), checked on the file before any upload ----------
+const F = require('../../format_rules');
+test('format rules: 90 s hard limit, 80–85 s target, VO budget = 90 − 1.0 cover − 2.3 tail', () => {
+  assert.equal(F.checkFinal(112.467).ok, false); assert.match(F.checkFinal(112.467).msg, /above the 90 s Whyscape format.*do not speed/);
+  assert.equal(F.checkFinal(90.0).ok, true); assert.equal(F.checkFinal(90.04).ok, false);
+  assert.equal(F.checkFinal(82).severity, null); assert.equal(F.checkFinal(88).severity, 'INFO');
+  assert.equal(F.maxVO(), 86.7); assert.deepEqual(F.targetVO(), [76.7, 81.7]);
+  assert.equal(F.checkVO(109.48).severity, 'FIX'); assert.equal(F.checkVO(79).severity, null); assert.equal(F.checkVO(84).severity, 'INFO');
+});
+test('publisher: a final MP4 over 90 s is rejected for every platform before any request; ≤ 90 s passes this gate', async () => {
+  const d = tmp(), { execFileSync } = require('child_process'), P = require('../publish');
+  const mk = (s, name) => { const f = path.join(d, name); execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'lavfi', '-i', `testsrc=size=108x192:rate=10:duration=${s}`, '-c:v', 'libx264', '-preset', 'ultrafast', f]); return f; };
+  const post = path.resolve(__dirname, '../../../episodes/ep14_kulkas/creator/POST.md');
+  const cfg = v => { const f = path.join(d, `cfg_${path.basename(v)}.json`); fs.writeFileSync(f, JSON.stringify({ episode: 'WS-EP14', root: '/', video: { path: v, qc: 'PASS' }, post_file: post, schedule: { publish_at_wib: '2030-01-01 21:00', creator_instruction: 'test' }, platforms: {} })); return f; };
+  const long = P.load(cfg(mk(92, 'long.mp4')));
+  assert.ok(long.problems.some(p => /92\.\d+ s, above the 90 s Whyscape format: rejected before upload/.test(p)), long.problems.join(' | '));
+  const ok = P.load(cfg(mk(85, 'ok.mp4')));
+  assert.ok(!ok.problems.some(p => /Whyscape format/.test(p)), ok.problems.join(' | '));
+});
+test('publisher: the real WS-EP14 config is blocked (112.47 s > 90 s and creator hold)', () => {
+  const P = require('../publish'), L = P.load(path.resolve(__dirname, '../../../outputs/WS-EP14/publish_config.json'));
+  assert.ok(L.problems.some(p => /112\.47 s, above the 90 s/.test(p))); assert.ok(L.problems.some(p => /ON HOLD/.test(p)));
+});
