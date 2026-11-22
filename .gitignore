@@ -20,6 +20,10 @@
 !/.claude/skills/
 
 # never, anywhere
+client_secret*.json
+*oauth*token*
+*.token.json
+credentials*.json
 *.wav
 *.mp4
 *.mov
