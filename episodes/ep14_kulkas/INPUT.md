@@ -19,4 +19,4 @@ Hasil `automation/preflight.js --dry`: **lolos**.
 
 ## Catatan
 - Brief §Identitas menyebut nama unggahan `whyscape_episode_13.mp3`, tetapi berkas yang diterima bernama `whyscape_episode_14.mp3`. Isinya tetap episode kulkas: durasi 109,48 s mono 44,1 kHz cocok dengan brief.
-- Belum dirender; belum ada transkrip.
+- 22 Nov 2026: diproduksi penuh di cloud. Final `outputs/WS-EP14/WS-EP14.mp4` (md5 `12074b85…`). Lihat `README_EP14.md`, `QC.md`, `NOTES.md`.

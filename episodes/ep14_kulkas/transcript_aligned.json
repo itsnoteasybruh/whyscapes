@@ -1,0 +1,1731 @@
+{
+ "duration": 109.479,
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 0.58,
+   "text": "Bayangin,",
+   "words": [
+    [
+     "Bayangin,",
+     0.0,
+     0.58
+    ]
+   ]
+  },
+  {
+   "start": 0.83,
+   "end": 1.92,
+   "text": "lo buka kulkas,",
+   "words": [
+    [
+     "lo",
+     0.83,
+     0.94
+    ],
+    [
+     "buka",
+     0.94,
+     1.41
+    ],
+    [
+     "kulkas,",
+     1.41,
+     1.92
+    ]
+   ]
+  },
+  {
+   "start": 2.1,
+   "end": 4.83,
+   "text": "nemu kotak makanan yang baru beberapa hari lalu lo simpan.",
+   "words": [
+    [
+     "nemu",
+     2.1,
+     2.37
+    ],
+    [
+     "kotak",
+     2.37,
+     2.67
+    ],
+    [
+     "makanan",
+     2.67,
+     3.13
+    ],
+    [
+     "yang",
+     3.13,
+     3.23
+    ],
+    [
+     "baru",
+     3.23,
+     3.55
+    ],
+    [
+     "beberapa",
+     3.55,
+     3.73
+    ],
+    [
+     "hari",
+     3.73,
+     4.12
+    ],
+    [
+     "lalu",
+     4.12,
+     4.47
+    ],
+    [
+     "lo",
+     4.47,
+     4.65
+    ],
+    [
+     "simpan.",
+     4.65,
+     4.83
+    ]
+   ]
+  },
+  {
+   "start": 5.22,
+   "end": 5.99,
+   "text": "Tutupnya dibuka.",
+   "words": [
+    [
+     "Tutupnya",
+     5.24,
+     5.8
+    ],
+    [
+     "dibuka.",
+     5.8,
+     5.99
+    ]
+   ]
+  },
+  {
+   "start": 6.75,
+   "end": 6.96,
+   "text": "Lah,",
+   "words": [
+    [
+     "Lah,",
+     6.75,
+     6.96
+    ]
+   ]
+  },
+  {
+   "start": 7.32,
+   "end": 8.32,
+   "text": "kok baunya udah aneh?",
+   "words": [
+    [
+     "kok",
+     7.32,
+     7.39
+    ],
+    [
+     "baunya",
+     7.39,
+     7.88
+    ],
+    [
+     "udah",
+     7.88,
+     8.1
+    ],
+    [
+     "aneh?",
+     8.1,
+     8.32
+    ]
+   ]
+  },
+  {
+   "start": 8.65,
+   "end": 9.73,
+   "text": "Padahal masuk kulkas, lho.",
+   "words": [
+    [
+     "Padahal",
+     8.65,
+     9.15
+    ],
+    [
+     "masuk",
+     9.15,
+     9.41
+    ],
+    [
+     "kulkas,",
+     9.41,
+     9.58
+    ],
+    [
+     "lho.",
+     9.58,
+     9.73
+    ]
+   ]
+  },
+  {
+   "start": 10.01,
+   "end": 11.41,
+   "text": "Bukannya di situ makanan jadi awet?",
+   "words": [
+    [
+     "Bukannya",
+     10.01,
+     10.5
+    ],
+    [
+     "di",
+     10.5,
+     10.49
+    ],
+    [
+     "situ",
+     10.49,
+     10.69
+    ],
+    [
+     "makanan",
+     10.69,
+     11.15
+    ],
+    [
+     "jadi",
+     11.15,
+     11.21
+    ],
+    [
+     "awet?",
+     11.21,
+     11.41
+    ]
+   ]
+  },
+  {
+   "start": 11.77,
+   "end": 13.0,
+   "text": "Coba kita ikuti jejaknya.",
+   "words": [
+    [
+     "Coba",
+     11.77,
+     12.15
+    ],
+    [
+     "kita",
+     12.15,
+     12.31
+    ],
+    [
+     "ikuti",
+     12.31,
+     12.57
+    ],
+    [
+     "jejaknya.",
+     12.57,
+     13.0
+    ]
+   ]
+  },
+  {
+   "start": 13.37,
+   "end": 17.44,
+   "text": "Waktu makanan masuk kulkas, suhu dingin memperlambat pertumbuhan banyak mikroba.",
+   "words": [
+    [
+     "Waktu",
+     13.37,
+     13.58
+    ],
+    [
+     "makanan",
+     13.58,
+     14.24
+    ],
+    [
+     "masuk",
+     14.24,
+     14.44
+    ],
+    [
+     "kulkas,",
+     14.44,
+     14.85
+    ],
+    [
+     "suhu",
+     14.85,
+     15.23
+    ],
+    [
+     "dingin",
+     15.23,
+     15.49
+    ],
+    [
+     "memperlambat",
+     15.49,
+     16.07
+    ],
+    [
+     "pertumbuhan",
+     16.07,
+     16.65
+    ],
+    [
+     "banyak",
+     16.65,
+     16.96
+    ],
+    [
+     "mikroba.",
+     16.96,
+     17.44
+    ]
+   ]
+  },
+  {
+   "start": 17.71,
+   "end": 20.34,
+   "text": "Tapi memperlambat itu beda sama menghentikan.",
+   "words": [
+    [
+     "Tapi",
+     17.71,
+     17.91
+    ],
+    [
+     "memperlambat",
+     17.91,
+     18.82
+    ],
+    [
+     "itu",
+     18.82,
+     19.08
+    ],
+    [
+     "beda",
+     19.08,
+     19.3
+    ],
+    [
+     "sama",
+     19.3,
+     19.64
+    ],
+    [
+     "menghentikan.",
+     19.64,
+     20.34
+    ]
+   ]
+  },
+  {
+   "start": 20.55,
+   "end": 23.54,
+   "text": "Sebagian bakteri pembusuk masih bisa tumbuh di suhu kulkas.",
+   "words": [
+    [
+     "Sebagian",
+     20.55,
+     20.98
+    ],
+    [
+     "bakteri",
+     20.98,
+     21.31
+    ],
+    [
+     "pembusuk",
+     21.31,
+     21.77
+    ],
+    [
+     "masih",
+     21.77,
+     22.15
+    ],
+    [
+     "bisa",
+     22.15,
+     22.43
+    ],
+    [
+     "tumbuh",
+     22.43,
+     22.76
+    ],
+    [
+     "di",
+     22.76,
+     23.06
+    ],
+    [
+     "suhu",
+     23.06,
+     23.21
+    ],
+    [
+     "kulkas.",
+     23.21,
+     23.54
+    ]
+   ]
+  },
+  {
+   "start": 23.79,
+   "end": 25.78,
+   "text": "Pelan-pelan, mereka mengubah makanan.",
+   "words": [
+    [
+     "Pelan-pelan,",
+     23.79,
+     24.48
+    ],
+    [
+     "mereka",
+     24.48,
+     24.72
+    ],
+    [
+     "mengubah",
+     24.72,
+     25.44
+    ],
+    [
+     "makanan.",
+     25.44,
+     25.78
+    ]
+   ]
+  },
+  {
+   "start": 26.02,
+   "end": 26.92,
+   "text": "Baunya berubah.",
+   "words": [
+    [
+     "Baunya",
+     26.32,
+     26.39
+    ],
+    [
+     "berubah.",
+     26.39,
+     26.92
+    ]
+   ]
+  },
+  {
+   "start": 27.18,
+   "end": 28.24,
+   "text": "Rasanya berubah.",
+   "words": [
+    [
+     "Rasanya",
+     27.25,
+     27.71
+    ],
+    [
+     "berubah.",
+     27.71,
+     28.24
+    ]
+   ]
+  },
+  {
+   "start": 28.47,
+   "end": 30.19,
+   "text": "Teksturnya juga bisa ikut berubah.",
+   "words": [
+    [
+     "Teksturnya",
+     28.47,
+     29.13
+    ],
+    [
+     "juga",
+     29.13,
+     29.3
+    ],
+    [
+     "bisa",
+     29.3,
+     29.64
+    ],
+    [
+     "ikut",
+     29.64,
+     29.75
+    ],
+    [
+     "berubah.",
+     29.75,
+     30.19
+    ]
+   ]
+  },
+  {
+   "start": 30.44,
+   "end": 32.47,
+   "text": "Dan mikroba bukan satu-satunya pemain.",
+   "words": [
+    [
+     "Dan",
+     30.44,
+     30.73
+    ],
+    [
+     "mikroba",
+     30.73,
+     31.25
+    ],
+    [
+     "bukan",
+     31.25,
+     31.32
+    ],
+    [
+     "satu-satunya",
+     31.32,
+     32.05
+    ],
+    [
+     "pemain.",
+     32.05,
+     32.47
+    ]
+   ]
+  },
+  {
+   "start": 32.72,
+   "end": 35.17,
+   "text": "Enzim alami dalam makanan masih bisa bekerja,",
+   "words": [
+    [
+     "Enzim",
+     32.85,
+     33.05
+    ],
+    [
+     "alami",
+     33.05,
+     33.38
+    ],
+    [
+     "dalam",
+     33.38,
+     33.71
+    ],
+    [
+     "makanan",
+     33.71,
+     34.2
+    ],
+    [
+     "masih",
+     34.2,
+     34.46
+    ],
+    [
+     "bisa",
+     34.46,
+     34.72
+    ],
+    [
+     "bekerja,",
+     34.72,
+     35.17
+    ]
+   ]
+  },
+  {
+   "start": 35.35,
+   "end": 38.31,
+   "text": "sementara udara bisa memicu perubahan pada beberapa bahan.",
+   "words": [
+    [
+     "sementara",
+     35.35,
+     35.81
+    ],
+    [
+     "udara",
+     35.81,
+     36.16
+    ],
+    [
+     "bisa",
+     36.16,
+     36.35
+    ],
+    [
+     "memicu",
+     36.35,
+     36.67
+    ],
+    [
+     "perubahan",
+     36.67,
+     37.32
+    ],
+    [
+     "pada",
+     37.32,
+     37.55
+    ],
+    [
+     "beberapa",
+     37.55,
+     38.0
+    ],
+    [
+     "bahan.",
+     38.0,
+     38.31
+    ]
+   ]
+  },
+  {
+   "start": 38.55,
+   "end": 41.29,
+   "text": "Jadi meskipun dingin, prosesnya tetap jalan,",
+   "words": [
+    [
+     "Jadi",
+     38.55,
+     38.75
+    ],
+    [
+     "meskipun",
+     38.75,
+     39.44
+    ],
+    [
+     "dingin,",
+     39.44,
+     39.95
+    ],
+    [
+     "prosesnya",
+     39.95,
+     40.53
+    ],
+    [
+     "tetap",
+     40.53,
+     40.75
+    ],
+    [
+     "jalan,",
+     40.75,
+     41.29
+    ]
+   ]
+  },
+  {
+   "start": 41.53,
+   "end": 42.3,
+   "text": "cuma lebih lambat.",
+   "words": [
+    [
+     "cuma",
+     41.53,
+     41.75
+    ],
+    [
+     "lebih",
+     41.75,
+     41.98
+    ],
+    [
+     "lambat.",
+     41.98,
+     42.3
+    ]
+   ]
+  },
+  {
+   "start": 42.58,
+   "end": 44.6,
+   "text": "Anggap aja kulkas itu tombol slow motion,",
+   "words": [
+    [
+     "Anggap",
+     42.58,
+     43.07
+    ],
+    [
+     "aja",
+     43.07,
+     43.23
+    ],
+    [
+     "kulkas",
+     43.23,
+     43.61
+    ],
+    [
+     "itu",
+     43.61,
+     43.67
+    ],
+    [
+     "tombol",
+     43.67,
+     43.95
+    ],
+    [
+     "slow",
+     43.95,
+     44.26
+    ],
+    [
+     "motion,",
+     44.26,
+     44.6
+    ]
+   ]
+  },
+  {
+   "start": 44.81,
+   "end": 45.99,
+   "text": "bukan tombol pause.",
+   "words": [
+    [
+     "bukan",
+     44.81,
+     45.15
+    ],
+    [
+     "tombol",
+     45.15,
+     45.63
+    ],
+    [
+     "pause.",
+     45.63,
+     45.99
+    ]
+   ]
+  },
+  {
+   "start": 46.26,
+   "end": 50.99,
+   "text": "Masalahnya, kadang makanan udah punya modal buat cepat rusak sebelum pintu kulkas ditutup.",
+   "words": [
+    [
+     "Masalahnya,",
+     46.26,
+     46.83
+    ],
+    [
+     "kadang",
+     46.83,
+     47.11
+    ],
+    [
+     "makanan",
+     47.11,
+     47.58
+    ],
+    [
+     "udah",
+     47.58,
+     48.04
+    ],
+    [
+     "punya",
+     48.04,
+     48.4
+    ],
+    [
+     "modal",
+     48.4,
+     48.54
+    ],
+    [
+     "buat",
+     48.54,
+     48.84
+    ],
+    [
+     "cepat",
+     48.84,
+     49.24
+    ],
+    [
+     "rusak",
+     49.24,
+     49.59
+    ],
+    [
+     "sebelum",
+     49.59,
+     49.88
+    ],
+    [
+     "pintu",
+     49.88,
+     50.32
+    ],
+    [
+     "kulkas",
+     50.32,
+     50.6
+    ],
+    [
+     "ditutup.",
+     50.6,
+     50.99
+    ]
+   ]
+  },
+  {
+   "start": 51.26,
+   "end": 54.26,
+   "text": "Misalnya, sisa masakan dibiarkan terlalu lama di meja,",
+   "words": [
+    [
+     "Misalnya,",
+     51.26,
+     51.91
+    ],
+    [
+     "sisa",
+     51.91,
+     52.05
+    ],
+    [
+     "masakan",
+     52.05,
+     52.46
+    ],
+    [
+     "dibiarkan",
+     52.46,
+     52.95
+    ],
+    [
+     "terlalu",
+     52.95,
+     53.5
+    ],
+    [
+     "lama",
+     53.5,
+     53.79
+    ],
+    [
+     "di",
+     53.79,
+     53.95
+    ],
+    [
+     "meja,",
+     53.95,
+     54.26
+    ]
+   ]
+  },
+  {
+   "start": 54.51,
+   "end": 58.22,
+   "text": "atau ditaruh dalam satu wadah besar sehingga bagian tengahnya lama dingin.",
+   "words": [
+    [
+     "atau",
+     54.51,
+     54.68
+    ],
+    [
+     "ditaruh",
+     54.68,
+     55.16
+    ],
+    [
+     "dalam",
+     55.16,
+     55.59
+    ],
+    [
+     "satu",
+     55.59,
+     55.68
+    ],
+    [
+     "wadah",
+     55.68,
+     56.09
+    ],
+    [
+     "besar",
+     56.09,
+     56.38
+    ],
+    [
+     "sehingga",
+     56.38,
+     56.91
+    ],
+    [
+     "bagian",
+     56.91,
+     57.08
+    ],
+    [
+     "tengahnya",
+     57.08,
+     57.61
+    ],
+    [
+     "lama",
+     57.61,
+     57.87
+    ],
+    [
+     "dingin.",
+     57.87,
+     58.22
+    ]
+   ]
+  },
+  {
+   "start": 58.48,
+   "end": 61.86,
+   "text": "Begitu masuk kulkas, waktu yang terlewat tadi nggak bisa diputar balik.",
+   "words": [
+    [
+     "Begitu",
+     58.48,
+     58.96
+    ],
+    [
+     "masuk",
+     58.96,
+     59.16
+    ],
+    [
+     "kulkas,",
+     59.16,
+     59.55
+    ],
+    [
+     "waktu",
+     59.55,
+     59.82
+    ],
+    [
+     "yang",
+     59.82,
+     60.06
+    ],
+    [
+     "terlewat",
+     60.06,
+     60.42
+    ],
+    [
+     "tadi",
+     60.42,
+     60.59
+    ],
+    [
+     "nggak",
+     60.59,
+     60.96
+    ],
+    [
+     "bisa",
+     60.96,
+     61.42
+    ],
+    [
+     "diputar",
+     61.42,
+     61.57
+    ],
+    [
+     "balik.",
+     61.57,
+     61.86
+    ]
+   ]
+  },
+  {
+   "start": 62.19,
+   "end": 64.64,
+   "text": "Terus, ada satu hal yang sering bikin kita terkecoh.",
+   "words": [
+    [
+     "Terus,",
+     62.19,
+     62.43
+    ],
+    [
+     "ada",
+     62.43,
+     62.78
+    ],
+    [
+     "satu",
+     62.78,
+     62.92
+    ],
+    [
+     "hal",
+     62.92,
+     63.12
+    ],
+    [
+     "yang",
+     63.12,
+     63.32
+    ],
+    [
+     "sering",
+     63.32,
+     63.78
+    ],
+    [
+     "bikin",
+     63.78,
+     64.12
+    ],
+    [
+     "kita",
+     64.12,
+     64.23
+    ],
+    [
+     "terkecoh.",
+     64.23,
+     64.64
+    ]
+   ]
+  },
+  {
+   "start": 64.89,
+   "end": 67.5,
+   "text": "Basi dan aman itu bukan ukuran yang sama.",
+   "words": [
+    [
+     "Basi",
+     65.02,
+     65.16
+    ],
+    [
+     "dan",
+     65.16,
+     65.48
+    ],
+    [
+     "aman",
+     65.48,
+     65.93
+    ],
+    [
+     "itu",
+     65.93,
+     66.05
+    ],
+    [
+     "bukan",
+     66.05,
+     66.39
+    ],
+    [
+     "ukuran",
+     66.39,
+     66.71
+    ],
+    [
+     "yang",
+     66.71,
+     67.06
+    ],
+    [
+     "sama.",
+     67.06,
+     67.5
+    ]
+   ]
+  },
+  {
+   "start": 67.77,
+   "end": 71.57,
+   "text": "Bakteri yang bikin makanan bau bisa berbeda dari kuman yang bikin orang sakit.",
+   "words": [
+    [
+     "Bakteri",
+     67.77,
+     68.15
+    ],
+    [
+     "yang",
+     68.15,
+     68.43
+    ],
+    [
+     "bikin",
+     68.43,
+     68.66
+    ],
+    [
+     "makanan",
+     68.66,
+     69.07
+    ],
+    [
+     "bau",
+     69.07,
+     69.41
+    ],
+    [
+     "bisa",
+     69.41,
+     69.52
+    ],
+    [
+     "berbeda",
+     69.52,
+     70.02
+    ],
+    [
+     "dari",
+     70.02,
+     70.25
+    ],
+    [
+     "kuman",
+     70.25,
+     70.45
+    ],
+    [
+     "yang",
+     70.45,
+     70.84
+    ],
+    [
+     "bikin",
+     70.84,
+     70.91
+    ],
+    [
+     "orang",
+     70.91,
+     71.42
+    ],
+    [
+     "sakit.",
+     71.42,
+     71.57
+    ]
+   ]
+  },
+  {
+   "start": 71.83,
+   "end": 74.0,
+   "text": "Jadi, masih wangi berarti aman?",
+   "words": [
+    [
+     "Jadi,",
+     71.83,
+     72.34
+    ],
+    [
+     "masih",
+     72.34,
+     72.89
+    ],
+    [
+     "wangi",
+     72.89,
+     73.21
+    ],
+    [
+     "berarti",
+     73.21,
+     73.63
+    ],
+    [
+     "aman?",
+     73.63,
+     74.0
+    ]
+   ]
+  },
+  {
+   "start": 74.17,
+   "end": 74.89,
+   "text": "Belum tentu.",
+   "words": [
+    [
+     "Belum",
+     74.17,
+     74.65
+    ],
+    [
+     "tentu.",
+     74.65,
+     74.89
+    ]
+   ]
+  },
+  {
+   "start": 75.16,
+   "end": 78.29,
+   "text": "Biar lebih aman, simpan makanan yang mudah rusak secepatnya.",
+   "words": [
+    [
+     "Biar",
+     75.16,
+     75.43
+    ],
+    [
+     "lebih",
+     75.43,
+     75.75
+    ],
+    [
+     "aman,",
+     75.75,
+     76.26
+    ],
+    [
+     "simpan",
+     76.26,
+     76.39
+    ],
+    [
+     "makanan",
+     76.39,
+     76.66
+    ],
+    [
+     "yang",
+     76.66,
+     77.08
+    ],
+    [
+     "mudah",
+     77.08,
+     77.55
+    ],
+    [
+     "rusak",
+     77.55,
+     77.87
+    ],
+    [
+     "secepatnya.",
+     77.87,
+     78.29
+    ]
+   ]
+  },
+  {
+   "start": 78.58,
+   "end": 82.08,
+   "text": "Untuk sisa masakan, jangan biarkan di suhu ruang lebih dari 2 jam.",
+   "words": [
+    [
+     "Untuk",
+     78.58,
+     78.77
+    ],
+    [
+     "sisa",
+     78.77,
+     79.3
+    ],
+    [
+     "masakan,",
+     79.3,
+     79.71
+    ],
+    [
+     "jangan",
+     79.71,
+     79.77
+    ],
+    [
+     "biarkan",
+     79.77,
+     80.26
+    ],
+    [
+     "di",
+     80.26,
+     80.51
+    ],
+    [
+     "suhu",
+     80.51,
+     80.76
+    ],
+    [
+     "ruang",
+     80.76,
+     81.21
+    ],
+    [
+     "lebih",
+     81.21,
+     81.34
+    ],
+    [
+     "dari",
+     81.34,
+     81.65
+    ],
+    [
+     "2",
+     81.65,
+     81.86
+    ],
+    [
+     "jam.",
+     81.86,
+     82.08
+    ]
+   ]
+  },
+  {
+   "start": 82.33,
+   "end": 85.03,
+   "text": "Bagi ke wadah kecil atau dangkal supaya cepat dingin.",
+   "words": [
+    [
+     "Bagi",
+     82.33,
+     82.61
+    ],
+    [
+     "ke",
+     82.61,
+     82.75
+    ],
+    [
+     "wadah",
+     82.75,
+     83.07
+    ],
+    [
+     "kecil",
+     83.07,
+     83.4
+    ],
+    [
+     "atau",
+     83.4,
+     83.68
+    ],
+    [
+     "dangkal",
+     83.68,
+     84.16
+    ],
+    [
+     "supaya",
+     84.16,
+     84.39
+    ],
+    [
+     "cepat",
+     84.39,
+     84.54
+    ],
+    [
+     "dingin.",
+     84.54,
+     85.03
+    ]
+   ]
+  },
+  {
+   "start": 85.3,
+   "end": 88.52,
+   "text": "Jaga suhu kulkas di 4 derajat Celsius atau lebih rendah.",
+   "words": [
+    [
+     "Jaga",
+     85.3,
+     85.67
+    ],
+    [
+     "suhu",
+     85.67,
+     85.91
+    ],
+    [
+     "kulkas",
+     85.91,
+     86.09
+    ],
+    [
+     "di",
+     86.09,
+     86.53
+    ],
+    [
+     "4",
+     86.53,
+     86.71
+    ],
+    [
+     "derajat",
+     86.71,
+     87.05
+    ],
+    [
+     "Celsius",
+     87.05,
+     87.63
+    ],
+    [
+     "atau",
+     87.63,
+     87.81
+    ],
+    [
+     "lebih",
+     87.81,
+     88.15
+    ],
+    [
+     "rendah.",
+     88.15,
+     88.52
+    ]
+   ]
+  },
+  {
+   "start": 88.76,
+   "end": 93.01,
+   "text": "Sisa masakan yang disimpan dengan benar umumnya dihabiskan dalam 3–4 hari.",
+   "words": [
+    [
+     "Sisa",
+     88.76,
+     89.02
+    ],
+    [
+     "masakan",
+     89.02,
+     89.29
+    ],
+    [
+     "yang",
+     89.29,
+     89.8
+    ],
+    [
+     "disimpan",
+     89.8,
+     90.11
+    ],
+    [
+     "dengan",
+     90.11,
+     90.58
+    ],
+    [
+     "benar",
+     90.58,
+     90.76
+    ],
+    [
+     "umumnya",
+     90.76,
+     91.21
+    ],
+    [
+     "dihabiskan",
+     91.21,
+     91.83
+    ],
+    [
+     "dalam",
+     91.83,
+     91.99
+    ],
+    [
+     "3–4",
+     91.99,
+     92.68
+    ],
+    [
+     "hari.",
+     92.68,
+     93.01
+    ]
+   ]
+  },
+  {
+   "start": 93.28,
+   "end": 94.97,
+   "text": "Kalau mau lebih lama, bekukan.",
+   "words": [
+    [
+     "Kalau",
+     93.28,
+     93.68
+    ],
+    [
+     "mau",
+     93.68,
+     93.79
+    ],
+    [
+     "lebih",
+     93.79,
+     94.36
+    ],
+    [
+     "lama,",
+     94.36,
+     94.44
+    ],
+    [
+     "bekukan.",
+     94.44,
+     94.97
+    ]
+   ]
+  },
+  {
+   "start": 95.22,
+   "end": 101.0,
+   "text": "Jadi, di balik kotak makanan yang kelihatannya diam di kulkas, ada proses tersembunyi yang masih berjalan.",
+   "words": [
+    [
+     "Jadi,",
+     95.22,
+     95.47
+    ],
+    [
+     "di",
+     95.47,
+     95.82
+    ],
+    [
+     "balik",
+     95.82,
+     96.02
+    ],
+    [
+     "kotak",
+     96.02,
+     96.36
+    ],
+    [
+     "makanan",
+     96.36,
+     96.64
+    ],
+    [
+     "yang",
+     96.64,
+     97.01
+    ],
+    [
+     "kelihatannya",
+     97.01,
+     97.63
+    ],
+    [
+     "diam",
+     97.63,
+     98.04
+    ],
+    [
+     "di",
+     98.04,
+     98.24
+    ],
+    [
+     "kulkas,",
+     98.24,
+     98.66
+    ],
+    [
+     "ada",
+     98.66,
+     98.94
+    ],
+    [
+     "proses",
+     98.94,
+     99.33
+    ],
+    [
+     "tersembunyi",
+     99.33,
+     99.89
+    ],
+    [
+     "yang",
+     99.89,
+     100.17
+    ],
+    [
+     "masih",
+     100.17,
+     100.65
+    ],
+    [
+     "berjalan.",
+     100.65,
+     101.0
+    ]
+   ]
+  },
+  {
+   "start": 101.27,
+   "end": 103.08,
+   "text": "Kulkas memberi kita tambahan waktu.",
+   "words": [
+    [
+     "Kulkas",
+     101.27,
+     101.62
+    ],
+    [
+     "memberi",
+     101.62,
+     102.08
+    ],
+    [
+     "kita",
+     102.08,
+     102.22
+    ],
+    [
+     "tambahan",
+     102.22,
+     102.88
+    ],
+    [
+     "waktu.",
+     102.88,
+     103.08
+    ]
+   ]
+  },
+  {
+   "start": 103.36,
+   "end": 105.3,
+   "text": "Tapi waktunya tetap ada batas.",
+   "words": [
+    [
+     "Tapi",
+     103.36,
+     103.56
+    ],
+    [
+     "waktunya",
+     103.56,
+     104.35
+    ],
+    [
+     "tetap",
+     104.35,
+     104.54
+    ],
+    [
+     "ada",
+     104.54,
+     104.81
+    ],
+    [
+     "batas.",
+     104.81,
+     105.3
+    ]
+   ]
+  },
+  {
+   "start": 105.53,
+   "end": 105.84,
+   "text": "Ngaku,",
+   "words": [
+    [
+     "Ngaku,",
+     105.53,
+     105.84
+    ]
+   ]
+  },
+  {
+   "start": 106.08,
+   "end": 109.16,
+   "text": "lo pernah nemu makanan misterius yang kelupaan di belakang kulkas?",
+   "words": [
+    [
+     "lo",
+     106.08,
+     106.24
+    ],
+    [
+     "pernah",
+     106.24,
+     106.56
+    ],
+    [
+     "nemu",
+     106.56,
+     106.81
+    ],
+    [
+     "makanan",
+     106.81,
+     107.06
+    ],
+    [
+     "misterius",
+     107.06,
+     107.66
+    ],
+    [
+     "yang",
+     107.66,
+     107.82
+    ],
+    [
+     "kelupaan",
+     107.82,
+     108.27
+    ],
+    [
+     "di",
+     108.27,
+     108.48
+    ],
+    [
+     "belakang",
+     108.48,
+     108.82
+    ],
+    [
+     "kulkas?",
+     108.82,
+     109.16
+    ]
+   ]
+  }
+ ]
+}

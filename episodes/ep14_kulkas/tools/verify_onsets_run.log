@@ -1,0 +1,58 @@
+1:2 kulkas,: aligned 1.55 → verified 1.41 (Δ -0.14)
+2:1 kotak: aligned 2.42 → verified 2.37 (Δ -0.05)
+3:0 Tutupnya: aligned 5.22 → verified 5.24 (Δ +0.02)
+4:0 Lah,: not heard by 7.01 — kept 6.75
+5:0 kok: not heard by 7.82 — kept 7.32
+5:1 baunya: not heard by 7.89 — kept 7.39
+8:0 Coba: not heard by 12.27 — kept 11.77
+/project/sherpa-onnx/csrc/offline-whisper-greedy-search-decoder.cc:Decode:294 Warning: the decode stopped at the token limit (51 tokens for 1.73 s of audio, max_tokens_per_second=30) rather than at an end-of-text token. The text may be truncated. Set the per-stream option 'max_tokens_per_second' to a larger value to allow more tokens.
+9:5 dingin: aligned 14.92 → verified 15.23 (Δ +0.31)
+/project/sherpa-onnx/csrc/offline-whisper-greedy-search-decoder.cc:Decode:294 Warning: the decode stopped at the token limit (54 tokens for 1.82 s of audio, max_tokens_per_second=30) rather than at an end-of-text token. The text may be truncated. Set the per-stream option 'max_tokens_per_second' to a larger value to allow more tokens.
+9:6 memperlambat: aligned 15.41 → verified 15.49 (Δ +0.08)
+/project/sherpa-onnx/csrc/offline-whisper-greedy-search-decoder.cc:Decode:294 Warning: the decode stopped at the token limit (63 tokens for 2.11 s of audio, max_tokens_per_second=30) rather than at an end-of-text token. The text may be truncated. Set the per-stream option 'max_tokens_per_second' to a larger value to allow more tokens.
+10:5 menghentikan.: aligned 19.46 → verified 19.64 (Δ +0.18)
+11:1 bakteri: aligned 21.12 → verified 20.98 (Δ -0.14)
+11:5 tumbuh: aligned 22.42 → verified 22.43 (Δ +0.01)
+13:0 Baunya: aligned 26.02 → verified 26.32 (Δ +0.30)
+/project/sherpa-onnx/csrc/offline-whisper-greedy-search-decoder.cc:Decode:294 Warning: the decode stopped at the token limit (3 tokens for 0.13 s of audio, max_tokens_per_second=30) rather than at an end-of-text token. The text may be truncated. Set the per-stream option 'max_tokens_per_second' to a larger value to allow more tokens.
+14:0 Rasanya: aligned 27.18 → verified 27.25 (Δ +0.07)
+15:0 Teksturnya: not heard by 28.97 — kept 28.47
+9:9 mikroba.: aligned 16.92 → verified 16.96 (Δ +0.04)
+17:0 Enzim: aligned 32.72 → verified 32.85 (Δ +0.13)
+/project/sherpa-onnx/csrc/offline-whisper-greedy-search-decoder.cc:Decode:294 Warning: the decode stopped at the token limit (18 tokens for 0.61 s of audio, max_tokens_per_second=30) rather than at an end-of-text token. The text may be truncated. Set the per-stream option 'max_tokens_per_second' to a larger value to allow more tokens.
+18:1 udara: aligned 35.85 → verified 35.81 (Δ -0.04)
+20:2 lambat.: aligned 42.00 → verified 41.98 (Δ -0.02)
+21:5 slow: aligned 43.99 → verified 43.95 (Δ -0.04)
+22:2 pause.: aligned 45.70 → verified 45.63 (Δ -0.07)
+23:5 modal: aligned 48.22 → verified 48.40 (Δ +0.18)
+24:7 meja,: aligned 54.10 → verified 53.95 (Δ -0.15)
+25:4 wadah: aligned 55.72 → verified 55.68 (Δ -0.04)
+/project/sherpa-onnx/csrc/offline-whisper-greedy-search-decoder.cc:Decode:294 Warning: the decode stopped at the token limit (70 tokens for 2.36 s of audio, max_tokens_per_second=30) rather than at an end-of-text token. The text may be truncated. Set the per-stream option 'max_tokens_per_second' to a larger value to allow more tokens.
+25:8 tengahnya: aligned 57.09 → verified 57.08 (Δ -0.01)
+26:9 diputar: aligned 61.19 → verified 61.42 (Δ +0.23)
+/project/sherpa-onnx/csrc/offline-whisper-greedy-search-decoder.cc:Decode:294 Warning: the decode stopped at the token limit (3 tokens for 0.13 s of audio, max_tokens_per_second=30) rather than at an end-of-text token. The text may be truncated. Set the per-stream option 'max_tokens_per_second' to a larger value to allow more tokens.
+/project/sherpa-onnx/csrc/offline-whisper-greedy-search-decoder.cc:Decode:294 Warning: the decode stopped at the token limit (10 tokens for 0.35 s of audio, max_tokens_per_second=30) rather than at an end-of-text token. The text may be truncated. Set the per-stream option 'max_tokens_per_second' to a larger value to allow more tokens.
+/project/sherpa-onnx/csrc/offline-whisper-greedy-search-decoder.cc:Decode:294 Warning: the decode stopped at the token limit (9 tokens for 0.30 s of audio, max_tokens_per_second=30) rather than at an end-of-text token. The text may be truncated. Set the per-stream option 'max_tokens_per_second' to a larger value to allow more tokens.
+28:0 Basi: aligned 64.89 → verified 65.02 (Δ +0.13)
+/project/sherpa-onnx/csrc/offline-whisper-greedy-search-decoder.cc:Decode:294 Warning: the decode stopped at the token limit (10 tokens for 0.36 s of audio, max_tokens_per_second=30) rather than at an end-of-text token. The text may be truncated. Set the per-stream option 'max_tokens_per_second' to a larger value to allow more tokens.
+/project/sherpa-onnx/csrc/offline-whisper-greedy-search-decoder.cc:Decode:294 Warning: the decode stopped at the token limit (19 tokens for 0.66 s of audio, max_tokens_per_second=30) rather than at an end-of-text token. The text may be truncated. Set the per-stream option 'max_tokens_per_second' to a larger value to allow more tokens.
+28:2 aman: aligned 65.47 → verified 65.48 (Δ +0.01)
+29:8 kuman: aligned 70.22 → verified 70.25 (Δ +0.03)
+30:2 wangi: aligned 72.68 → verified 72.89 (Δ +0.21)
+31:0 Belum: not heard by 74.67 — kept 74.17
+32:3 simpan: aligned 76.10 → verified 76.26 (Δ +0.16)
+33:9 dari: aligned 81.38 → verified 81.34 (Δ -0.04)
+33:10 2: aligned 81.61 → verified 81.65 (Δ +0.04)
+/project/sherpa-onnx/csrc/offline-whisper-greedy-search-decoder.cc:Decode:294 Warning: the decode stopped at the token limit (30 tokens for 1.00 s of audio, max_tokens_per_second=30) rather than at an end-of-text token. The text may be truncated. Set the per-stream option 'max_tokens_per_second' to a larger value to allow more tokens.
+34:2 wadah: not heard by 83.25 — kept 82.75
+34:5 dangkal: aligned 83.77 → verified 83.68 (Δ -0.09)
+/project/sherpa-onnx/csrc/offline-whisper-greedy-search-decoder.cc:Decode:294 Warning: the decode stopped at the token limit (42 tokens for 1.40 s of audio, max_tokens_per_second=30) rather than at an end-of-text token. The text may be truncated. Set the per-stream option 'max_tokens_per_second' to a larger value to allow more tokens.
+35:4 4: aligned 86.27 → verified 86.53 (Δ +0.26)
+36:9 3–4: not heard by 92.49 — kept 91.99
+37:4 bekukan.: aligned 94.53 → verified 94.44 (Δ -0.09)
+38:12 tersembunyi: not heard by 99.83 — kept 99.33
+39:3 tambahan: aligned 102.21 → verified 102.22 (Δ +0.01)
+40:4 batas.: aligned 104.96 → verified 104.81 (Δ -0.15)
+41:0 Ngaku,: not heard by 105.89 — kept 105.53
+42:4 misterius: aligned 107.22 → verified 107.06 (Δ -0.16)
+42:8 belakang: aligned 108.50 → verified 108.48 (Δ -0.02)
