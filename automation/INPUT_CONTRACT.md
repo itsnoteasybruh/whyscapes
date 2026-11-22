@@ -73,6 +73,15 @@ platforms: instagram, facebook, youtube
 #tag1 #tag2
 ```
 
+Bentuk heading yang dipakai creator juga dibaca apa adanya, tanpa mengubah file:
+- `# POST — WS-EP15` → episode;
+- `## Judul` → judul posting;
+- `## Hashtag` atau `## Hashtags`;
+- `## Platform` → platform tujuan;
+- `## Jadwal` → satu baris `YYYY-MM-DD HH:MM`, WIB.
+
+Bila salah satu tidak ada, statusnya NEEDS_CREATOR_FIX.
+
 **VO_SCRIPT.md**
 ```
 ---

@@ -90,43 +90,50 @@ for (const name of pk) {
   const present = fs.readdirSync(dir);
   for (const f of RULES.files) if (!present.includes(f)) { const near = present.find(p => p.toLowerCase() === f.toLowerCase()); add('FIX', 'files', `${f} is missing${near ? ` (found "${near}": the file name must be exactly ${f})` : ''}`, f); }
   const extra = present.filter(p => !RULES.files.includes(p)); if (extra.length) add('INFO', 'files', `extra files kept as-is: ${extra.join(', ')}`);
-  if (issues.some(i => i.sev === 'FIX')) { results.push(r); continue; }
+  const has = f => present.includes(f);          // missing files are reported above; every other check still runs on the files that exist
   // 2. readable
   let txt = {};
-  for (const f of ['VO_SCRIPT.md', 'BRIEF.md', 'POST.md']) { const b = fs.readFileSync(F[f]); txt[f] = b.toString('utf8'); if (Buffer.compare(Buffer.from(txt[f], 'utf8'), b) !== 0) add('FIX', 'readable', `${f} is not valid UTF-8 text`, f); if (!txt[f].trim()) add('FIX', 'readable', `${f} is empty`, f); }
-  try { r.vo_seconds = +(+execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', F['VO.mp3']]).toString().trim()).toFixed(2); }
+  for (const f of ['VO_SCRIPT.md', 'BRIEF.md', 'POST.md'].filter(has)) { const b = fs.readFileSync(F[f]); txt[f] = b.toString('utf8'); if (Buffer.compare(Buffer.from(txt[f], 'utf8'), b) !== 0) add('FIX', 'readable', `${f} is not valid UTF-8 text`, f); if (!txt[f].trim()) add('FIX', 'readable', `${f} is empty`, f); }
+  if (has('VO.mp3')) try { r.vo_seconds = +(+execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', F['VO.mp3']]).toString().trim()).toFixed(2); }
   catch { add('FIX', 'readable', 'VO.mp3 cannot be decoded (ffprobe)', 'VO.mp3'); }
   if (r.vo_seconds != null && !(r.vo_seconds >= RULES.voSeconds[0] && r.vo_seconds <= RULES.voSeconds[1])) add('FIX', 'readable', `VO is ${r.vo_seconds}s, outside the series range ${RULES.voSeconds.join('–')}s`, 'VO.mp3');
-  r.sha256 = Object.fromEntries([['vo', 'VO.mp3'], ['vo_script', 'VO_SCRIPT.md'], ['brief', 'BRIEF.md'], ['thumbnail', 'THUMBNAIL.png'], ['post', 'POST.md']].map(([k, f]) => [k, sha(F[f])]));
+  r.sha256 = Object.fromEntries([['vo', 'VO.mp3'], ['vo_script', 'VO_SCRIPT.md'], ['brief', 'BRIEF.md'], ['thumbnail', 'THUMBNAIL.png'], ['post', 'POST.md']].map(([k, f]) => [k, has(f) ? sha(F[f]) : null]));
   // 3. POST.md (creator's editorial decision: validated, never edited)
-  const P = frontMatter(txt['POST.md']), S = frontMatter(txt['VO_SCRIPT.md']);
+  const P = frontMatter(txt['POST.md'] || ''), S = frontMatter(txt['VO_SCRIPT.md'] || '');
+  // creator formats accepted as written: front matter (title/episode/publish_at/platforms) OR headings "# POST — WS-EP14", "## Judul", "## Hashtag(s)",
+  // "## Platform", "## Jadwal" (one "YYYY-MM-DD HH:MM" line). Nothing in the file is rewritten; missing fields → NEEDS_CREATOR_FIX.
+  const h1 = (P.body.match(/^#\s+POST\s*[—–-]\s*(\S+)/mi) || [])[1];
+  if (!P.fm.episode && h1) P.fm.episode = h1;
+  if (!P.fm.title) P.fm.title = (section(P.body, 'Judul') || '').split('\n')[0].trim() || undefined;
+  if (!P.fm.platforms) P.fm.platforms = (section(P.body, 'Platform(?:s)?') || '').replace(/^[-*]\s*/gm, '').split('\n').join(',') || undefined;
+  if (!P.fm.publish_at) P.fm.publish_at = ((section(P.body, 'Jadwal(?: tayang)?') || '').match(/\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}/) || [])[0];
   r.title = P.fm.title || null; r.slug = (P.fm.slug || '').toLowerCase().replace(/[^a-z0-9_]/g, '') || null;
-  if (!r.title) add('FIX', 'post', 'no "title:" in the front matter', 'POST.md');
-  const caption = section(P.body, 'Caption'), tagsRaw = section(P.body, 'Hashtags');
-  if (!caption) add('FIX', 'post', 'no "## Caption" section (Claude does not write captions)', 'POST.md');
+  if (has('POST.md') && !r.title) add('FIX', 'post', 'no post title ("title:" or "## Judul")', 'POST.md');
+  const caption = section(P.body, 'Caption'), tagsRaw = section(P.body, 'Hashtags?');
+  if (has('POST.md') && !caption) add('FIX', 'post', 'no "## Caption" section (Claude does not write captions)', 'POST.md');
   const hashtags = (tagsRaw || '').match(/#[\p{L}\p{N}_]+/gu) || [];
-  if (!hashtags.length) add('FIX', 'post', 'no hashtags under "## Hashtags"', 'POST.md');
+  if (has('POST.md') && !hashtags.length) add('FIX', 'post', 'no hashtags under "## Hashtags"', 'POST.md');
   const dupTags = hashtags.filter((h, i) => hashtags.findIndex(x => x.toLowerCase() === h.toLowerCase()) !== i); if (dupTags.length) add('FIX', 'post', `repeated hashtags: ${dupTags.join(' ')}`, 'POST.md');
   const platforms = (P.fm.platforms || '').split(/[,\s]+/).map(s => s.toLowerCase()).filter(Boolean);
-  if (!platforms.length) add('FIX', 'post', 'no "platforms:"', 'POST.md');
+  if (has('POST.md') && !platforms.length) add('FIX', 'post', 'no target platforms ("platforms:" or "## Platform")', 'POST.md');
   for (const p of platforms) if (!RULES.platforms[p]) add('FIX', 'post', `unknown platform "${p}" (known: ${Object.keys(RULES.platforms).join(', ')})`, 'POST.md');
   if (P.fm.timezone && P.fm.timezone !== 'Asia/Jakarta') add('FIX', 'schedule', `timezone "${P.fm.timezone}": the contract is Asia/Jakarta`, 'POST.md');
   // 4. same episode: the folder name (epNN) must be declared in POST.md and VO_SCRIPT.md; BRIEF must name the episode or its title
-  const okEp = v => [name.toLowerCase(), `ws-ep${epNo}`].includes((v || '').toLowerCase());
-  if (!okEp(P.fm.episode)) add('FIX', 'identity', `"episode: ${P.fm.episode || ''}" ≠ folder "${name}" (file from another episode?)`, 'POST.md');
-  if (!okEp(S.fm.episode)) add('FIX', 'identity', `"episode: ${S.fm.episode || ''}" ≠ folder "${name}" (file from another episode?)`, 'VO_SCRIPT.md');
-  const B = txt['BRIEF.md'];
+  const okEp = v => [name.toLowerCase(), `ws-ep${epNo}`, `ep${epNo}`].includes((v || '').toLowerCase());
+  if (has('POST.md') && !okEp(P.fm.episode)) add('FIX', 'identity', `"episode: ${P.fm.episode || ''}" ≠ folder "${name}" (file from another episode?)`, 'POST.md');
+  if (has('VO_SCRIPT.md') && !okEp(S.fm.episode)) add('FIX', 'identity', `"episode: ${S.fm.episode || ''}" ≠ folder "${name}" (file from another episode?)`, 'VO_SCRIPT.md');
+  const B = txt['BRIEF.md'] || '';
   const briefTitle = ((B.match(/^\s*[-*]?\s*Judul (?:video|cover):\s*\**([^*\n]+?)\**\s*$/mi) || [])[1] || '').trim() || null;
   const briefEp = new RegExp(`\\b(ws-)?ep\\s?0*${+epNo}\\b`, 'i').test(B), briefMentionsTitle = r.title && normT(B).includes(normT(r.title));
-  if (!briefEp && !briefMentionsTitle && !(S.fm.title && normT(B).includes(normT(S.fm.title)))) add('FIX', 'identity', `names neither ${name} nor the POST/VO_SCRIPT title: is it this episode's brief? (add "episode: ${name}" or the title)`, 'BRIEF.md');
+  if (has('BRIEF.md') && !briefEp && !briefMentionsTitle && !(S.fm.title && normT(B).includes(normT(S.fm.title)))) add('FIX', 'identity', `names neither ${name} nor the POST/VO_SCRIPT title: is it this episode's brief? (add "episode: ${name}" or the title)`, 'BRIEF.md');
   // 5. titles: the POST title and the THUMBNAIL title must agree editorially. The VIDEO title is a production decision (BRIEF / series standard):
   //    it may differ from the post title and is only reported.
   r.video_title = briefTitle;
-  if (!briefTitle) add('INFO', 'title', 'BRIEF.md has no "Judul video:"/"Judul cover:" line: the producer takes the video title from the brief text / series standard');
+  if (has('BRIEF.md') && !briefTitle) add('INFO', 'title', 'BRIEF.md has no "Judul video:"/"Judul cover:" line: the producer takes the video title from the brief text / series standard');
   else if (r.title && normT(briefTitle) !== normT(r.title)) add('INFO', 'title', `video title (BRIEF) "${briefTitle}" differs from POST title "${r.title}": allowed, reported only`);
   if (S.fm.title && r.title && normT(S.fm.title) !== normT(r.title) && (!briefTitle || normT(S.fm.title) !== normT(briefTitle))) add('FIX', 'title', `title "${S.fm.title}" matches neither POST.md "${r.title}" nor the BRIEF video title: conflicting titles`, 'VO_SCRIPT.md');
   // THUMBNAIL.png = social-media post thumbnail (only its title is checked against POST.md; it is never compared with the video)
-  if (r.title) {
+  if (r.title && has('THUMBNAIL.png')) {
     const c = py('thumbnail_check.py', F['THUMBNAIL.png'], r.title);
     if (!c.ok) add(c.error && c.error.includes('tesseract') ? 'SYSTEM' : 'FIX', 'thumbnail', c.error, 'THUMBNAIL.png');
     else {
@@ -139,7 +146,7 @@ for (const name of pk) {
   r.thumbnail_in_video = /THUMBNAIL\.png/i.test(B);
   if (r.thumbnail_in_video) add('INFO', 'thumbnail', 'BRIEF.md mentions THUMBNAIL.png: the producer follows that exact sentence only, and never uses the thumbnail as the opening or closing', 'BRIEF.md');
   // 6. VO_SCRIPT ↔ VO (audio is the truth)
-  {
+  if (has('VO.mp3') && has('VO_SCRIPT.md')) {
     const v = py('vo_check.py', F['VO.mp3'], F['VO_SCRIPT.md']);
     if (!v.ok) add('SYSTEM', 'vo_script', `VO check could not run: ${v.error}`);
     else {
@@ -151,8 +158,8 @@ for (const name of pk) {
   }
   // 7. schedule: valid WIB time, lead time, collisions
   const at = parseWIB(P.fm.publish_at);
-  if (!at) add('FIX', 'schedule', `publish_at "${P.fm.publish_at || ''}" is not a valid "YYYY-MM-DD HH:MM" (Asia/Jakarta)`, 'POST.md');
-  else {
+  if (!at && has('POST.md')) add('FIX', 'schedule', P.fm.publish_at ? `publish_at "${P.fm.publish_at}" is not a valid "YYYY-MM-DD HH:MM" (Asia/Jakarta)` : 'no publish date/time ("publish_at:" or "## Jadwal" with YYYY-MM-DD HH:MM WIB)', 'POST.md');
+  else if (at) {
     r.publish_at = wibISO(at); r.target_date = wibDate(at); r.produce_date = addDays(r.target_date, -RULES.produceOffsetDays);
     const lead = (at - NOW) / 3600e3;
     if (lead <= 0) add('FIX', 'schedule', `publish_at ${r.publish_at} is in the past`, 'POST.md');
@@ -160,7 +167,7 @@ for (const name of pk) {
     for (const s of slots) { const gap = Math.abs(at - s.at) / 3600e3; if (wibDate(s.at) === r.target_date || gap < RULES.minGapHours) add('FIX', 'schedule', `collides with ${s.id} at ${wibISO(s.at)} (same day or < ${RULES.minGapHours} h apart)`, 'POST.md'); }
   }
   // 8. duplicates (queue, this batch, already produced episodes)
-  if (r.sha256) {
+  if (r.sha256.vo) {
     if (producedVO[r.sha256.vo]) add('FIX', 'duplicate', `identical to episodes/${producedVO[r.sha256.vo]}/audio/vo.mp3 (already produced)`, 'VO.mp3');
     if (producedIds.has(r.id)) add('FIX', 'duplicate', `folder ${name} = ${r.id}, which already exists as episodes/${producedIds.get(r.id)}`, 'folder name');
     for (const [k, v, f] of [['vo', r.sha256.vo, 'VO.mp3'], ['thumbnail', r.sha256.thumbnail, 'THUMBNAIL.png'], ['title', normT(r.title), 'POST.md']]) if (v && seen[k].has(v)) add('FIX', 'duplicate', `same ${k} as ${seen[k].get(v)}`, f);
@@ -183,8 +190,9 @@ for (const name of pk) {
   const claimSec = (B.match(/^##+[^\n]*klaim[^\n]*\n([\s\S]*?)(?=^##\s|$(?![\s\S]))/mi) || [])[1] || '';
   const unitRe = /(\d+(?:[.,]\d+)?(?:\s?[–-]\s?\d+)?)\s?(°\s?C|derajat|jam|hari|menit|persen|%)/gi, keyOf = (n, u) => n.replace(/\s/g, '').replace('-', '–') + ' ' + u.toLowerCase().replace(/\s/g, '').replace('derajat', '°c');
   const voNums = new Set([...S.body.matchAll(unitRe)].map(m => keyOf(m[1], m[2])));
-  const missing = [...new Set([...claimSec.matchAll(unitRe)].map(m => keyOf(m[1], m[2])))].filter(k => !voNums.has(k));
-  for (const k of missing) { const line = claimSec.split('\n').find(l => [...l.matchAll(unitRe)].some(m => keyOf(m[1], m[2]) === k)) || ''; r.editorial_flags.push({ level: 'HIGH', where: 'BRIEF vs VO', sentence: line.replace(/^\s*\d+\.\s*/, '').trim().slice(0, 300), why: `the brief's claim limits mention "${k}", the VO never says it: an omitted condition?` }); }
+  const capNums = new Set([...(caption || '').matchAll(unitRe)].map(m => keyOf(m[1], m[2])));
+  const missing = has('VO_SCRIPT.md') ? [...new Set([...claimSec.matchAll(unitRe)].map(m => keyOf(m[1], m[2])))].filter(k => !voNums.has(k)) : [];
+  for (const k of missing) { const line = claimSec.split('\n').find(l => [...l.matchAll(unitRe)].some(m => keyOf(m[1], m[2]) === k)) || ''; const inCap = capNums.has(k); r.editorial_flags.push({ level: inCap ? 'CHECK' : 'HIGH', where: 'BRIEF vs VO', sentence: line.replace(/^\s*\d+\.\s*/, '').trim().slice(0, 300), why: inCap ? `"${k}" is not in the VO but the creator's POST caption states it` : `the brief's claim limits mention "${k}", the VO never says it: an omitted condition?` }); }
   const hi = r.editorial_flags.filter(f => f.level === 'HIGH');
   if (hi.length) add('FIX', 'claims', `${hi.length} claim flag(s) for editorial correction (absolute wording, or a condition in BRIEF that the VO omits): ${hi.map(f => f.why).join(' · ')}. Creator decides: correct VO/caption, or confirm as intended`, 'VO.mp3 / VO_SCRIPT.md / POST.md');
   if (r.editorial_flags.length - hi.length) add('INFO', 'claims', `${r.editorial_flags.length - hi.length} sentence(s) with numbers/health terms to fact-check (listed)`);
