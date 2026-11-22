@@ -1,0 +1,1203 @@
+{
+ "duration": 116.3,
+ "fade": 1.2,
+ "fadeIn": 0.4,
+ "voOffset": 1,
+ "garden": [
+  [
+   0,
+   16.35
+  ]
+ ],
+ "learn": [
+  [
+   16.35,
+   39.33
+  ]
+ ],
+ "sky": [
+  [
+   39.33,
+   59.09
+  ]
+ ],
+ "flow": [
+  [
+   59.09,
+   73.94
+  ]
+ ],
+ "home": [
+  [
+   73.94,
+   99.37
+  ]
+ ],
+ "nest": [
+  [
+   99.37,
+   117.3
+  ]
+ ],
+ "lift": [
+  [
+   0,
+   1,
+   4
+  ],
+  [
+   15.85,
+   17.39,
+   2.5
+  ],
+  [
+   103.22,
+   105.02,
+   3
+  ],
+  [
+   114.35,
+   116.3,
+   4
+  ]
+ ],
+ "duckMusic": [
+  [
+   2.6,
+   3.18,
+   -3
+  ],
+  [
+   6.66,
+   7.24,
+   -3
+  ],
+  [
+   10.459999999999999,
+   11.04,
+   -3
+  ],
+  [
+   11.84,
+   12.42,
+   -3
+  ],
+  [
+   20.32,
+   20.9,
+   -3
+  ],
+  [
+   24.340000000000003,
+   24.92,
+   -3
+  ],
+  [
+   26.62,
+   27.2,
+   -3
+  ],
+  [
+   31.46,
+   32.04,
+   -3
+  ],
+  [
+   32.410000000000004,
+   32.99,
+   -3
+  ],
+  [
+   33.83,
+   34.41,
+   -3
+  ],
+  [
+   38.32,
+   38.9,
+   -3
+  ],
+  [
+   43.550000000000004,
+   44.13,
+   -3
+  ],
+  [
+   46.36,
+   46.94,
+   -3
+  ],
+  [
+   48.32,
+   48.9,
+   -3
+  ],
+  [
+   52.63,
+   53.21,
+   -3
+  ],
+  [
+   56.43,
+   57.01,
+   -3
+  ],
+  [
+   61.65,
+   62.23,
+   -3
+  ],
+  [
+   63.46,
+   64.03999999999999,
+   -3
+  ],
+  [
+   68.45,
+   69.03,
+   -3
+  ],
+  [
+   77.17,
+   77.75,
+   -3
+  ],
+  [
+   78.15,
+   78.73,
+   -3
+  ],
+  [
+   80.16,
+   80.74,
+   -3
+  ],
+  [
+   88.12,
+   88.7,
+   -3
+  ],
+  [
+   89.9,
+   90.48,
+   -3
+  ],
+  [
+   94.18,
+   94.76,
+   -3
+  ],
+  [
+   98.04,
+   98.62,
+   -3
+  ],
+  [
+   103.14,
+   103.72,
+   -3
+  ],
+  [
+   108.77,
+   109.35,
+   -3
+  ],
+  [
+   112.93,
+   113.51,
+   -3
+  ],
+  [
+   48.4,
+   55.79,
+   -2
+  ],
+  [
+   87.21,
+   95.26,
+   -2
+  ]
+ ],
+ "duckAmb": [],
+ "sheetHead": "# EP13 — cue sheet audio (timestamp = waktu VIDEO; VO Genesius 1,00x mulai di 1 s di balik cover)\n\nKolom: waktu · anchor VO | aksi di layar | kelas | sumber/file | level relatif (pre-mix) | tujuan | lisensi. Fase musik di `cues.json` (garden → learn → sky → flow → home → nest).\nDengung lebah dibuat sebagai gestur pendek yang berubah ukuran/jarak/stereo, bukan loop. Semua bunyi disintesis dengan kode; tidak ada rekaman pihak ketiga dan tidak ada suara orang.\n\n",
+ "sfx": [
+  {
+   "cls": "ambience",
+   "label": "kebun: angin di daun, burung jauh sesekali, tanpa suara orang (hook, mapsJoke, hook)",
+   "name": "amb_garden",
+   "t": 0,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "shot hook",
+   "args": {
+    "dur": 16.7
+   }
+  },
+  {
+   "cls": "id",
+   "label": "cover pembuka (logo)",
+   "name": "chime",
+   "t": 0.04,
+   "pan": 0,
+   "trim": 0,
+   "gain": 0.7,
+   "why": "",
+   "anchor": "frame 0"
+  },
+  {
+   "cls": "movement",
+   "label": "lebah keluar dari pintu sarang",
+   "name": "buzz",
+   "t": 2.13,
+   "pan": -0.4,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "dur": 0.9,
+    "size": 0.8,
+    "near": 0.4
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "lebah melintas dekat kamera",
+   "name": "passby",
+   "t": 2.68,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"keluar dari sarangnya\"",
+   "args": {
+    "dur": 1.1
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "menuju pohon",
+   "name": "buzz",
+   "t": 4.63,
+   "pan": 0.2,
+   "trim": 4,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "dur": 0.9,
+    "size": 1.1,
+    "near": 0.5
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "Mpi berjalan di jalan setapak",
+   "name": "grassstep",
+   "t": 5.66,
+   "pan": 0.1,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "n": 5,
+    "iv": 0.38
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "bunga ke bunga",
+   "name": "flowerbob",
+   "t": 6.65,
+   "pan": 0.4,
+   "trim": -2,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "hero",
+   "label": "mampir: bunga menunduk",
+   "name": "flowerbob",
+   "t": 6.74,
+   "pan": 0.3,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"mampir\""
+  },
+  {
+   "cls": "movement",
+   "label": "bunga ketiga",
+   "name": "flowerbob",
+   "t": 7.55,
+   "pan": 0.5,
+   "trim": -4,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "hero",
+   "label": "Mpi mengangkat HP (lebah tidak punya)",
+   "name": "phonepop",
+   "t": 10.54,
+   "pan": -0.2,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"buka Maps\""
+  },
+  {
+   "cls": "movement",
+   "label": "tanda silang di kartu lebah",
+   "name": "nope2",
+   "t": 11.04,
+   "pan": 0.3,
+   "trim": -2,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "hero",
+   "label": "tarik kamera: sarang kecil jauh",
+   "name": "pullback",
+   "t": 11.92,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"rumahnya di mana?\"",
+   "args": {
+    "dur": 1.2
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "tanda tanya di sarang",
+   "name": "qpop",
+   "t": 12.32,
+   "pan": -0.4,
+   "trim": -3,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "ambience",
+   "label": "dekat sarang: dengung koloni lembut (di bawah VO) (atHive)",
+   "name": "amb_hive",
+   "t": 16.05,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "shot atHive",
+   "args": {
+    "dur": 12.31
+   }
+  },
+  {
+   "cls": "id",
+   "label": "\"Coba kita ikuti jejaknya\": tapak Mpi + lebah kecil di jalur → masuk ke penerbangan orientasi",
+   "name": "motif_transisi",
+   "t": 16.06,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "motif signature tidak diubah",
+   "anchor": "\"Coba\""
+  },
+  {
+   "cls": "hero",
+   "label": "masuk kilas balik",
+   "name": "flashback",
+   "t": 20.4,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"sejak sebelum\"",
+   "args": {
+    "dur": 1.2
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "lebah muda melayang menghadap sarang",
+   "name": "loop",
+   "t": 22.75,
+   "pan": 0,
+   "trim": 5,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "dur": 1.8
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "penerbangan orientasi",
+   "name": "loop",
+   "t": 24.42,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"orientasi\"",
+   "args": {
+    "dur": 1.6,
+    "pitch": 1.05
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "pintu sarang disorot",
+   "name": "tagpop",
+   "t": 26.7,
+   "pan": -0.2,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"pintu masuknya\""
+  },
+  {
+   "cls": "ambience",
+   "label": "dunia penjelas: udara lembut (loops)",
+   "name": "amb_diagram",
+   "t": 27.71,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "shot loops",
+   "args": {
+    "dur": 3.93
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "lingkaran makin lebar (atas)",
+   "name": "loop",
+   "t": 28.11,
+   "pan": 0,
+   "trim": 5,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "dur": 2,
+    "pitch": 0.95
+   }
+  },
+  {
+   "cls": "ambience",
+   "label": "kebun: angin di daun, burung jauh sesekali, tanpa suara orang (landmarks, learn, lookUp)",
+   "name": "amb_garden",
+   "t": 30.99,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "shot landmarks",
+   "args": {
+    "dur": 14.6
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "pohon dikenali",
+   "name": "landmark",
+   "t": 31.54,
+   "pan": -0.3,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"Pohon di sini\"",
+   "args": {
+    "which": 0
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "tepi kebun dikenali",
+   "name": "landmark",
+   "t": 32.49,
+   "pan": 0.1,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"Tepi kebun\"",
+   "args": {
+    "which": 1
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "garis langit dikenali",
+   "name": "landmark",
+   "t": 33.91,
+   "pan": 0.4,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"garis langit\"",
+   "args": {
+    "which": 2
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "kartu ingatan 1",
+   "name": "snapshot",
+   "t": 37.42,
+   "pan": -0.3,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "movement",
+   "label": "kartu ingatan 2",
+   "name": "snapshot",
+   "t": 37.82,
+   "pan": -0.2,
+   "trim": -2,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "hero",
+   "label": "belajar",
+   "name": "snapshot",
+   "t": 38.4,
+   "pan": -0.1,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"belajar\""
+  },
+  {
+   "cls": "movement",
+   "label": "arah-arah kemungkinan",
+   "name": "candidates",
+   "t": 40.46,
+   "pan": 0,
+   "trim": -2,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "movement",
+   "label": "kamera menengadah",
+   "name": "pullback",
+   "t": 41.32,
+   "pan": 0,
+   "trim": -4,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "dur": 1.4
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "matahari",
+   "name": "suntone",
+   "t": 43.63,
+   "pan": 0.2,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"Matahari\""
+  },
+  {
+   "cls": "ambience",
+   "label": "dunia penjelas: udara lembut (sunCompass)",
+   "name": "amb_diagram",
+   "t": 44.94,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "shot sunCompass",
+   "args": {
+    "dur": 11.03
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "sudut terhadap matahari (kompas)",
+   "name": "arc",
+   "t": 46.44,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"kompas\""
+  },
+  {
+   "cls": "hero",
+   "label": "matahari bergeser",
+   "name": "sunmove",
+   "t": 48.4,
+   "pan": 0.3,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"bergeser\"",
+   "args": {
+    "dur": 2
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "jam biologis (dial tanpa angka)",
+   "name": "dial",
+   "t": 52.71,
+   "pan": 0.4,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"jam biologis\"",
+   "args": {
+    "n": 6
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "kompas & jam terhubung",
+   "name": "suntone",
+   "t": 54.19,
+   "pan": 0.3,
+   "trim": -3,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "dur": 1
+   }
+  },
+  {
+   "cls": "ambience",
+   "label": "kebun: angin di daun, burung jauh sesekali, tanpa suara orang (keys, flight)",
+   "name": "amb_garden",
+   "t": 55.32,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "shot keys",
+   "args": {
+    "dur": 7.56
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "Mpi menepuk saku",
+   "name": "pocketpat",
+   "t": 56.51,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"lupa naruh kunci\"",
+   "args": {
+    "n": 5
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "lebah lewat santai",
+   "name": "passby",
+   "t": 57.63,
+   "pan": 0,
+   "trim": -3,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "dur": 1
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "pemandangan meluncur (dekat cepat)",
+   "name": "flowwhoosh",
+   "t": 61.73,
+   "pan": -0.2,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"bergerak melewati\"",
+   "args": {
+    "dur": 1.6,
+    "near": 1
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "lapisan jauh pelan",
+   "name": "flowwhoosh",
+   "t": 62.03,
+   "pan": 0.3,
+   "trim": -6,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "dur": 1.8,
+    "near": 0.3
+   }
+  },
+  {
+   "cls": "ambience",
+   "label": "dunia penjelas: udara lembut (beeEye)",
+   "name": "amb_diagram",
+   "t": 62.23,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "shot beeEye",
+   "args": {
+    "dur": 1.26
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "pandangan mata lebah",
+   "name": "buzz",
+   "t": 62.58,
+   "pan": 0,
+   "trim": -4,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "dur": 1,
+    "size": 1,
+    "near": 0.8
+   }
+  },
+  {
+   "cls": "ambience",
+   "label": "kebun: angin di daun, burung jauh sesekali, tanpa suara orang (estimate)",
+   "name": "amb_garden",
+   "t": 62.84,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "shot estimate",
+   "args": {
+    "dur": 7.93
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "perkiraan jarak terisi",
+   "name": "jar",
+   "t": 63.54,
+   "pan": 0.3,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"seberapa jauh\"",
+   "args": {
+    "n": 9,
+    "iv": 0.2
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "bukan angka kilometer",
+   "name": "kmstrike",
+   "t": 68.53,
+   "pan": -0.1,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"kilometer\""
+  },
+  {
+   "cls": "ambience",
+   "label": "dunia penjelas: udara lembut (differ, homing)",
+   "name": "amb_diagram",
+   "t": 70.12,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "shot differ",
+   "args": {
+    "dur": 17.34
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "padang bunga: banyak gerak",
+   "name": "jar",
+   "t": 70.82,
+   "pan": -0.3,
+   "trim": -3,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "n": 6,
+    "iv": 0.12
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "rumput & pagar: sedikit",
+   "name": "jar",
+   "t": 71.47,
+   "pan": 0.3,
+   "trim": -5,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "n": 3,
+    "iv": 0.3
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "beberapa kemungkinan arah",
+   "name": "candidates",
+   "t": 74.24,
+   "pan": 0.2,
+   "trim": -2,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "hero",
+   "label": "arah dari langit",
+   "name": "clue",
+   "t": 77.25,
+   "pan": -0.3,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"Arah dari langit\"",
+   "args": {
+    "which": 0
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "perkiraan perjalanan",
+   "name": "clue",
+   "t": 78.23,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"Perkiraan perjalanan\"",
+   "args": {
+    "which": 1
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "tempat yang dikenal",
+   "name": "clue",
+   "t": 80.24,
+   "pan": 0.3,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"Lalu pohon\"",
+   "args": {
+    "which": 2
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "tepi kebun cocok",
+   "name": "landmark",
+   "t": 81.01,
+   "pan": 0.2,
+   "trim": -2,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "which": 1
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "satu petunjuk meredup",
+   "name": "dimclue",
+   "t": 84.4,
+   "pan": -0.3,
+   "trim": -2,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "movement",
+   "label": "yang lain ikut berperan",
+   "name": "clue",
+   "t": 85.74,
+   "pan": 0.3,
+   "trim": -3,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "which": 2
+   }
+  },
+  {
+   "cls": "ambience",
+   "label": "meja penelitian: ruang tenang (experiment)",
+   "name": "amb_lab",
+   "t": 86.81,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "shot experiment",
+   "args": {
+    "dur": 9.96
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "kotak pembawa ditutup",
+   "name": "latch",
+   "t": 88.2,
+   "pan": 0.2,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"memindahkan\""
+  },
+  {
+   "cls": "movement",
+   "label": "dilepas di lokasi lain",
+   "name": "release",
+   "t": 89.67,
+   "pan": 0.3,
+   "trim": -2,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "hero",
+   "label": "penerbangan dilacak",
+   "name": "track",
+   "t": 89.98,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"melacak\"",
+   "args": {
+    "dur": 2.4
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "ingatan bentang alam",
+   "name": "memory",
+   "t": 94.26,
+   "pan": -0.3,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"ingatannya\""
+  },
+  {
+   "cls": "ambience",
+   "label": "kebun: angin di daun, burung jauh sesekali, tanpa suara orang (magicLine)",
+   "name": "amb_garden",
+   "t": 96.12,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "shot magicLine",
+   "args": {
+    "dur": 3.5
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "garis ajaib muncul",
+   "name": "magicline",
+   "t": 98.04,
+   "pan": 0,
+   "trim": -3,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "hero",
+   "label": "garis ajaib ditolak",
+   "name": "nope2",
+   "t": 98.12,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"ajaib\""
+  },
+  {
+   "cls": "ambience",
+   "label": "dekat sarang: dengung koloni lembut (di bawah VO) (payoff)",
+   "name": "amb_hive",
+   "t": 98.97,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "shot payoff",
+   "args": {
+    "dur": 10.96
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "lebah melewati pohon",
+   "name": "buzz",
+   "t": 101.95,
+   "pan": -0.2,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "dur": 1.2,
+    "size": 1,
+    "near": 0.6
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "proses tersembunyi",
+   "name": "reveal",
+   "t": 103.22,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"tersembunyi\"",
+   "args": {
+    "dur": 2
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "membaca langit",
+   "name": "suntone",
+   "t": 104.34,
+   "pan": 0.3,
+   "trim": -3,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "dur": 1
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "pemandangan bergerak",
+   "name": "flowwhoosh",
+   "t": 105.57,
+   "pan": 0,
+   "trim": -4,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "dur": 1.2,
+    "near": 0.8
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "mengenali tempat → mendarat di pintu",
+   "name": "land",
+   "t": 108.85,
+   "pan": -0.3,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"dilewatinya\""
+  },
+  {
+   "cls": "ambience",
+   "label": "kebun asing: angin berbeda warna, jangkrik jauh (cta)",
+   "name": "amb_strange",
+   "t": 109.28,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "shot cta",
+   "args": {
+    "dur": 7.02
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "HP tanpa petunjuk (memutar)",
+   "name": "spinner",
+   "t": 111.86,
+   "pan": 0.4,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "dur": 1.6
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "lebah melesat pulang",
+   "name": "passby",
+   "t": 113.01,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"secepat lebah\"",
+   "args": {
+    "dur": 1.2
+   }
+  },
+  {
+   "cls": "id",
+   "label": "cover penutup (logo)",
+   "name": "chime",
+   "t": 114.87,
+   "pan": 0,
+   "trim": 0,
+   "gain": 0.65,
+   "why": "",
+   "anchor": "END − 1,43"
+  }
+ ]
+}

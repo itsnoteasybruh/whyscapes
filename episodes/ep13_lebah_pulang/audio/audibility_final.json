@@ -1,0 +1,368 @@
+[
+ [
+  0.04,
+  "id",
+  "cover pembuka (logo)",
+  15.4
+ ],
+ [
+  2.13,
+  "movement",
+  "lebah keluar dari pintu sarang",
+  -12.0
+ ],
+ [
+  2.68,
+  "hero",
+  "lebah melintas dekat kamera",
+  -7.2
+ ],
+ [
+  4.63,
+  "movement",
+  "menuju pohon",
+  -14.9
+ ],
+ [
+  5.66,
+  "movement",
+  "Mpi berjalan di jalan setapak",
+  -8.5
+ ],
+ [
+  6.65,
+  "movement",
+  "bunga ke bunga",
+  -9.3
+ ],
+ [
+  6.74,
+  "hero",
+  "mampir: bunga menunduk",
+  -9.1
+ ],
+ [
+  7.55,
+  "movement",
+  "bunga ketiga",
+  1.1
+ ],
+ [
+  10.54,
+  "hero",
+  "Mpi mengangkat HP (lebah tidak punya)",
+  -0.7
+ ],
+ [
+  11.04,
+  "movement",
+  "tanda silang di kartu lebah",
+  5.1
+ ],
+ [
+  11.92,
+  "hero",
+  "tarik kamera: sarang kecil jauh",
+  -0.5
+ ],
+ [
+  12.32,
+  "movement",
+  "tanda tanya di sarang",
+  -0.8
+ ],
+ [
+  16.06,
+  "id",
+  "\"Coba kita ikuti jejaknya\": tapak Mpi + lebah kecil di jalur → masuk ke penerbangan orientasi",
+  -15.2
+ ],
+ [
+  20.4,
+  "hero",
+  "masuk kilas balik",
+  -8.7
+ ],
+ [
+  22.75,
+  "movement",
+  "lebah muda melayang menghadap sarang",
+  -15.9
+ ],
+ [
+  24.42,
+  "hero",
+  "penerbangan orientasi",
+  -11.0
+ ],
+ [
+  26.7,
+  "hero",
+  "pintu sarang disorot",
+  0.8
+ ],
+ [
+  28.11,
+  "movement",
+  "lingkaran makin lebar (atas)",
+  -15.1
+ ],
+ [
+  31.54,
+  "hero",
+  "pohon dikenali",
+  0.2
+ ],
+ [
+  32.49,
+  "hero",
+  "tepi kebun dikenali",
+  1.7
+ ],
+ [
+  33.91,
+  "hero",
+  "garis langit dikenali",
+  -4.3
+ ],
+ [
+  37.42,
+  "movement",
+  "kartu ingatan 1",
+  -10.0
+ ],
+ [
+  37.82,
+  "movement",
+  "kartu ingatan 2",
+  -5.6
+ ],
+ [
+  38.4,
+  "hero",
+  "belajar",
+  -7.2
+ ],
+ [
+  40.46,
+  "movement",
+  "arah-arah kemungkinan",
+  -3.5
+ ],
+ [
+  41.32,
+  "movement",
+  "kamera menengadah",
+  -9.0
+ ],
+ [
+  43.63,
+  "hero",
+  "matahari",
+  -4.1
+ ],
+ [
+  46.44,
+  "hero",
+  "sudut terhadap matahari (kompas)",
+  -2.8
+ ],
+ [
+  48.4,
+  "hero",
+  "matahari bergeser",
+  -2.3
+ ],
+ [
+  52.71,
+  "hero",
+  "jam biologis (dial tanpa angka)",
+  -7.9
+ ],
+ [
+  54.19,
+  "movement",
+  "kompas & jam terhubung",
+  -11.5
+ ],
+ [
+  56.51,
+  "hero",
+  "Mpi menepuk saku",
+  -10.8
+ ],
+ [
+  57.63,
+  "movement",
+  "lebah lewat santai",
+  -10.8
+ ],
+ [
+  61.73,
+  "hero",
+  "pemandangan meluncur (dekat cepat)",
+  -6.5
+ ],
+ [
+  62.03,
+  "movement",
+  "lapisan jauh pelan",
+  -4.5
+ ],
+ [
+  62.58,
+  "movement",
+  "pandangan mata lebah",
+  -3.2
+ ],
+ [
+  63.54,
+  "hero",
+  "perkiraan jarak terisi",
+  -0.4
+ ],
+ [
+  68.53,
+  "hero",
+  "bukan angka kilometer",
+  -12.7
+ ],
+ [
+  70.82,
+  "movement",
+  "padang bunga: banyak gerak",
+  -9.8
+ ],
+ [
+  71.47,
+  "movement",
+  "rumput & pagar: sedikit",
+  -7.9
+ ],
+ [
+  74.24,
+  "movement",
+  "beberapa kemungkinan arah",
+  -6.0
+ ],
+ [
+  77.25,
+  "hero",
+  "arah dari langit",
+  0.9
+ ],
+ [
+  78.23,
+  "hero",
+  "perkiraan perjalanan",
+  -1.0
+ ],
+ [
+  80.24,
+  "hero",
+  "tempat yang dikenal",
+  -0.4
+ ],
+ [
+  81.01,
+  "movement",
+  "tepi kebun cocok",
+  -7.4
+ ],
+ [
+  84.4,
+  "movement",
+  "satu petunjuk meredup",
+  -5.5
+ ],
+ [
+  85.74,
+  "movement",
+  "yang lain ikut berperan",
+  -4.3
+ ],
+ [
+  88.2,
+  "hero",
+  "kotak pembawa ditutup",
+  -6.7
+ ],
+ [
+  89.67,
+  "movement",
+  "dilepas di lokasi lain",
+  -4.1
+ ],
+ [
+  89.98,
+  "hero",
+  "penerbangan dilacak",
+  -1.0
+ ],
+ [
+  94.26,
+  "hero",
+  "ingatan bentang alam",
+  -0.3
+ ],
+ [
+  98.04,
+  "movement",
+  "garis ajaib muncul",
+  0.5
+ ],
+ [
+  98.12,
+  "hero",
+  "garis ajaib ditolak",
+  0.7
+ ],
+ [
+  101.95,
+  "movement",
+  "lebah melewati pohon",
+  -14.3
+ ],
+ [
+  103.22,
+  "hero",
+  "proses tersembunyi",
+  2.9
+ ],
+ [
+  104.34,
+  "movement",
+  "membaca langit",
+  -7.3
+ ],
+ [
+  105.57,
+  "movement",
+  "pemandangan bergerak",
+  -10.8
+ ],
+ [
+  108.85,
+  "hero",
+  "mengenali tempat → mendarat di pintu",
+  -1.9
+ ],
+ [
+  111.86,
+  "movement",
+  "HP tanpa petunjuk (memutar)",
+  -3.8
+ ],
+ [
+  113.01,
+  "hero",
+  "lebah melesat pulang",
+  -8.4
+ ],
+ [
+  114.87,
+  "id",
+  "cover penutup (logo)",
+  3.6
+ ]
+]

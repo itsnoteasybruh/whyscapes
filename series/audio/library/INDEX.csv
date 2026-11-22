@@ -1,0 +1,32 @@
+kategori,file,durasi_s,peak_dBFS,sumber_kode,fungsi_mood,contoh_pakai,dipakai_di_EP01_x
+identitas,identitas/chime_logo.wav,1.45,-7.2,synth.sfx_chime(),logo opening & closing (wajib di seri),opening t=0.04 s; closing END-1.43 s,2
+identitas,identitas/motif_transisi_jejak.wav,1.75,-3.4,synth.motif_transisi(),SIGNATURE: 3 tapak + naik + 2 nada portal (wajib saat transisi jejak),t0 transisi + 0.21 s,1
+identitas,identitas/motif_jejak_legacy.wav,2.45,-4.8,synth.motif_jejak(),"motif lama v3 (arsip, jangan dipakai untuk transisi baru)",-,0
+penasaran,penasaran/pop_rendah.wav,0.17,-2.9,synth.sfx_pop(pitch=0.8),"label/ikon muncul, nada rendah",label ke-2/ke-3 berurutan,27
+penasaran,penasaran/pop.wav,0.17,-4.1,synth.sfx_pop(pitch=1.0),label/ikon muncul,"kata kunci, ikon",27
+penasaran,penasaran/pop_tinggi.wav,0.17,-5.5,synth.sfx_pop(pitch=1.25),"label/ikon muncul, nada tinggi","tanda tanya, lampu ide",27
+penasaran,penasaran/ticks_pendek.wav,0.83,-10.2,"synth.sfx_ticks(n=4, rate=0.17)",jam berdetak / menunggu sebentar,saat waktu disebut,3
+penasaran,penasaran/ticks.wav,1.17,-10.2,"synth.sfx_ticks(n=6, rate=0.17)",jam berdetak,menit berlalu,3
+penasaran,penasaran/monitor.wav,0.55,-15.9,synth.sfx_monitor(),dua bip monitor / alat ukur,"data, alat, layar",1
+penasaran,penasaran/knock.wav,0.30,-5.5,synth.sfx_knock(),benda mendarat / ketukan,"papan, kartu jatuh di meja",2
+tegang,tegang/wait_tapestop.wav,0.65,-0.2,synth.sfx_wait(),"rem mendadak: ""Tunggu…"" (musik ikut berhenti)",pembalik cerita,1
+tegang,tegang/pulse.wav,0.25,-6.1,synth.sfx_pulse(),satu denyut sinyal,"sinyal saraf, detak",10
+tegang,tegang/squeeze.wav,0.65,-8.0,synth.sfx_squeeze(),sesuatu menyempit / menekan,"pembuluh, pipa menyempit",2
+tegang,tegang/slowdown.wav,0.95,-12.2,synth.sfx_slowdown(),aliran melambat / tenaga turun,aliran berkurang,1
+perpindahan,perpindahan/whoosh_naik.wav,0.60,-15.6,"synth.sfx_whoosh(dur=0.55, up=True)","gerak kamera / tokoh, naik",pindah panel,10
+perpindahan,perpindahan/whoosh_turun.wav,0.60,-16.2,"synth.sfx_whoosh(dur=0.55, up=False)","gerak kamera / tokoh, turun",turun ke bawah,10
+perpindahan,perpindahan/whoosh_pendek.wav,0.40,-17.1,"synth.sfx_whoosh(dur=0.35, up=True)",gerak cepat,swipe kecil,10
+perpindahan,perpindahan/dive.wav,1.15,-8.1,synth.sfx_dive(),masuk ke dalam (zoom ke penampang),masuk kulit/pipa/tanah,1
+perpindahan,perpindahan/paper.wav,0.27,-10.4,synth.sfx_paper(),kartu / panel masuk,panel info,2
+perpindahan,perpindahan/scan.wav,1.65,-10.4,synth.sfx_scan(),garis pemindai (x-ray),melihat tembus,1
+penemuan,penemuan/discover.wav,1.15,-3.2,synth.sfx_discover(),jawaban mulai terlihat: 3 nada naik,"momen ""oh, ternyata""",4
+penemuan,penemuan/signal.wav,0.65,-9.4,synth.sfx_signal(),tiga blip terang: pesan terkirim,sinyal sampai,1
+penemuan,penemuan/stamp.wav,0.40,-2.5,synth.sfx_stamp(),cap / kesimpulan dikunci,penegasan,1
+benda_air,benda_air/plunge.wav,0.65,-2.1,synth.sfx_plunge(),benda/jari masuk air,celup,1
+benda_air,benda_air/bubbles.wav,0.95,-6.8,synth.sfx_bubbles(),gelembung,di dalam air,3
+benda_air,benda_air/bubbles_pendek.wav,0.55,-4.4,"synth.sfx_bubbles(count=4, length=0.5)",gelembung singkat,aksen kecil,3
+benda_air,benda_air/drip.wav,0.30,-8.0,synth.sfx_drip(),tetes,air menetes,1
+benda_air,benda_air/ripple.wav,0.55,-13.2,synth.sfx_ripple(),riak naik,"riak air, gelombang",2
+benda_air,benda_air/crinkle.wav,0.67,-5.8,synth.sfx_crinkle(),kerutan / kertas kusut,"kulit mengerut, plastik",5
+sedih,(kosong),,,,belum ada SFX sedih di EP01,,0
+menantang,(kosong),,,,belum ada SFX menantang/tantangan di EP01,,0

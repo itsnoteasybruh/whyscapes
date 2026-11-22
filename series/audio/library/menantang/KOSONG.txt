@@ -1,0 +1,2 @@
+Kategori "menantang": belum ada SFX menantang/tantangan di EP01.
+Buat fungsi baru di synth.py saat episode membutuhkannya, lalu daftarkan di make_library.py.

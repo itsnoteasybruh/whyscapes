@@ -1,0 +1,15 @@
+# Proposed .gitignore for the Whyscape cloud repo (copy to .gitignore when the repo is created).
+# Lean repo ~130 MB: series/ + episode sources + docs. Big/regenerable files stay out.
+node_modules/
+*.wav
+!series/audio/**/*.wav
+episodes/*/out/
+episodes/*/qc/
+episodes/*/final/*.mp4
+arsip/
+_checkpoint/
+_bukan_whyscape/
+_migrasi/
+kaizen/
+outputs/*/source/*.wav
+# finished MP4s live in outputs/<id>/ (< 100 MB each, GitHub file limit) or as GitHub Release assets

@@ -1,0 +1,447 @@
+{
+ "summary": {
+  "master_gain_dB": 4.1,
+  "speech_vs_music_dB(headphone)": 13.5,
+  "speech_vs_music_dB(phone)": 12.4,
+  "speech_vs_sfx_dB(headphone)": 15.8,
+  "speech_vs_sfx_dB(phone)": 14.9,
+  "key_frames_limited_%": 12.0,
+  "detail_frames_limited_%": 11.0,
+  "cues_measured": 61,
+  "cues_lost_on_phone(<-18dB)": 11,
+  "median_cue_vs_bed_phone_dB": {
+   "id": -0.2,
+   "hero": -8.6,
+   "movement": -14.1
+  }
+ },
+ "cues": [
+  {
+   "t": 0.04,
+   "label": "cover pembuka (logo)",
+   "cls": "id",
+   "cue_vs_bed_phone_dB": 11.7,
+   "over_speech": false
+  },
+  {
+   "t": 2.13,
+   "label": "lebah keluar dari pintu sarang",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -17.0,
+   "over_speech": true
+  },
+  {
+   "t": 2.68,
+   "label": "lebah melintas dekat kamera",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -12.8,
+   "over_speech": true
+  },
+  {
+   "t": 4.63,
+   "label": "menuju pohon",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -20.0,
+   "over_speech": true
+  },
+  {
+   "t": 5.66,
+   "label": "Mpi berjalan di jalan setapak",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -16.5,
+   "over_speech": true
+  },
+  {
+   "t": 6.65,
+   "label": "bunga ke bunga",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -18.9,
+   "over_speech": true
+  },
+  {
+   "t": 6.74,
+   "label": "mampir: bunga menunduk",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -18.6,
+   "over_speech": true
+  },
+  {
+   "t": 7.55,
+   "label": "bunga ketiga",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -8.2,
+   "over_speech": true
+  },
+  {
+   "t": 10.54,
+   "label": "Mpi mengangkat HP (lebah tidak punya)",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -8.6,
+   "over_speech": true
+  },
+  {
+   "t": 11.04,
+   "label": "tanda silang di kartu lebah",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -1.1,
+   "over_speech": true
+  },
+  {
+   "t": 11.92,
+   "label": "tarik kamera: sarang kecil jauh",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -5.7,
+   "over_speech": true
+  },
+  {
+   "t": 12.32,
+   "label": "tanda tanya di sarang",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -9.1,
+   "over_speech": true
+  },
+  {
+   "t": 16.06,
+   "label": "\"Coba kita ikuti jejaknya\": tapak Mpi + lebah kecil di jalur → masuk ke penerbangan orientasi",
+   "cls": "id",
+   "cue_vs_bed_phone_dB": -24.5,
+   "over_speech": true
+  },
+  {
+   "t": 20.4,
+   "label": "masuk kilas balik",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -17.9,
+   "over_speech": true
+  },
+  {
+   "t": 22.75,
+   "label": "lebah muda melayang menghadap sarang",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -22.0,
+   "over_speech": true
+  },
+  {
+   "t": 24.42,
+   "label": "penerbangan orientasi",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -16.3,
+   "over_speech": true
+  },
+  {
+   "t": 26.7,
+   "label": "pintu sarang disorot",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -6.3,
+   "over_speech": true
+  },
+  {
+   "t": 28.11,
+   "label": "lingkaran makin lebar (atas)",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -19.2,
+   "over_speech": true
+  },
+  {
+   "t": 31.54,
+   "label": "pohon dikenali",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -3.2,
+   "over_speech": true
+  },
+  {
+   "t": 32.49,
+   "label": "tepi kebun dikenali",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -3.0,
+   "over_speech": true
+  },
+  {
+   "t": 33.91,
+   "label": "garis langit dikenali",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -8.1,
+   "over_speech": true
+  },
+  {
+   "t": 37.42,
+   "label": "kartu ingatan 1",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -18.6,
+   "over_speech": true
+  },
+  {
+   "t": 37.82,
+   "label": "kartu ingatan 2",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -14.1,
+   "over_speech": true
+  },
+  {
+   "t": 38.4,
+   "label": "belajar",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -15.7,
+   "over_speech": true
+  },
+  {
+   "t": 40.46,
+   "label": "arah-arah kemungkinan",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -8.0,
+   "over_speech": true
+  },
+  {
+   "t": 41.32,
+   "label": "kamera menengadah",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -15.9,
+   "over_speech": true
+  },
+  {
+   "t": 43.63,
+   "label": "matahari",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -6.9,
+   "over_speech": true
+  },
+  {
+   "t": 46.44,
+   "label": "sudut terhadap matahari (kompas)",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -6.9,
+   "over_speech": true
+  },
+  {
+   "t": 48.4,
+   "label": "matahari bergeser",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -10.4,
+   "over_speech": true
+  },
+  {
+   "t": 52.71,
+   "label": "jam biologis (dial tanpa angka)",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -15.9,
+   "over_speech": true
+  },
+  {
+   "t": 54.19,
+   "label": "kompas & jam terhubung",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -12.0,
+   "over_speech": true
+  },
+  {
+   "t": 56.51,
+   "label": "Mpi menepuk saku",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -18.8,
+   "over_speech": true
+  },
+  {
+   "t": 57.63,
+   "label": "lebah lewat santai",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -14.9,
+   "over_speech": true
+  },
+  {
+   "t": 61.73,
+   "label": "pemandangan meluncur (dekat cepat)",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -11.9,
+   "over_speech": true
+  },
+  {
+   "t": 62.03,
+   "label": "lapisan jauh pelan",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -18.3,
+   "over_speech": true
+  },
+  {
+   "t": 62.58,
+   "label": "pandangan mata lebah",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -8.3,
+   "over_speech": true
+  },
+  {
+   "t": 63.54,
+   "label": "perkiraan jarak terisi",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -7.9,
+   "over_speech": true
+  },
+  {
+   "t": 68.53,
+   "label": "bukan angka kilometer",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -19.6,
+   "over_speech": true
+  },
+  {
+   "t": 70.82,
+   "label": "padang bunga: banyak gerak",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -14.5,
+   "over_speech": true
+  },
+  {
+   "t": 71.47,
+   "label": "rumput & pagar: sedikit",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -14.4,
+   "over_speech": true
+  },
+  {
+   "t": 74.24,
+   "label": "beberapa kemungkinan arah",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -10.8,
+   "over_speech": true
+  },
+  {
+   "t": 77.25,
+   "label": "arah dari langit",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -3.5,
+   "over_speech": true
+  },
+  {
+   "t": 78.23,
+   "label": "perkiraan perjalanan",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -5.3,
+   "over_speech": true
+  },
+  {
+   "t": 80.24,
+   "label": "tempat yang dikenal",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -6.4,
+   "over_speech": true
+  },
+  {
+   "t": 81.01,
+   "label": "tepi kebun cocok",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -12.3,
+   "over_speech": true
+  },
+  {
+   "t": 84.4,
+   "label": "satu petunjuk meredup",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -8.7,
+   "over_speech": true
+  },
+  {
+   "t": 85.74,
+   "label": "yang lain ikut berperan",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -8.1,
+   "over_speech": true
+  },
+  {
+   "t": 88.2,
+   "label": "kotak pembawa ditutup",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -13.5,
+   "over_speech": true
+  },
+  {
+   "t": 89.67,
+   "label": "dilepas di lokasi lain",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -9.5,
+   "over_speech": true
+  },
+  {
+   "t": 89.98,
+   "label": "penerbangan dilacak",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -8.6,
+   "over_speech": true
+  },
+  {
+   "t": 94.26,
+   "label": "ingatan bentang alam",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -3.9,
+   "over_speech": true
+  },
+  {
+   "t": 98.04,
+   "label": "garis ajaib muncul",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -6.9,
+   "over_speech": true
+  },
+  {
+   "t": 98.12,
+   "label": "garis ajaib ditolak",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -5.5,
+   "over_speech": true
+  },
+  {
+   "t": 101.95,
+   "label": "lebah melewati pohon",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -18.9,
+   "over_speech": true
+  },
+  {
+   "t": 103.22,
+   "label": "proses tersembunyi",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": 0.1,
+   "over_speech": true
+  },
+  {
+   "t": 104.34,
+   "label": "membaca langit",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -10.8,
+   "over_speech": true
+  },
+  {
+   "t": 105.57,
+   "label": "pemandangan bergerak",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -14.9,
+   "over_speech": true
+  },
+  {
+   "t": 108.85,
+   "label": "mengenali tempat → mendarat di pintu",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -11.4,
+   "over_speech": true
+  },
+  {
+   "t": 111.86,
+   "label": "HP tanpa petunjuk (memutar)",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -12.1,
+   "over_speech": true
+  },
+  {
+   "t": 113.01,
+   "label": "lebah melesat pulang",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -16.3,
+   "over_speech": true
+  },
+  {
+   "t": 114.87,
+   "label": "cover penutup (logo)",
+   "cls": "id",
+   "cue_vs_bed_phone_dB": -0.2,
+   "over_speech": false
+  }
+ ]
+}

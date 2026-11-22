@@ -1,0 +1,37 @@
+# Whyscape cloud repo — ALLOWLIST (22 Nov 2026). Everything is ignored unless re-included below.
+# Excluded on purpose: node_modules, Whisper model (lives outside the project), all MP4 finals, WAV stems/mixes,
+# arsip/, _checkpoint/, _migrasi/, _bukan_whyscape/, kaizen/, docs/ (third-party reference videos), other episodes.
+/*
+!/.gitignore
+!/package.json
+!/package-lock.json
+!/CLAUDE.md
+!/README.md
+!/HANDOFF.md
+!/automation/
+!/series/
+!/episodes/
+/episodes/*
+!/episodes/_template_epXX/
+!/episodes/ep13_lebah_pulang/
+!/.claude/
+/.claude/*
+!/.claude/skills/
+
+# never, anywhere
+*.wav
+*.mp4
+*.mov
+*.onnx
+*.tar.bz2
+*.zip
+.env*
+*.key
+*.pem
+**/settings.local.json
+**/out/
+**/qc/
+**/final/
+**/__pycache__/
+**/_*.log
+outputs/

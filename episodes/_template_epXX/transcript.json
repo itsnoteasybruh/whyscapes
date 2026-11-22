@@ -1,0 +1,11 @@
+{
+ "_catatan": "CONTOH saja. Ganti dengan hasil transkripsi MP3 VO episode baru (series/tools/transcribe.py), lalu rapikan teksnya manual.",
+ "duration": 10.4,
+ "segments": [
+  { "start": 0.10, "end": 1.90, "text": "Ini kalimat contoh untuk adegan pembuka." },
+  { "start": 2.20, "end": 3.70, "text": "Lalu muncul pertanyaan, kok bisa?" },
+  { "start": 4.00, "end": 5.10, "text": "Coba kita ikuti jejaknya." },
+  { "start": 5.90, "end": 8.40, "text": "Di sini tujuan transisi tampil di balik portal." },
+  { "start": 8.70, "end": 10.20, "text": "Lalu penutup kembali ke awal." }
+ ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "whyscape-kit",
+  "private": true,
+  "description": "Whyscape series assets + engine. See README.md",
+  "scripts": {
+    "refs": "node series/tools/export_refs.js",
+    "template:stills": "node series/engine/render.js episodes/_template_epXX stills 0.3 4.95 6.8 11.6"
+  },
+  "dependencies": {
+    "playwright": "^1.47.0"
+  }
+}
