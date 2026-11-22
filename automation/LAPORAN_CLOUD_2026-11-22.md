@@ -1,5 +1,7 @@
 # Whyscape → Claude Cloud: laporan kelayakan (22 Nov 2026)
 
+> **Catatan 22 Nov 2026:** format input di laporan ini (`inbox/…/{vo.mp3, brief.md}`) sudah diganti oleh `automation/INPUT_CONTRACT.md` (lima file dari creator per `epNN/`). Laporan ini disimpan sebagai catatan historis.
+
 **Kesimpulan:** belum bisa otomatis di cloud. Penghambat utamanya:
 - folder proyek belum menjadi repo git;
 - belum ada remote GitHub.

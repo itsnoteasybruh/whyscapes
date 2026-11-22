@@ -28,7 +28,7 @@ Sumber primer yang tercantum di brief **tidak bisa dibuka dari sesi cloud ini**:
 **Kesimpulan:** tidak ada klaim VO yang keliru secara material terhadap acuan brief, jadi render final tidak dihentikan.
 **Risiko tersisa (keputusan produser):** di Indonesia suhu ruang/luar sering mendekati atau melewati 32 °C. Acuan brief memakai batas **1 jam** untuk kondisi itu, dan VO tidak menyebutnya. Pilihan:
 1. tayang apa adanya;
-2. tambah kalimat di caption/deskripsi, misalnya "Di cuaca panas (di atas 32 °C), batasnya 1 jam";
+2. creator menambah kalimatnya di POST.md (caption adalah wewenang creator; Claude tidak menulisnya);
 3. minta klip VO baru dari produser (VO tidak diubah oleh Claude).
 
 Sumber untuk dicek ulang (hanya di dokumen, tidak di layar): USDA FSIS (bakteri di kulkas; penanganan sisa masakan), FDA (penyimpanan pangan; termometer kulkas), FoodSafety.gov (tabel penyimpanan dingin), University of Nebraska–Lincoln Extension (enzim & oksidasi). URL lengkap ada di `BRIEF.md`.

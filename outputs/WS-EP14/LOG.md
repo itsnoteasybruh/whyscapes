@@ -9,3 +9,9 @@
 - 09:05–09:12: render penuh v1 (6,6 menit). QC menemukan irisan jam "2 jam" yang mendahului VO.
 - 09:13–09:20: perbaikan + render penuh final (6,4 menit). QC ulang: PASS dengan catatan.
 - Lama produksi nyata di sesi ini: **±1 jam** (08:40–09:40 UTC), termasuk 2 render penuh (±13 menit).
+
+## Catatan kontrak input (22 Nov 2026, sesudah produksi)
+- EP14 diproduksi **sebelum** kontrak lima file berlaku. Hanya VO + BRIEF yang diterima dari creator. Tidak ada VO_SCRIPT, THUMBNAIL, atau POST.
+- `cover.png` di folder ini = frame 0 video (pembuka standar seri), **bukan** THUMBNAIL posting.
+- Draf `caption.txt` buatan Claude dihapus. Caption, judul posting, hashtag, dan thumbnail menjadi wewenang creator.
+- Untuk dipublikasikan, EP14 masih butuh THUMBNAIL.png + POST.md dari creator, dan keputusan soal klaim "2 jam / 1 jam bila > 32 °C". Statusnya menurut kontrak baru: **NEEDS_CREATOR_FIX** (untuk publikasi).

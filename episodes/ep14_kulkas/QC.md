@@ -58,7 +58,7 @@ Tidak ada sesi dengar oleh manusia. Headphone dan speaker HP hanya disimulasikan
 
 ## 6. Sisa risiko (perlu keputusan manusia)
 1. **Klaim tidak diverifikasi ulang ke sumber primer**: semua URL USDA/FDA/FoodSafety.gov/UNL diblokir jaringan cloud. Pengecekan hanya terhadap acuan di brief (`NOTES.md`).
-2. **"2 jam" tanpa pengecualian cuaca panas**: acuan brief menyebut 1 jam bila > 32 °C. VO tidak menyebutnya dan layar tidak menambahkannya. Usulan caption ada di `outputs/WS-EP14/caption.txt`.
+2. **"2 jam" tanpa pengecualian cuaca panas**: acuan brief menyebut 1 jam bila > 32 °C. VO tidak menyebutnya dan layar tidak menambahkannya. Status kontrak baru: **NEEDS_CREATOR_FIX** (keputusan creator: VO baru, caption dari creator, atau konfirmasi tayang apa adanya). Draf caption buatan Claude dihapus (22 Nov): caption adalah wewenang creator.
 3. 8 onset kata pembuka frasa (mis. "Lah", "Coba", "Belum") memakai awal frasa silencedetect, bukan prefix decoding. Risikonya rendah.
 4. 1 cue detail tidak terdengar di speaker HP (86,67 s).
 5. Kualitas gambar dinilai oleh model dari still/contact sheet, bukan oleh penonton manusia di perangkat nyata.
