@@ -74,14 +74,14 @@ if (!mode || !cfgFile) { console.error(`usage: publish.js --config <publish_conf
     if (mode === 'reconcile') {
       const pst = st.p(p); if (!['AMBIGUOUS', 'CREATING'].includes(pst.state)) { out.result = { note: `state ${pst.state}: nothing to reconcile` }; continue; }
       const m = await A.reconcile(ctx, pst); out.result = C.redact(m);
-      if (m.matches && m.matches.length === 1) st.set(p, { state: p === 'instagram' ? 'PUBLISHED' : 'CREATED', remote_id: m.matches[0].id }, { step: 'reconcile-adopt', id: m.matches[0].id });
-      else st.set(p, { state: 'AMBIGUOUS' }, { step: 'reconcile', found: m.matches ? m.matches.length : 'error', note: 'no automatic retry; a creator instruction decides' });
+      if (m.matches && m.matches.length === 1) await st.set(p, { state: p === 'instagram' ? 'PUBLISHED' : 'CREATED', remote_id: m.matches[0].id }, { step: 'reconcile-adopt', id: m.matches[0].id });
+      else await st.set(p, { state: 'AMBIGUOUS' }, { step: 'reconcile', found: m.matches ? m.matches.length : 'error', note: 'no automatic retry; a creator instruction decides' });
       continue;
     }
-    if (blockers.length) { out.result = { stop: true, reason: 'blocked', blockers }; st.set(p, { state: ['NOT_STARTED', 'BLOCKED'].includes(st.p(p).state) ? 'BLOCKED' : st.p(p).state, blockers }, { step: 'gate' }); continue; }
+    if (blockers.length) { out.result = { stop: true, reason: 'blocked', blockers }; await st.set(p, { state: ['NOT_STARTED', 'BLOCKED'].includes(st.p(p).state) ? 'BLOCKED' : st.p(p).state, blockers }, { step: 'gate' }); continue; }
     if (mode === 'publish' && p !== 'instagram') { out.result = { note: 'publish mode is only for Instagram; other platforms publish by their own schedule' }; continue; }
     try { out.result = C.redact(await (mode === 'publish' ? A.publish(ctx, st) : A.schedule(ctx, st))); }
-    catch (e) { st.set(p, { state: e.kind === 'not_sent' ? st.p(p).state : 'AMBIGUOUS' }, { step: mode, error: e.message }); out.result = { stop: true, reason: e.message }; }
+    catch (e) { await st.set(p, { state: e.kind === 'not_sent' ? st.p(p).state : 'AMBIGUOUS' }, { step: mode, error: e.message }); out.result = { stop: true, reason: e.message }; }
     out.state = st.p(p).state;
   }
   console.log(JSON.stringify(C.redact(report), null, 2));

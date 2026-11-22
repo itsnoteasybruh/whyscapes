@@ -9,7 +9,10 @@ const fs = require('fs');
 const { TransportError, createOutcome } = require('./core');
 const API = 'https://www.googleapis.com/youtube/v3', UP = 'https://www.googleapis.com/upload/youtube/v3';
 
-const authHeaders = () => process.env.YT_ACCESS_TOKEN ? { Authorization: `Bearer ${process.env.YT_ACCESS_TOKEN}` } : {};   // else the egress proxy injects it (network secret)
+// auth: ctx.auth.youtube() (Cloud: access token minted in-process from the refresh token in Secret Manager) > YT_ACCESS_TOKEN > proxy-injected
+let CUR = null;
+const authHeaders = () => CUR ? { Authorization: `Bearer ${CUR}` } : process.env.YT_ACCESS_TOKEN ? { Authorization: `Bearer ${process.env.YT_ACCESS_TOKEN}` } : {};
+async function useAuth(ctx) { CUR = ctx.auth && ctx.auth.youtube ? await ctx.auth.youtube() : null; }
 function gate(ctx) {
   const r = [], d = ctx.cfg.declarations || {};
   for (const k of ['made_for_kids', 'contains_synthetic_media', 'has_paid_product_placement']) if (typeof d[k] !== 'boolean') r.push(`creator declaration "${k}" (true/false) is missing: the channel owner must state it, Claude does not guess`);
@@ -26,12 +29,14 @@ const metadata = ctx => ({
 const urls = id => ({ shorts_url: `https://www.youtube.com/shorts/${id}`, studio_url: `https://studio.youtube.com/video/${id}/edit` });
 
 async function checkAuth(ctx) {
+  await useAuth(ctx);
   const r = await ctx.http('GET', `${API}/channels?part=id,snippet,contentDetails&mine=true`, { headers: authHeaders() });
   if (!r.ok || !r.json || !(r.json.items || []).length) return { ok: false, detail: `HTTP ${r.status} ${JSON.stringify(r.json && r.json.error && r.json.error.message || r.text || '')}` };
   const c = r.json.items[0]; return { ok: true, account: { channel_id: c.id, title: c.snippet.title }, uploads_playlist: c.contentDetails.relatedPlaylists.uploads };
 }
 // find uploads with exactly this title created after the intent (private/scheduled uploads are included for the owner)
 async function reconcile(ctx, p) {
+  await useAuth(ctx);
   const a = await checkAuth(ctx); if (!a.ok) return { error: 'auth: ' + a.detail };
   const r = await ctx.http('GET', `${API}/playlistItems?part=snippet,status&maxResults=25&playlistId=${a.uploads_playlist}`, { headers: authHeaders() });
   if (!r.ok) return { error: `HTTP ${r.status}` };
@@ -47,69 +52,71 @@ async function readBack(ctx, id) {
 }
 async function setThumbnail(ctx, st, id) {
   const r = await ctx.http('POST', `${UP}/thumbnails/set?videoId=${id}&uploadType=media`, { headers: { ...authHeaders(), 'Content-Type': ctx.thumb.mime }, body: fs.readFileSync(ctx.thumb.path) });
-  if (r.ok) { st.set('youtube', { thumbnail: 'set' }, { step: 'thumbnails.set', http: r.status }); return true; }
-  st.set('youtube', { thumbnail: 'failed' }, { step: 'thumbnails.set', http: r.status, error: r.json && r.json.error && r.json.error.message }); return false;
+  if (r.ok) { await st.set('youtube', { thumbnail: 'set' }, { step: 'thumbnails.set', http: r.status }); return true; }
+  await st.set('youtube', { thumbnail: 'failed' }, { step: 'thumbnails.set', http: r.status, error: r.json && r.json.error && r.json.error.message }); return false;
 }
 
 // schedule = upload private + publishAt, set thumbnail after processing, then read back. Re-entrant at every step.
 async function schedule(ctx, st) {
+  await useAuth(ctx);
   let p = st.p('youtube');
-  if (['SCHEDULED', 'PUBLISHED'].includes(p.state)) return verify(ctx, st);
+  if (p.state === 'PUBLISHED' || (p.state === 'SCHEDULED' && p.thumbnail === 'set')) return verify(ctx, st);
   if (p.state === 'AMBIGUOUS') return { stop: true, reason: 'previous create had an unknown outcome; run reconcile or get a creator instruction (no automatic retry)' };
-  if (p.state !== 'CREATED') {
+  if (!['CREATED', 'SCHEDULED'].includes(p.state) || !p.remote_id) {          // never re-create once a video ID exists
     const size = ctx.video.size;
-    if (!st.local('yt_resume_uri')) {
-      st.set('youtube', { state: 'CREATING', intent_at: new Date().toISOString(), file_sha256: ctx.videoSha, publish_at: ctx.publishAt.toISOString() }, { step: 'intent' });
+    if (!(await st.local('yt_resume_uri'))) {
+      await st.set('youtube', { state: 'CREATING', intent_at: new Date().toISOString(), file_sha256: ctx.videoSha, publish_at: ctx.publishAt.toISOString() }, { step: 'intent' });
       let r;
       try { r = await ctx.http('POST', `${UP}/videos?uploadType=resumable&part=snippet,status,paidProductPlacementDetails`, { headers: { ...authHeaders(), 'Content-Type': 'application/json; charset=UTF-8', 'X-Upload-Content-Length': String(size), 'X-Upload-Content-Type': 'video/mp4' }, body: JSON.stringify(metadata(ctx)) }); }
-      catch (e) { st.set('youtube', { state: 'FAILED_DEFINITE' }, { step: 'session', error: e.message, note: 'no video exists before the upload completes: safe to retry' }); return { stop: true, reason: e.message }; }
-      if (!r.ok || !r.headers.location) { st.set('youtube', { state: 'FAILED_DEFINITE' }, { step: 'session', http: r.status, error: r.json && r.json.error && r.json.error.message }); return { stop: true, reason: `session HTTP ${r.status}` }; }
-      st.local('yt_resume_uri', r.headers.location); p = st.set('youtube', { session: 'open' }, { step: 'session', http: r.status });
+      catch (e) { await st.set('youtube', { state: 'FAILED_DEFINITE' }, { step: 'session', error: e.message, note: 'no video exists before the upload completes: safe to retry' }); return { stop: true, reason: e.message }; }
+      if (!r.ok || !r.headers.location) { await st.set('youtube', { state: 'FAILED_DEFINITE' }, { step: 'session', http: r.status, error: r.json && r.json.error && r.json.error.message }); return { stop: true, reason: `session HTTP ${r.status}` }; }
+      await st.local('yt_resume_uri', r.headers.location); p = await st.set('youtube', { session: 'open' }, { step: 'session', http: r.status });
     }
     // upload bytes (or resume / query the same session)
     let r, start = 0;
-    const uri = st.local('yt_resume_uri');
+    const uri = await st.local('yt_resume_uri');
     const query = async () => ctx.http('PUT', uri, { headers: { 'Content-Range': `bytes */${size}`, 'Content-Length': '0' } });
     try {
       const q = p.upload_attempted ? await query() : null;
       if (q && (q.status === 200 || q.status === 201)) r = q;
       else {
         if (q && q.status === 308) start = q.headers.range ? +q.headers.range.split('-')[1] + 1 : 0;
-        else if (q && q.status !== 308) { st.set('youtube', { state: 'AMBIGUOUS' }, { step: 'session-query', http: q.status }); return { stop: true, reason: `upload session answered ${q.status}; reconcile required` }; }
-        st.set('youtube', { upload_attempted: true }, { step: 'upload', from_byte: start });
+        else if (q && q.status !== 308) { await st.set('youtube', { state: 'AMBIGUOUS' }, { step: 'session-query', http: q.status }); return { stop: true, reason: `upload session answered ${q.status}; reconcile required` }; }
+        await st.set('youtube', { upload_attempted: true }, { step: 'upload', from_byte: start });
         const buf = fs.readFileSync(ctx.video.path).subarray(start);
         r = await ctx.http('PUT', uri, { headers: { 'Content-Type': 'video/mp4', 'Content-Length': String(buf.length), ...(start ? { 'Content-Range': `bytes ${start}-${size - 1}/${size}` } : {}) }, body: buf });
       }
     } catch (e) {
       // the bytes may have arrived: ask the same session once; if that also fails → AMBIGUOUS, stop
-      try { const q = await query(); if (q.status === 200 || q.status === 201) r = q; else if (q.status === 308) { st.set('youtube', {}, { step: 'upload', error: e.message, note: 'session says incomplete (308): next run resumes the SAME session' }); return { stop: true, reason: 'upload incomplete; resumable on next run' }; } }
+      try { const q = await query(); if (q.status === 200 || q.status === 201) r = q; else if (q.status === 308) { await st.set('youtube', {}, { step: 'upload', error: e.message, note: 'session says incomplete (308): next run resumes the SAME session' }); return { stop: true, reason: 'upload incomplete; resumable on next run' }; } }
       catch (e2) { /* fall through */ }
-      if (!r) { st.set('youtube', { state: 'AMBIGUOUS' }, { step: 'upload', error: e.message }); return { stop: true, reason: 'upload outcome unknown; no retry' }; }
+      if (!r) { await st.set('youtube', { state: 'AMBIGUOUS' }, { step: 'upload', error: e.message }); return { stop: true, reason: 'upload outcome unknown; no retry' }; }
     }
     const out = createOutcome(r);
-    if (out !== 'done' || !r.json || !r.json.id) { st.set('youtube', { state: out === 'rejected' ? 'FAILED_DEFINITE' : 'AMBIGUOUS' }, { step: 'upload', http: r.status, error: r.json && r.json.error && r.json.error.message }); return { stop: true, reason: `upload HTTP ${r.status}` }; }
-    st.local('yt_resume_uri', null); p = st.set('youtube', { state: 'CREATED', remote_id: r.json.id, session: 'closed', ...urls(r.json.id) }, { step: 'upload', http: r.status, video_id: r.json.id });
+    if (out !== 'done' || !r.json || !r.json.id) { await st.set('youtube', { state: out === 'rejected' ? 'FAILED_DEFINITE' : 'AMBIGUOUS' }, { step: 'upload', http: r.status, error: r.json && r.json.error && r.json.error.message }); return { stop: true, reason: `upload HTTP ${r.status}` }; }
+    await st.local('yt_resume_uri', null); p = await st.set('youtube', { state: 'CREATED', remote_id: r.json.id, session: 'closed', ...urls(r.json.id) }, { step: 'upload', http: r.status, video_id: r.json.id });
   }
   // thumbnail after processing (bounded wait; a later run finishes it)
   if (p.thumbnail !== 'set') {
     for (let i = 0; i < (ctx.pollTries ?? 20); i++) {
       const b = await readBack(ctx, p.remote_id);
       if (b.processing === 'succeeded') { await setThumbnail(ctx, st, p.remote_id); break; }
-      if (b.processing === 'failed' || b.missing) { st.set('youtube', {}, { step: 'processing', result: b }); break; }
+      if (b.processing === 'failed' || b.missing) { await st.set('youtube', {}, { step: 'processing', result: b }); break; }
       await ctx.sleep(ctx.pollMs ?? 30000);
     }
   }
   return verify(ctx, st);
 }
 async function verify(ctx, st) {
+  await useAuth(ctx);
   const p = st.p('youtube'); if (!p.remote_id) return { stop: true, reason: 'nothing uploaded' };
   const b = await readBack(ctx, p.remote_id);
-  if (b.error || b.missing) { st.set('youtube', {}, { step: 'verify', result: b }); return { stop: true, reason: 'read-back failed: ' + (b.error || 'video not found') }; }
+  if (b.error || b.missing) { await st.set('youtube', {}, { step: 'verify', result: b }); return { stop: true, reason: 'read-back failed: ' + (b.error || 'video not found') }; }
   const want = ctx.publishAt.toISOString().replace('.000Z', 'Z'), got = b.publishAt && new Date(b.publishAt).toISOString().replace('.000Z', 'Z');
   let state = p.state;
   if (b.privacy === 'public') state = 'PUBLISHED';
   else if (b.privacy === 'private' && got === want) state = 'SCHEDULED';
-  st.set('youtube', { state, evidence: { video_id: p.remote_id, privacyStatus: b.privacy, publishAt: b.publishAt, processing: b.processing, thumbnail: p.thumbnail || null, checked_at: new Date().toISOString(), ...urls(p.remote_id) } }, { step: 'verify', privacy: b.privacy, publishAt: b.publishAt });
+  await st.set('youtube', { state, evidence: { video_id: p.remote_id, privacyStatus: b.privacy, publishAt: b.publishAt, processing: b.processing, thumbnail: p.thumbnail || null, checked_at: new Date().toISOString(), ...urls(p.remote_id) } }, { step: 'verify', privacy: b.privacy, publishAt: b.publishAt });
   return { state, evidence: st.p('youtube').evidence };
 }
 module.exports = { name: 'youtube', gate, checkAuth, reconcile, schedule, verify, metadata };

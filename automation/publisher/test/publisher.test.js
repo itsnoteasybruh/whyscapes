@@ -233,3 +233,15 @@ test('publisher: the real WS-EP14 config is blocked (112.47 s > 90 s and creator
   const P = require('../publish'), L = P.load(path.resolve(__dirname, '../../../outputs/WS-EP14/publish_config.json'));
   assert.ok(L.problems.some(p => /112\.47 s, above the 90 s/.test(p))); assert.ok(L.problems.some(p => /ON HOLD/.test(p)));
 });
+
+test('YouTube: SCHEDULED but thumbnail pending → only thumbnails.set + verify, never a new upload', async () => {
+  const d = tmp(), st = new C.State(path.join(d, 's.json'), 'E'), pa = new Date(Date.now() + 3 * 3600e3);
+  st.set('youtube', { state: 'SCHEDULED', remote_id: 'VIDX', thumbnail: 'failed' }, {});
+  const f = fake([
+    { m: (m, u) => m === 'GET' && u.includes('/videos?part=status'), res: { status: 200, json: { items: [{ status: { privacyStatus: 'private', publishAt: pa.toISOString().replace('.000Z', 'Z') }, snippet: {}, processingDetails: { processingStatus: 'succeeded' } }] } } },
+    { m: (m, u) => u.includes('thumbnails/set'), res: { status: 200, json: {} } },
+  ]);
+  const r = await YT.schedule(ctxFor(d, f.http, YCFG, { publishAt: pa }), st);
+  assert.equal(r.state, 'SCHEDULED'); assert.equal(st.p('youtube').thumbnail, 'set');
+  assert.ok(!f.calls.some(c => c.url.includes('uploadType=resumable') || c.method === 'PUT'));
+});

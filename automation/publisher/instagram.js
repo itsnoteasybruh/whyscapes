@@ -50,17 +50,17 @@ async function prepare(ctx, st) {
   if (['PUBLISHED'].includes(p.state)) return verify(ctx, st);
   if (p.state === 'AMBIGUOUS') return { stop: true, reason: 'unknown outcome earlier; reconcile required' };
   if (!p.container_id) {
-    st.set('instagram', { state: 'CREATING', intent_at: new Date().toISOString(), file_sha256: ctx.videoSha, publish_at: ctx.publishAt.toISOString() }, { step: 'intent' });
+    await st.set('instagram', { state: 'CREATING', intent_at: new Date().toISOString(), file_sha256: ctx.videoSha, publish_at: ctx.publishAt.toISOString() }, { step: 'intent' });
     let r;
     try { r = await ctx.http('POST', `${G}/${ctx.cfg.ig_user_id}/media`, { headers: tok(), body: form({ media_type: 'REELS', video_url: ctx.cfg.public_video_url, cover_url: ctx.cfg.public_cover_url, caption: ctx.post.text, share_to_feed: ctx.cfg.share_to_feed }) }); }
-    catch (e) { st.set('instagram', { state: e.kind === 'not_sent' ? 'FAILED_DEFINITE' : 'NOT_STARTED' }, { step: 'container', error: e.message, note: 'a container is not a post; an orphan expires in 24 h' }); return { stop: true, reason: e.message }; }
-    if (createOutcome(r) !== 'done' || !r.json || !r.json.id) { st.set('instagram', { state: 'FAILED_DEFINITE' }, { step: 'container', http: r.status, error: r.json && r.json.error && r.json.error.message }); return { stop: true, reason: `container HTTP ${r.status}` }; }
-    p = st.set('instagram', { state: 'CREATED', container_id: r.json.id }, { step: 'container', container_id: r.json.id });
+    catch (e) { await st.set('instagram', { state: e.kind === 'not_sent' ? 'FAILED_DEFINITE' : 'NOT_STARTED' }, { step: 'container', error: e.message, note: 'a container is not a post; an orphan expires in 24 h' }); return { stop: true, reason: e.message }; }
+    if (createOutcome(r) !== 'done' || !r.json || !r.json.id) { await st.set('instagram', { state: 'FAILED_DEFINITE' }, { step: 'container', http: r.status, error: r.json && r.json.error && r.json.error.message }); return { stop: true, reason: `container HTTP ${r.status}` }; }
+    p = await st.set('instagram', { state: 'CREATED', container_id: r.json.id }, { step: 'container', container_id: r.json.id });
   }
   for (let i = 0; i < (ctx.pollTries ?? 5); i++) {
     const c = await container(ctx, p.container_id);
-    if (c.status_code === 'FINISHED') { st.set('instagram', { container_status: 'FINISHED' }, { step: 'container-status' }); return { state: 'CREATED', prepared: true, container_id: p.container_id, note: `ready; media_publish will run at ${ctx.publishAt.toISOString()} (Instagram API has no native scheduling)` }; }
-    if (['ERROR', 'EXPIRED'].includes(c.status_code)) { st.set('instagram', { state: 'FAILED_DEFINITE', container_id: null }, { step: 'container-status', status: c.status_code }); return { stop: true, reason: 'container ' + c.status_code }; }
+    if (c.status_code === 'FINISHED') { await st.set('instagram', { container_status: 'FINISHED' }, { step: 'container-status' }); return { state: 'CREATED', prepared: true, container_id: p.container_id, note: `ready; media_publish will run at ${ctx.publishAt.toISOString()} (Instagram API has no native scheduling)` }; }
+    if (['ERROR', 'EXPIRED'].includes(c.status_code)) { await st.set('instagram', { state: 'FAILED_DEFINITE', container_id: null }, { step: 'container-status', status: c.status_code }); return { stop: true, reason: 'container ' + c.status_code }; }
     await ctx.sleep(ctx.pollMs ?? 60000);
   }
   return { stop: true, reason: 'container still processing; next run continues' };
@@ -71,13 +71,13 @@ async function publish(ctx, st) {
   if (p.state === 'PUBLISHED') return verify(ctx, st);
   if (!p.container_id || p.container_status !== 'FINISHED') return { stop: true, reason: 'container not prepared' };
   const c = await container(ctx, p.container_id);
-  if (c.status_code === 'PUBLISHED') { const m = await reconcile(ctx, p); if (m.matches && m.matches.length === 1) { st.set('instagram', { state: 'PUBLISHED', remote_id: m.matches[0].id, url: m.matches[0].url }, { step: 'adopt' }); return verify(ctx, st); } st.set('instagram', { state: 'AMBIGUOUS' }, { step: 'publish', note: 'container PUBLISHED but media not uniquely found' }); return { stop: true, reason: 'ambiguous' }; }
-  st.set('instagram', { publish_attempted_at: new Date().toISOString() }, { step: 'publish-intent' });
+  if (c.status_code === 'PUBLISHED') { const m = await reconcile(ctx, p); if (m.matches && m.matches.length === 1) { await st.set('instagram', { state: 'PUBLISHED', remote_id: m.matches[0].id, url: m.matches[0].url }, { step: 'adopt' }); return verify(ctx, st); } await st.set('instagram', { state: 'AMBIGUOUS' }, { step: 'publish', note: 'container PUBLISHED but media not uniquely found' }); return { stop: true, reason: 'ambiguous' }; }
+  await st.set('instagram', { publish_attempted_at: new Date().toISOString() }, { step: 'publish-intent' });
   let r;
   try { r = await ctx.http('POST', `${G}/${ctx.cfg.ig_user_id}/media_publish`, { headers: tok(), body: form({ creation_id: p.container_id }) }); }
-  catch (e) { st.set('instagram', { state: e.kind === 'not_sent' ? 'CREATED' : 'AMBIGUOUS' }, { step: 'publish', error: e.message }); return { stop: true, reason: e.message }; }
-  if (r.ok && r.json && r.json.id) { st.set('instagram', { state: 'PUBLISHED', remote_id: r.json.id }, { step: 'publish', media_id: r.json.id }); return verify(ctx, st); }
-  st.set('instagram', { state: createOutcome(r) === 'rejected' ? 'CREATED' : 'AMBIGUOUS' }, { step: 'publish', http: r.status, error: r.json && r.json.error && r.json.error.message });
+  catch (e) { await st.set('instagram', { state: e.kind === 'not_sent' ? 'CREATED' : 'AMBIGUOUS' }, { step: 'publish', error: e.message }); return { stop: true, reason: e.message }; }
+  if (r.ok && r.json && r.json.id) { await st.set('instagram', { state: 'PUBLISHED', remote_id: r.json.id }, { step: 'publish', media_id: r.json.id }); return verify(ctx, st); }
+  await st.set('instagram', { state: createOutcome(r) === 'rejected' ? 'CREATED' : 'AMBIGUOUS' }, { step: 'publish', http: r.status, error: r.json && r.json.error && r.json.error.message });
   return { stop: true, reason: `publish HTTP ${r.status}` };
 }
 async function verify(ctx, st) {
@@ -85,7 +85,7 @@ async function verify(ctx, st) {
   if (!p.remote_id) return { state: p.state, evidence: { container_id: p.container_id || null, container_status: p.container_status || null } };
   const r = await ctx.http('GET', `${G}/${p.remote_id}?fields=id,permalink,timestamp,media_product_type`, { headers: tok() });
   if (!r.ok) return { stop: true, reason: `read-back HTTP ${r.status}` };
-  st.set('instagram', { state: 'PUBLISHED', url: r.json.permalink, evidence: { media_id: r.json.id, permalink: r.json.permalink, timestamp: r.json.timestamp, type: r.json.media_product_type, checked_at: new Date().toISOString() } }, { step: 'verify' });
+  await st.set('instagram', { state: 'PUBLISHED', url: r.json.permalink, evidence: { media_id: r.json.id, permalink: r.json.permalink, timestamp: r.json.timestamp, type: r.json.media_product_type, checked_at: new Date().toISOString() } }, { step: 'verify' });
   return { state: 'PUBLISHED', evidence: st.p('instagram').evidence };
 }
 module.exports = { name: 'instagram', gate, checkAuth, reconcile, prepare, publish, verify, schedule: prepare };

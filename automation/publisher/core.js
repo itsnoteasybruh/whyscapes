@@ -67,6 +67,7 @@ function makeTransport({ timeoutMs = 120000, fetchImpl = globalThis.fetch } = {}
       throw new TransportError('ambiguous', `${code || ''} ${e.message}`);     // timeout / reset: it may have arrived
     }
     clearTimeout(timer);
+    if (arguments[2] && arguments[2].binary && res.ok) return { ok: true, status: res.status, buffer: Buffer.from(await res.arrayBuffer()), headers: Object.fromEntries(res.headers.entries()) };
     const text = await res.text(); let json = null; try { json = text ? JSON.parse(text) : null; } catch { /* non-JSON */ }
     return { ok: res.ok, status: res.status, json, text: json ? undefined : text.slice(0, 500), headers: Object.fromEntries(res.headers.entries()) };
   };

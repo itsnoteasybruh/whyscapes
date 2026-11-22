@@ -72,13 +72,13 @@ async function schedule(ctx, st) {
   if (p.state === 'AMBIGUOUS') return { stop: true, reason: 'previous create had an unknown outcome; reconcile or creator instruction required' };
   const token = await pt(ctx);                                    // fails closed (not_sent) before anything is created
   if (!p.remote_id) {
-    st.set('facebook', { state: 'CREATING', intent_at: new Date().toISOString(), file_sha256: ctx.videoSha, publish_at: ctx.publishAt.toISOString() }, { step: 'intent' });
+    await st.set('facebook', { state: 'CREATING', intent_at: new Date().toISOString(), file_sha256: ctx.videoSha, publish_at: ctx.publishAt.toISOString() }, { step: 'intent' });
     let r;
     try { r = await ctx.http('POST', `${G}/${ctx.cfg.page_id}/video_reels`, { body: form({ upload_phase: 'start', access_token: token }) }); }
-    catch (e) { st.set('facebook', { state: e.kind === 'not_sent' ? 'FAILED_DEFINITE' : 'AMBIGUOUS' }, { step: 'start', error: e.message }); return { stop: true, reason: e.message }; }
+    catch (e) { await st.set('facebook', { state: e.kind === 'not_sent' ? 'FAILED_DEFINITE' : 'AMBIGUOUS' }, { step: 'start', error: e.message }); return { stop: true, reason: e.message }; }
     const out = createOutcome(r);
-    if (out !== 'done' || !r.json || !r.json.video_id) { st.set('facebook', { state: out === 'rejected' ? 'FAILED_DEFINITE' : 'AMBIGUOUS' }, { step: 'start', http: r.status, error: r.json && r.json.error && r.json.error.message }); return { stop: true, reason: `start HTTP ${r.status}` }; }
-    p = st.set('facebook', { state: 'CREATED', remote_id: r.json.video_id }, { step: 'start', video_id: r.json.video_id });
+    if (out !== 'done' || !r.json || !r.json.video_id) { await st.set('facebook', { state: out === 'rejected' ? 'FAILED_DEFINITE' : 'AMBIGUOUS' }, { step: 'start', http: r.status, error: r.json && r.json.error && r.json.error.message }); return { stop: true, reason: `start HTTP ${r.status}` }; }
+    p = await st.set('facebook', { state: 'CREATED', remote_id: r.json.video_id }, { step: 'start', video_id: r.json.video_id });
   }
   // bytes: resume from what Meta already has (rupload.facebook.com — no network secret there; Page token sent by us)
   const s0 = await status(ctx, p.remote_id), up = (s0.status && s0.status.uploading_phase) || {}, have = +(up.bytes_transfered || 0);
@@ -86,22 +86,22 @@ async function schedule(ctx, st) {
     const buf = fs.readFileSync(ctx.video.path);
     try {
       const r = await ctx.http('POST', `${RU}/${p.remote_id}`, { headers: { Authorization: `OAuth ${token}`, offset: String(have), file_size: String(buf.length) }, body: buf.subarray(have) });
-      st.set('facebook', {}, { step: 'upload', http: r.status, from_byte: have });
+      await st.set('facebook', {}, { step: 'upload', http: r.status, from_byte: have });
       if (!r.ok) return { stop: true, reason: `upload HTTP ${r.status}` };
-    } catch (e) { st.set('facebook', {}, { step: 'upload', error: e.message, note: 'same video_id; next run resumes by offset' }); return { stop: true, reason: e.kind === 'not_sent' ? `upload host not reachable: ${e.message}` : 'upload interrupted; resumable' }; }
+    } catch (e) { await st.set('facebook', {}, { step: 'upload', error: e.message, note: 'same video_id; next run resumes by offset' }); return { stop: true, reason: e.kind === 'not_sent' ? `upload host not reachable: ${e.message}` : 'upload interrupted; resumable' }; }
   }
   if (p.thumbnail !== 'set') {
     const fd = new FormData(); fd.append('access_token', token); fd.append('is_preferred', 'true'); fd.append('source', new Blob([fs.readFileSync(ctx.thumb.path)], { type: ctx.thumb.mime }), 'thumbnail.' + ctx.thumb.ext);
     const r = await ctx.http('POST', `${G}/${p.remote_id}/thumbnails`, { body: fd });
-    st.set('facebook', { thumbnail: r.ok ? 'set' : 'failed' }, { step: 'thumbnail', http: r.status });
+    await st.set('facebook', { thumbnail: r.ok ? 'set' : 'failed' }, { step: 'thumbnail', http: r.status });
   }
   // finish → SCHEDULED, only if Meta does not already show it scheduled/published
   const s1 = await status(ctx, p.remote_id), pub = (s1.status && s1.status.publishing_phase) || {};
   if (!(['scheduled', 'published'].includes(pub.publish_status) || DONE(pub.status) || pub.status === 'in_progress')) {
     let r;
     try { r = await ctx.http('POST', `${G}/${ctx.cfg.page_id}/video_reels`, { body: form({ upload_phase: 'finish', video_id: p.remote_id, video_state: 'SCHEDULED', scheduled_publish_time: Math.floor(ctx.publishAt / 1000), description: ctx.post.text, title: ctx.post.title, is_ai_generated: ctx.cfg.declarations.is_ai_generated, access_token: token }) }); }
-    catch (e) { st.set('facebook', {}, { step: 'finish', error: e.message, note: 'read status before any new finish' }); return verify(ctx, st); }
-    st.set('facebook', {}, { step: 'finish', http: r.status, error: r.json && r.json.error && r.json.error.message });
+    catch (e) { await st.set('facebook', {}, { step: 'finish', error: e.message, note: 'read status before any new finish' }); return verify(ctx, st); }
+    await st.set('facebook', {}, { step: 'finish', http: r.status, error: r.json && r.json.error && r.json.error.message });
   }
   return verify(ctx, st);
 }
@@ -113,7 +113,7 @@ async function verify(ctx, st) {
   if (ph.publish_status === 'published') state = 'PUBLISHED';
   else if (ph.publish_status === 'scheduled' && ph.publish_time) state = 'SCHEDULED';
   const want = Math.floor(ctx.publishAt / 1000), got = ph.publish_time ? +ph.publish_time : null;
-  st.set('facebook', { state, url: s.permalink_url || `https://www.facebook.com/reel/${p.remote_id}`, evidence: { video_id: p.remote_id, video_status: vs, publish_status: ph.publish_status || null, publish_time_unix: got, publish_time_matches: got === want, permalink_url: s.permalink_url || null, checked_at: new Date().toISOString() } }, { step: 'verify', video_status: vs, publish_status: ph.publish_status, publish_time: got });
+  await st.set('facebook', { state, url: s.permalink_url || `https://www.facebook.com/reel/${p.remote_id}`, evidence: { video_id: p.remote_id, video_status: vs, publish_status: ph.publish_status || null, publish_time_unix: got, publish_time_matches: got === want, permalink_url: s.permalink_url || null, checked_at: new Date().toISOString() } }, { step: 'verify', video_status: vs, publish_status: ph.publish_status, publish_time: got });
   return { state, evidence: st.p('facebook').evidence };
 }
 module.exports = { name: 'facebook', gate, checkAuth, reconcile, schedule, verify, REQUIRED_PERMS };
