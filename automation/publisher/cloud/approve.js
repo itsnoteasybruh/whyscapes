@@ -17,8 +17,7 @@ function build() {
   const at = C.parseWIB(opt('--publish-at')); if (!at) errs.push('--publish-at "YYYY-MM-DD HH:MM" (WIB)'); else if (at - now < 2 * 3600e3) errs.push('publish time must be at least 2 h ahead');
   if (!platforms.length || platforms.some(p => !['youtube', 'facebook', 'instagram'].includes(p))) errs.push('--platforms youtube,facebook,instagram (subset)');
   if (!opt('--approved-by')) errs.push('--approved-by');
-  // the Instagram publish-window Scheduler trigger runs every 5 min 20:00–22:55 WIB (Instagram has no native scheduling)
-  if (at && platforms.includes('instagram')) { const h = +C.wibISO(at).slice(11, 13), m = +C.wibISO(at).slice(14, 16); if (h < 20 || h > 22 || (h === 22 && m > 35)) errs.push('Instagram publish time must be between 20:00 and 22:35 WIB (publish-window trigger); change the time or the Scheduler window'); }
+  // no fixed daily window: Instagram is published by one-shot Cloud Tasks created for the episode's own publish time
   if (errs.length) return { errs };
   const dur = C.probe(files.video).duration, fmt = F.checkFinal(dur); if (!fmt.ok) errs.push(fmt.msg);
   const post = C.readPost(files.post); if (!post.title || !post.caption) errs.push('POST.md needs a title and caption');

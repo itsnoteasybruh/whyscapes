@@ -104,10 +104,18 @@ function readSecret(name, dir = SECRET_DIR) {
   if (!fs.existsSync(f)) return null;
   return fs.readFileSync(f, 'utf8').trim();
 }
+// runtime read through the Secret Manager API (job SA has secretAccessor): no volume mount (job volumes are root-owned while the image
+// runs as non-root) and no deploy-time secret check, so a secret may stay empty until its step in the checklist. null = not set yet.
+async function accessSecret(http, auth, project, secret, version = 'latest') {
+  const r = await http('GET', `${SM}/projects/${project}/secrets/${secret}/versions/${version}:access`, { headers: await auth.header() });
+  if (r.status === 404 || r.status === 400 || (r.json && r.json.error && /NOT_FOUND|FAILED_PRECONDITION/.test(r.json.error.status || ''))) return null;
+  if (!r.ok) throw new Error(`Secret Manager access ${secret} HTTP ${r.status}`);
+  return Buffer.from(r.json.payload.data, 'base64').toString('utf8').trim();
+}
 async function addSecretVersion(http, auth, project, secret, value) {
   const r = await http('POST', `${SM}/projects/${project}/secrets/${secret}:addVersion`, { headers: { ...(await auth.header()), 'Content-Type': 'application/json' }, body: JSON.stringify({ payload: { data: Buffer.from(value).toString('base64') } }) });
   if (!r.ok) throw new Error(`Secret Manager addVersion HTTP ${r.status}`);
   return r.json.name.split('/').pop();                      // version number only
 }
 
-module.exports = { Conflict, metadataAuth, storage, v4Parts, signedUrl, iamSigner, readSecret, addSecretVersion, SECRET_DIR };
+module.exports = { Conflict, metadataAuth, storage, v4Parts, signedUrl, iamSigner, readSecret, accessSecret, addSecretVersion, SECRET_DIR };

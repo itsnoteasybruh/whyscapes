@@ -187,9 +187,33 @@ test('approve (creator tool): refuses > 90 s, missing declarations, time too clo
   assert.ok(!ok.errs); assert.equal(ok.approval.files.video.sha256, C.sha256(v)); assert.equal(ok.approval.declarations.facebook.is_ai_generated, true);
 });
 
-test('approve: Instagram outside the 20:00–22:35 WIB publish window is refused', () => {
+test('approve: Instagram at any publish time is accepted (no fixed daily window)', () => {
   const d = fs.mkdtempSync(path.join(os.tmpdir(), 'ap2-')), v = path.join(d, 'v.mp4'), th = path.join(d, 't.png'); mkVideo(84, v); fs.writeFileSync(th, Buffer.alloc(10));
   process.argv = ['n', 'approve.js', '--episode', 'WS-EP90', '--video', v, '--post', POST_FILE, '--thumbnail', th, '--publish-at', '2026-12-01 09:00', '--now', '2026-11-30T00:00:00Z', '--approved-by', 'E', '--platforms', 'instagram', '--ig-share-to-feed', 'true'];
   delete require.cache[require.resolve('../approve')];
-  assert.match(require('../approve').build().errs.join(), /20:00 and 22:35 WIB/);
+  const r = require('../approve').build(); assert.ok(!r.errs, JSON.stringify(r.errs)); assert.equal(r.approval.publish_at_wib, '2026-12-01 09:00');
+});
+
+test('Cloud Tasks: two one-shot triggers at publish_at and +5 min, task-level OAuth to run.googleapis.com, ALREADY_EXISTS = idempotent', async () => {
+  const T = require('../tasks'), seen = [], ids = new Set();
+  const http = async (m, u, o) => { const b = JSON.parse(o.body).task; seen.push(b); if (ids.has(b.name)) return { ok: false, status: 409, json: { error: { status: 'ALREADY_EXISTS' } } }; ids.add(b.name); return { ok: true, status: 200, json: b }; };
+  const cfg = { http, auth: { header: async () => ({ Authorization: 'Bearer SA' }) }, project: 'p', region: 'asia-southeast2', queue: 'q', job: 'whyscape-publisher', triggerSa: 'trig@p.iam.gserviceaccount.com', episode: 'WS-EP90', publishAt: new Date('2026-12-01T02:00:00Z') };
+  const a = await T.ensureIgPublishTasks(cfg), b = await T.ensureIgPublishTasks(cfg);
+  assert.deepEqual(a.map(x => x.at), ['2026-12-01T02:00:00.000Z', '2026-12-01T02:05:00.000Z']); assert.ok(a.every(x => x.created)); assert.ok(b.every(x => !x.created));
+  const t0 = seen[0]; assert.match(t0.httpRequest.url, /run\.googleapis\.com\/v2\/projects\/p\/locations\/asia-southeast2\/jobs\/whyscape-publisher:run$/);
+  assert.equal(t0.httpRequest.oauthToken.serviceAccountEmail, 'trig@p.iam.gserviceaccount.com');
+  assert.deepEqual(JSON.parse(Buffer.from(t0.httpRequest.body, 'base64')).overrides.containerOverrides[0].args, ['automation/publisher/cloud/job.js', 'publish-window', '--episode', 'WS-EP90']);
+});
+
+test('Secret Manager access: value decoded in memory; missing secret/version → null (not configured), never thrown with the value', async () => {
+  const http = async (m, u) => u.includes('/secrets/meta-token/') ? { ok: true, status: 200, json: { payload: { data: Buffer.from('EAA_SECRET_VALUE\n').toString('base64') } } } : { ok: false, status: 404, json: { error: { status: 'NOT_FOUND' } } };
+  const auth = { header: async () => ({ Authorization: 'Bearer SA' }) };
+  assert.equal(await G.accessSecret(http, auth, 'p', 'meta-token'), 'EAA_SECRET_VALUE');
+  assert.equal(await G.accessSecret(http, auth, 'p', 'yt-refresh-token'), null);
+});
+
+test('job: platform credentials missing in Secret Manager → alert, no platform call', async () => {
+  const f = fakeCloud(), calls = []; seed(f); const http = ytFake(f, calls);
+  const r = await J.runJob({ mode: 'tick', now: new Date('2026-11-30T14:00:00Z'), store: f.store, http, httpGraph: http, signer: G.iamSigner(f.http, f.auth), auth: { email: f.auth.email }, log: quiet, creds: { meta: true, youtube: false } });
+  assert.equal(calls.length, 0); assert.match(JSON.stringify(r.reports[0].alerts), /credentials not configured/);
 });

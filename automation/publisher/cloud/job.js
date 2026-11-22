@@ -1,14 +1,16 @@
 #!/usr/bin/env node
 // Whyscape publisher — Cloud Run Job entrypoint. Triggered ONLY by Cloud Scheduler (time zone Asia/Jakarta), never by a Claude session.
 //   node cloud/job.js tick            every 30 min: YouTube early private upload + publishAt, Facebook schedule, Instagram prepare, verify
-//   node cloud/job.js publish-window  every 5 min 20:00–22:55 WIB: Instagram media_publish inside [publish_at, +20 min]
-//   node cloud/job.js report          21:30 WIB daily: read back every platform, write reports/<date>/<ID>.json, alert on anything not done
+//   node cloud/job.js publish-window [--episode ID]  started by one-shot Cloud Tasks at publish_at (+5 min backup): Instagram media_publish
+//                     inside [publish_at, +20 min]. Any publish time works; there is no fixed daily window.
+//   node cloud/job.js report [--episode ID]  one-shot Cloud Tasks at publish_at + 15 / + 60 min, plus a daily summary (23:55 WIB):
+//                     read back every platform, write reports/<date>/<ID>.json, alert on anything not done
 // Acts ONLY on episodes that have a creator approval object episodes/<ID>/approval.json in the bucket whose file hashes match the
 // stored files, that are not on hold, and whose final MP4 is ≤ 90 s. No approval → nothing happens. Secrets come from Secret
-// Manager volume mounts; nothing secret is logged (all log lines pass through core.redact).
+// Manager API at runtime; nothing secret is logged (all log lines pass through core.redact).
 const fs = require('fs'), os = require('os'), path = require('path');
 const C = require('../core'), F = require('../../format_rules');
-const G = require('./gcp'), { CloudState, acquireLease, releaseLease } = require('./state'), { plan } = require('./planner'), S = require('./support');
+const T = require('./tasks'), G = require('./gcp'), { CloudState, acquireLease, releaseLease } = require('./state'), { plan } = require('./planner'), S = require('./support');
 const ADAPTERS = { youtube: require('../youtube'), facebook: require('../facebook'), instagram: require('../instagram') };
 const PLATFORMS = Object.keys(ADAPTERS);
 
@@ -24,7 +26,7 @@ function validateApproval(a, id) {
   return p;
 }
 
-async function runEpisode({ id, approval, mode, now, store, http, httpGraph, signer, auth, log, tmp }) {
+async function runEpisode({ id, approval, mode, now, store, http, httpGraph, signer, auth, log, tmp, tasksCfg = null, tasksAuth = null, creds = { meta: true, youtube: true } }) {
   const L = log.child({ episode: id }), report = { episode: id, mode, at: C.timeEvidence(now), platforms: {}, alerts: [] };
   const alert = (platform, reason) => { report.alerts.push({ platform, reason }); L.error('alert', { platform, reason }); };
   const probs = validateApproval(approval, id);
@@ -57,6 +59,7 @@ async function runEpisode({ id, approval, mode, now, store, http, httpGraph, sig
     const st0 = st;
     for (const a of work) {
       const A = ADAPTERS[a.platform], PL = L.child({ platform: a.platform, action: a.action });
+      if (!creds[a.platform === 'youtube' ? 'youtube' : 'meta']) { alert(a.platform, `credentials not configured in Secret Manager (${a.platform === 'youtube' ? 'yt-oauth-client + yt-refresh-token' : 'meta-token'}); nothing sent`); continue; }
       const cfg = { ...(approval[a.platform] || {}), declarations: (approval.declarations || {})[a.platform] };
       const ctx = { cfg, video, videoSha: approval.files.video.sha256, post, publishAt, now, thumb: thumbs[a.platform], http: a.platform === 'youtube' ? http : httpGraph,
         auth, sleep: ms => new Promise(r => setTimeout(r, ms)) };
@@ -73,12 +76,24 @@ async function runEpisode({ id, approval, mode, now, store, http, httpGraph, sig
         const fn = a.action === 'verify' ? A.verify : a.action === 'publish' ? A.publish : A.schedule;   // instagram.schedule = prepare
         const res = C.redact(await fn(ctx, st0));
         report.platforms[a.platform] = { action: a.action, result: res, state: st0.p(a.platform).state, evidence: st0.p(a.platform).evidence || null, url: st0.p(a.platform).url || null };
+        // Instagram has no native scheduling: once the container is FINISHED, enqueue the one-shot publish triggers (idempotent IDs)
+        if (a.platform === 'instagram' && a.action === 'prepare' && st0.p('instagram').container_status === 'FINISHED' && tasksCfg) {
+          const tk = await T.ensureIgPublishTasks({ ...tasksCfg, http, auth: tasksAuth, episode: id, publishAt });
+          await st0.set('instagram', { publish_triggers: tk.map(x => ({ id: x.id, at: x.at })) }, { step: 'publish-triggers', created: tk.filter(x => x.created).length });
+          report.platforms.instagram.publish_triggers = tk;
+        }
         PL.info('done', { state: st0.p(a.platform).state, stop: res && res.stop ? res.reason : undefined });
         if (st0.p(a.platform).state === 'AMBIGUOUS') alert(a.platform, 'AMBIGUOUS after this run: no automatic retry; reconcile/creator decision needed');
       } catch (e) {
         if (e.conflict) { alert(a.platform, 'state changed concurrently (412); stopped without retry'); break; }
         alert(a.platform, `error: ${C.redact(e.message)}`);
       }
+    }
+    // post-publish verification trigger (idempotent): once anything is scheduled/prepared for this episode
+    if (tasksCfg && mode === 'tick' && Object.values(st0.data.platforms).some(p => ['SCHEDULED', 'CREATED'].includes(p.state)) && !st0.data.verify_triggers) {
+      const vt = await T.ensureVerifyTasks({ ...tasksCfg, http, auth: tasksAuth, episode: id, publishAt });
+      await st0.setTop({ verify_triggers: vt.map(x => ({ id: x.id, at: x.at })) });
+      report.verify_triggers = vt;
     }
     return report;
   } finally {
@@ -92,15 +107,15 @@ function thumbFor(src, dir, okExt, fmt) {
   return { path: conv.to, ext: fmt === 'jpeg' ? 'jpg' : fmt, mime: `image/${fmt}`, conversion: conv };
 }
 
-async function runJob({ mode, now = new Date(), store, http, httpGraph, signer, auth, log, tmp = os.tmpdir() }) {
+async function runJob({ mode, now = new Date(), store, http, httpGraph, signer, auth, log, tmp = os.tmpdir(), only = null, tasksCfg = null, tasksAuth = null, creds = { meta: true, youtube: true } }) {
   if (!['tick', 'publish-window', 'report'].includes(mode)) throw new Error('mode must be tick | publish-window | report');
   const items = await store.list('episodes/');
-  const ids = items.map(i => (i.name.match(/^episodes\/([^/]+)\/approval\.json$/) || [])[1]).filter(Boolean);
+  const ids = items.map(i => (i.name.match(/^episodes\/([^/]+)\/approval\.json$/) || [])[1]).filter(Boolean).filter(x => !only || x === only);
   log.info('run', { mode, approvals: ids.length, now: C.timeEvidence(now) });
   const reports = [];
   for (const id of ids) {
     const ap = await store.getJSON(`episodes/${id}/approval.json`);
-    const r = await runEpisode({ id, approval: ap && ap.json, mode, now, store, http, httpGraph, signer, auth, log, tmp });
+    const r = await runEpisode({ id, approval: ap && ap.json, mode, now, store, http, httpGraph, signer, auth, log, tmp, tasksCfg, tasksAuth, creds });
     reports.push(r);
     const day = C.wibISO(now).slice(0, 10), name = `reports/${day}/${id}_${mode}.json`, cur = await store.getJSON(name);
     try { await store.putJSON(name, r, cur ? cur.generation : '0'); } catch (e) { log.warn('report write raced; skipped', { episode: id }); }
@@ -117,9 +132,13 @@ if (require.main === module) {
   (async () => {
     if (!process.env.WHYSCAPE_BUCKET) throw new Error('WHYSCAPE_BUCKET not set');
     const http = C.makeTransport({ timeoutMs: 600000 }), auth = G.metadataAuth(http), store = G.storage(http, auth, process.env.WHYSCAPE_BUCKET);
-    const meta = G.readSecret('meta-token'), ytClient = G.readSecret('yt-oauth-client'), ytRefresh = G.readSecret('yt-refresh-token');
+    const P = process.env.GCP_PROJECT, sec = n => G.accessSecret(http, auth, P, n);
+    const [meta, ytClient, ytRefresh] = [await sec('meta-token'), await sec('yt-oauth-client'), await sec('yt-refresh-token')];
+    for (const [n, v] of [['meta-token', meta], ['yt-oauth-client', ytClient], ['yt-refresh-token', ytRefresh]]) if (!v) log.warn('secret not configured yet', { secret: n });
     const ytAuth = { youtube: ytClient && ytRefresh ? S.youtubeTokenSource(http, JSON.parse(ytClient), ytRefresh) : null, email: auth.email };
-    const res = await runJob({ mode, store, http, httpGraph: S.withGraphAuth(http, meta), signer: G.iamSigner(http, auth), auth: ytAuth, log });
+    const i = process.argv.indexOf('--episode'), only = i > 0 ? process.argv[i + 1] : null;
+    const E = process.env, tasksCfg = E.TASKS_QUEUE ? { project: E.GCP_PROJECT, region: E.GCP_REGION, queue: E.TASKS_QUEUE, job: E.JOB_NAME || 'whyscape-publisher', triggerSa: E.TRIGGER_SA } : null;
+    const res = await runJob({ mode, store, http, httpGraph: S.withGraphAuth(http, meta), signer: G.iamSigner(http, auth), auth: ytAuth, log, only, tasksCfg, tasksAuth: auth, creds: { meta: !!meta, youtube: !!(ytClient && ytRefresh) } });
     process.exitCode = res.alerts ? 1 : 0;                 // a failed execution is visible in Cloud Run + alerting; max-retries is 0
   })().catch(e => { log.error('run crashed', { error: C.redact(String(e && e.stack || e)) }); process.exitCode = 1; });
 }

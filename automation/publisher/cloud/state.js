@@ -20,6 +20,8 @@ class CloudState {
     this.gen = await this.store.putJSON(this.name, this.data, this.gen);          // throws Conflict → caller stops
     return p;
   }
+  // episode-level fields (e.g. verify_triggers), written with the same compare-and-swap
+  async setTop(patch) { Object.assign(this.data, redact(patch)); this.gen = await this.store.putJSON(this.name, this.data, this.gen); return this.data; }
   // private sidecar (YouTube resumable session URI): same bucket, never logged, never part of reports
   async local(key, val) {
     const cur = await this.store.getJSON(this.localName), d = cur ? cur.json : {};

@@ -1,9 +1,0 @@
-# copy to the repo root as .dockerignore before building (keeps media, secrets and history out of the build context)
-*
-!automation/format_rules.js
-!automation/publisher/core.js
-!automation/publisher/youtube.js
-!automation/publisher/facebook.js
-!automation/publisher/instagram.js
-!automation/publisher/cloud/*.js
-!automation/publisher/cloud/Dockerfile

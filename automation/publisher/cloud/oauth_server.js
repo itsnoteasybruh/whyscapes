@@ -7,7 +7,7 @@
 // PKCE S256 and a one-time state (10 min) → /callback exchanges the code → checks the granted scope contains youtube.upload →
 // (optional, if youtube.readonly was granted) checks the channel ID equals EXPECTED_CHANNEL_ID → stores the refresh token as a NEW
 // version of the Secret Manager secret "yt-refresh-token". The page and the logs show only the version number and channel — never
-// a token. Client JSON comes from the mounted secret "yt-oauth-client".
+// a token. Client JSON is read from Secret Manager ("yt-oauth-client") at startup.
 const http = require('http'), crypto = require('crypto'), url = require('url');
 const G = require('./gcp'), C = require('../core'), S = require('./support');
 const UPLOAD = 'https://www.googleapis.com/auth/youtube.upload', READONLY = 'https://www.googleapis.com/auth/youtube.readonly';
@@ -52,11 +52,13 @@ function makeApp({ client, redirectUri, scopes = [UPLOAD], expectedChannel = nul
 }
 
 if (require.main === module) {
+  (async () => {
   const transport = C.makeTransport(), auth = G.metadataAuth(transport);
-  const client = JSON.parse(G.readSecret('yt-oauth-client') || '{}');
+  const client = JSON.parse((await G.accessSecret(transport, auth, process.env.GCP_PROJECT, 'yt-oauth-client')) || '{}');
   const scopes = [UPLOAD, ...(process.env.YT_WITH_READONLY === '1' ? [READONLY] : [])];
   const app = makeApp({ client, redirectUri: process.env.REDIRECT_URI || 'http://localhost:8080/callback', scopes, expectedChannel: process.env.EXPECTED_CHANNEL_ID || null, transport,
     storeRefresh: v => G.addSecretVersion(transport, auth, process.env.GCP_PROJECT, 'yt-refresh-token', v) });
   http.createServer((q, s) => app(q, s).catch(e => { s.writeHead(500); s.end('error'); S.logger().error('oauth handler error', { error: C.redact(e.message) }); })).listen(process.env.PORT || 8080);
+  })().catch(e => { S.logger().error('oauth service failed to start', { error: C.redact(e.message) }); process.exit(1); });
 }
 module.exports = { makeApp, UPLOAD, READONLY };
