@@ -117,23 +117,61 @@ test('Facebook gate: schedule must be > 10 min and ≤ 29 days ahead', () => {
   assert.match(FB.gate(ctxFor(d, null, cfg, { publishAt: new Date(Date.now() + 30 * 86400e3) })).join(), /29 days/);
 });
 
-test('Facebook: start returns video_id → stored; upload resumes by offset; finish SCHEDULED once; read back', async () => {
-  const d = tmp(), st = new C.State(path.join(d, 's.json'), 'E'), pa = new Date(Date.now() + 3 * 3600e3);
+test('Facebook: Page token derived in-process, sent only as access_token / rupload OAuth header, never stored or returned; resume by offset; finish once', async () => {
+  const d = tmp(), st = new C.State(path.join(d, 's.json'), 'E'), pa = new Date(Date.now() + 3 * 3600e3), PT = 'EAAPAGETOKENxxxxxxxxxxxxxxxxxxxxxx';
   let finished = 0, statusCalls = 0;
   const f = fake([
-    { m: (m, u, o) => m === 'POST' && u.endsWith('/P/video_reels') && String(o.body).includes('upload_phase=start'), res: { status: 200, json: { video_id: 'FV1' } } },
-    { m: (m, u) => m === 'GET' && u.includes('/FV1?fields=status'), res: () => { statusCalls++; return statusCalls === 1 ? { status: 200, json: { status: { uploading_phase: { status: 'in_progress', bytes_transfered: 400 } } } } : statusCalls === 2 ? { status: 200, json: { status: { uploading_phase: { status: 'complete' }, publishing_phase: { status: 'not_started' } } } } : { status: 200, json: { permalink_url: 'https://fb/reel/FV1', status: { video_status: 'ready', publishing_phase: { status: 'complete', publish_status: 'scheduled', publish_time: pa.toISOString() } } } }; } },
-    { m: (m, u, o) => m === 'POST' && u.includes('rupload') , res: (m, u, o) => { assert.equal(o.headers.offset, '400'); assert.equal(o.body.length, 600); return { status: 200, json: { success: true } }; } },
-    { m: (m, u) => u.includes('/FV1/thumbnails'), res: { status: 200, json: { success: true } } },
-    { m: (m, u, o) => m === 'POST' && String(o.body).includes('upload_phase=finish'), res: (m, u, o) => { finished++; const b = new URLSearchParams(o.body); assert.equal(b.get('video_state'), 'SCHEDULED'); assert.equal(b.get('scheduled_publish_time'), String(Math.floor(pa / 1000))); assert.equal(b.get('description'), POST.text); return { status: 200, json: { success: true } }; } },
+    { m: (m, u) => m === 'GET' && u.endsWith('/P?fields=access_token'), res: { status: 200, json: { access_token: PT, id: 'P' } } },
+    { m: (m, u, o) => m === 'POST' && u.endsWith('/P/video_reels') && String(o.body).includes('upload_phase=start'), res: (m, u, o) => { assert.equal(new URLSearchParams(o.body).get('access_token'), PT); return { status: 200, json: { video_id: 'FV1' } }; } },
+    { m: (m, u) => m === 'GET' && u.includes('/FV1?'), res: (m, u) => { assert.ok(u.includes('access_token=')); statusCalls++; return statusCalls === 1 ? { status: 200, json: { status: { uploading_phase: { status: 'in_progress', bytes_transfered: 400 } } } } : statusCalls === 2 ? { status: 200, json: { status: { uploading_phase: { status: 'completed' }, publishing_phase: { status: 'not_started' } } } } : { status: 200, json: { permalink_url: 'https://fb/reel/FV1', status: { video_status: 'ready', publishing_phase: { status: 'completed', publish_status: 'scheduled', publish_time: String(Math.floor(pa / 1000)) } } } }; } },
+    { m: (m, u) => m === 'POST' && u.includes('rupload'), res: (m, u, o) => { assert.equal(o.headers.Authorization, `OAuth ${PT}`); assert.equal(o.headers.offset, '400'); assert.equal(o.body.length, 600); return { status: 200, json: { success: true } }; } },
+    { m: (m, u) => u.includes('/FV1/thumbnails'), res: (m, u, o) => { assert.equal(o.body.get('access_token'), PT); return { status: 200, json: { success: true } }; } },
+    { m: (m, u, o) => m === 'POST' && String(o.body).includes('upload_phase=finish'), res: (m, u, o) => { finished++; const b = new URLSearchParams(o.body); assert.equal(b.get('video_state'), 'SCHEDULED'); assert.equal(b.get('scheduled_publish_time'), String(Math.floor(pa / 1000))); assert.equal(b.get('description'), POST.text); assert.equal(b.get('access_token'), PT); return { status: 200, json: { success: true } }; } },
   ]);
   const r = await FB.schedule(ctxFor(d, f.http, { page_id: 'P', declarations: { is_ai_generated: false } }, { publishAt: pa }), st);
-  assert.equal(r.state, 'SCHEDULED'); assert.equal(finished, 1); assert.equal(st.p('facebook').remote_id, 'FV1');
+  assert.equal(r.state, 'SCHEDULED'); assert.equal(finished, 1); assert.equal(st.p('facebook').remote_id, 'FV1'); assert.equal(r.evidence.publish_time_matches, true);
+  // graph.facebook.com never gets an Authorization header from us (the proxy owns it)
+  assert.ok(f.calls.filter(c => c.url.includes('graph.facebook.com')).every(c => !(c.headers && c.headers.Authorization)));
+  // the Page token is derived once and appears nowhere persistent or returned
+  assert.equal(f.calls.filter(c => c.url.endsWith('fields=access_token')).length, 1);
+  assert.ok(!fs.readFileSync(path.join(d, 's.json'), 'utf8').includes(PT));
+  assert.ok(!JSON.stringify(r).includes(PT));
+});
+
+test('Facebook checkAuth: page readable, permissions, Page token recognised as the Page — booleans only, no token in the result', async () => {
+  const d = tmp(), PT = 'EAAPAGETOKENyyyyyyyyyyyyyyyyyyyyyy';
+  const f = fake([
+    { m: (m, u) => u.endsWith('/P?fields=id,name'), res: { status: 200, json: { id: 'P', name: 'Whyscape.Id' } } },
+    { m: (m, u) => u.endsWith('/me/permissions'), res: { status: 200, json: { data: ['pages_show_list', 'pages_read_engagement', 'pages_manage_posts'].map(p => ({ permission: p, status: 'granted' })) } } },
+    { m: (m, u) => u.endsWith('/P?fields=access_token'), res: { status: 200, json: { access_token: PT } } },
+    { m: (m, u) => u.includes('/me?'), res: { status: 200, json: { id: 'P' } } },
+  ]);
+  const a = await FB.checkAuth(ctxFor(d, f.http, { page_id: 'P' }));
+  assert.equal(a.ok, true); assert.equal(a.checks.page_token_is_page, true); assert.ok(!JSON.stringify(a).includes(PT));
+});
+
+test('Facebook: Page token cannot be derived → nothing is created', async () => {
+  const d = tmp(), st = new C.State(path.join(d, 's.json'), 'E');
+  const f = fake([{ m: (m, u) => u.endsWith('fields=access_token'), res: { status: 403, json: { error: { message: 'no' } } } }]);
+  await assert.rejects(FB.schedule(ctxFor(d, f.http, { page_id: 'P', declarations: { is_ai_generated: false } }), st));
+  assert.equal(st.p('facebook').state, 'NOT_STARTED'); assert.equal(f.calls.length, 1);
+});
+
+test('Instagram checkAuth: no Authorization header sent (proxy injects), permissions + quota read', async () => {
+  const d = tmp();
+  const f = fake([
+    { m: (m, u) => u.endsWith('/I?fields=id,username'), res: { status: 200, json: { id: 'I', username: 'whyscape.id' } } },
+    { m: (m, u) => u.endsWith('/me/permissions'), res: { status: 200, json: { data: [{ permission: 'instagram_basic', status: 'granted' }, { permission: 'instagram_content_publish', status: 'granted' }] } } },
+    { m: (m, u) => u.includes('content_publishing_limit'), res: { status: 200, json: { data: [{ quota_usage: 0, config: { quota_total: 100, quota_duration: 86400 } }] } } },
+  ]);
+  const a = await IG.checkAuth(ctxFor(d, f.http, { ig_user_id: 'I' }));
+  assert.equal(a.ok, true); assert.deepEqual(a.checks.quota, { used: 0, total: 100, window_s: 86400 });
+  assert.ok(f.calls.every(c => !(c.headers && c.headers.Authorization)));
 });
 
 test('Facebook: start call outcome unknown → AMBIGUOUS, no retry on the next run', async () => {
   const d = tmp(), st = new C.State(path.join(d, 's.json'), 'E');
-  const f = fake([{ m: () => true, res: new C.TransportError('ambiguous', 'timeout') }]);
+  const f = fake([{ m: (m, u) => u.endsWith('fields=access_token'), res: { status: 200, json: { access_token: 'EAAPAGETOKENzzzzzzzzzzzzzzzzzzzzzz' } } }, { m: () => true, res: new C.TransportError('ambiguous', 'timeout') }]);
   const c = ctxFor(d, f.http, { page_id: 'P', declarations: { is_ai_generated: false } });
   await FB.schedule(c, st); assert.equal(st.p('facebook').state, 'AMBIGUOUS');
   const n = f.calls.length; await FB.schedule(c, st); assert.equal(f.calls.length, n);

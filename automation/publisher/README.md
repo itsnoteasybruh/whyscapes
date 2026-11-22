@@ -46,13 +46,19 @@ Judul, caption, dan hashtag dibaca persis dari POST.md; caption dan hashtag hany
 - **`reconcile`** hanya mengadopsi **tepat satu** objek yang cocok (judul/caption sama, dibuat setelah niat dicatat). Nol atau lebih dari satu kecocokan tetap AMBIGUOUS sampai ada instruksi creator.
 - Platform yang SCHEDULED/PUBLISHED hanya dibaca balik, tidak pernah dibuat ulang.
 
-## Kredensial
-Token tidak pernah masuk repo, log, maupun chat. Semua output melewati `redact()`.
+## Kredensial (diperbarui 22 Nov 2026 ±22.00 WIB)
+Token tidak pernah masuk repo, log, state, maupun chat. Semua output melewati `redact()`. Tes memastikan token Page tidak muncul di state atau hasil.
 
-| Platform | Cara memberi token |
+| Platform | Cara autentikasi |
 |---|---|
-| Meta (Facebook + Instagram) | Network secret environment per host (`graph.facebook.com`, `rupload.facebook.com`), disisipkan proxy. Alternatif: variabel `META_PAGE_TOKEN` / `META_IG_TOKEN` |
-| YouTube | `YT_ACCESS_TOKEN` atau network secret untuk `www.googleapis.com`. Token akses Google berumur ±1 jam, jadi otomasi butuh refresh token + client secret di tempat aman (lihat `PUBLISHER_READINESS`) |
+| Facebook Page Reels | Network secret environment di `graph.facebook.com`: proxy **menyisipkan dan mengganti** header Authorization dengan token **pengguna**. Endpoint Reels butuh token **Page**: diturunkan di dalam proses (`GET /{page-id}?fields=access_token`), disimpan hanya di closure, dikirim sebagai parameter `access_token` (Graph memakainya di atas header yang disisipkan; terbukti `GET /me` → ID Page), dan sebagai `Authorization: OAuth` di `rupload.facebook.com`. Tidak pernah dicetak atau disimpan |
+| Instagram Reels | Token pengguna yang disisipkan proxy (`instagram_basic`, `instagram_content_publish`). Kode tidak mengirim token sama sekali. Upload resumable **tidak** dipakai, karena butuh token di `rupload.facebook.com` yang hanya dipegang proxy untuk host graph. Video dan cover lewat URL publik |
+| YouTube | `YT_ACCESS_TOKEN` atau network secret di `www.googleapis.com` (belum dipasang) |
+
+**Host upload:**
+- **Facebook Reels:** `rupload.facebook.com`. Saat ini **diblokir** proxy. Cukup izinkan hostnya; **jangan** pasang network secret di host ini, karena proxy akan mengganti header OAuth token-Page dengan token pengguna.
+- **Instagram:** Meta mengambil video/cover dari URL publik, jadi tidak ada upload dari environment ini.
+- `graph-video.facebook.com` tidak dipakai kode ini.
 
 `publish.js` menjalankan ulang dirinya dengan `NODE_USE_ENV_PROXY=1`, karena `fetch` bawaan Node tidak membaca `HTTPS_PROXY`.
 

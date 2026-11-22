@@ -1,20 +1,50 @@
 {
   "episode": "WS-EP14",
   "root": "../..",
-  "video": { "path": "outputs/WS-EP14/WS-EP14.mp4", "expected_md5": "12074b85f35b6486ded67ed52f999ebc", "qc": "PASS" },
+  "video": {
+    "path": "outputs/WS-EP14/WS-EP14.mp4",
+    "expected_md5": "12074b85f35b6486ded67ed52f999ebc",
+    "qc": "PASS"
+  },
   "post_file": "episodes/ep14_kulkas/creator/POST.md",
   "expected_post_sha256": "8edd1436274e8ac777aae488e47655fcef80ef64d77127db2c5ecc1601aa8779",
   "thumbnail_file": "episodes/ep14_kulkas/creator/THUMBNAIL_received_via_chat.webp",
   "schedule": {
     "publish_at_wib": "2026-11-22 21:00",
-    "platforms": ["facebook", "instagram", "youtube"],
+    "platforms": [
+      "facebook",
+      "instagram",
+      "youtube"
+    ],
     "creator_instruction": "Untuk pilot EP14, coba jadwalkan tayang pukul 21.00 WIB HANYA pada platform yang koneksi, thumbnail, caption, dan jadwalnya sudah terverifikasi (Facebook Page Reels, Instagram Reels, YouTube Shorts; 'malam ini', pesan 22 Nov 2026)"
   },
   "platforms": {
-    "youtube": { "enabled": true, "category_id": null,
-      "declarations": { "made_for_kids": null, "contains_synthetic_media": null, "has_paid_product_placement": null, "source": "belum diberikan creator" } },
-    "facebook": { "enabled": true, "page_id": null,
-      "declarations": { "is_ai_generated": null, "source": "belum diberikan creator" } },
-    "instagram": { "enabled": true, "ig_user_id": null, "public_video_url": null, "public_cover_url": null, "share_to_feed": null }
+    "youtube": {
+      "enabled": true,
+      "category_id": null,
+      "declarations": {
+        "made_for_kids": null,
+        "contains_synthetic_media": null,
+        "has_paid_product_placement": null,
+        "source": "belum diberikan creator"
+      }
+    },
+    "facebook": {
+      "enabled": true,
+      "page_id": "1421016024432912",
+      "declarations": {
+        "is_ai_generated": null,
+        "source": "belum diberikan creator"
+      },
+      "auth": "network secret on graph.facebook.com (user token); Page token derived in-process"
+    },
+    "instagram": {
+      "enabled": true,
+      "ig_user_id": "17841464723522892",
+      "public_video_url": null,
+      "public_cover_url": null,
+      "share_to_feed": null,
+      "auth": "network secret on graph.facebook.com (user token)"
+    }
   }
 }

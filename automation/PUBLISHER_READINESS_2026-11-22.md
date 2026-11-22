@@ -7,6 +7,11 @@
 > - **Facebook "Reels 90 detik": BENAR untuk alur yang dipakai** (Reels Publishing API, `POST /{page-id}/video_reels`). Dokumen Meta: *"Duration | 3 to 90 seconds"*; error 1363128 *"Reels duration must be between 3 and 90 seconds."* EP14 = 112,47 s, jadi **ditolak di alur ini**. Format EP14 tidak diubah. Alur lain (video Halaman biasa) adalah keputusan creator dan belum diimplementasikan.
 > - **Instagram Reels lewat API: 3 detik – 15 menit** (EP14 lolos). Cover = `cover_url` **JPEG di URL publik**. Video lewat `video_url` publik atau upload resumable (butuh Facebook Login for Business). Dokumen tidak menyediakan jadwal publish; publikasi harus dipicu tepat 21.00 WIB oleh routine.
 > - **Facebook jadwal:** `video_state=SCHEDULED` + `scheduled_publish_time` (unix), harus **> 10 menit dan ≤ 29 hari** dari sekarang. Batas 30 posting API / 24 jam.
+> - **Pembaruan ±22.00 WIB (GET saja):**
+>   - Network secret `graph.facebook.com` berfungsi. Token pengguna "Whyscape Automation" (izin `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, `instagram_basic`, `instagram_content_publish`, `business_management`).
+>   - Page `Whyscape.Id` (1421016024432912) terbaca. Token Page bisa diturunkan dan dikenali sebagai Page.
+>   - Instagram `whyscape.id` (17841464723522892) terbaca dan terhubung ke Page itu. Kuota publikasi 0/100 per 24 jam.
+>   - `rupload.facebook.com` dan `graph-video.facebook.com` masih diblokir proxy.
 > - Bagian di bawah yang bertentangan dengan koreksi ini tidak berlaku lagi.
 
 

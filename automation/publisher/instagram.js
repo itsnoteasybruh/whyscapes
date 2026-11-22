@@ -4,10 +4,15 @@
 //   (EXPIRED, ERROR, FINISHED, IN_PROGRESS, PUBLISHED; poll ≤ once/min, ≤ 5 min); POST /{ig-user-id}/media_publish creation_id;
 //   100 API posts / 24 h (GET /{ig-user-id}/content_publishing_limit). The docs describe NO scheduled-publish parameter.
 // So "scheduling" on Instagram = prepare the container in advance, then media_publish at publish_at (run by the routine).
+// AUTH (22 Nov 2026): graph.facebook.com calls carry NO token from this code — the environment's network secret injects the user
+// token (instagram_basic + instagram_content_publish granted). Resumable upload is NOT used: it needs "Authorization: OAuth <user
+// token>" on rupload.facebook.com, and that value only exists inside the proxy for graph.facebook.com. Video and cover therefore go
+// by PUBLIC URL (video_url / cover_url), as the docs require.
 // Idempotency: container id stored at once; media_publish is never repeated if the container already says PUBLISHED.
 const { createOutcome } = require('./core');
 const V = 'v27.0', G = `https://graph.facebook.com/${V}`;
-const tok = () => process.env.META_IG_TOKEN ? { Authorization: `OAuth ${process.env.META_IG_TOKEN}` } : {};
+const tok = () => ({});                                  // token injected by the egress proxy (network secret on graph.facebook.com)
+const REQUIRED_PERMS = ['instagram_basic', 'instagram_content_publish'];
 const form = o => new URLSearchParams(Object.entries(o).filter(([, v]) => v !== undefined && v !== null).map(([k, v]) => [k, String(v)]));
 const PUBLISH_WINDOW_MIN = 20;
 
@@ -15,14 +20,22 @@ function gate(ctx, mode) {
   const r = [];
   if (!ctx.cfg.ig_user_id) r.push('Instagram professional account ID not configured');
   if (ctx.video.duration < 3 || ctx.video.duration > 900) r.push(`video is ${ctx.video.duration}s; Reels API accepts 3 s – 15 min`);
-  if (!ctx.cfg.public_video_url) r.push('no PUBLIC URL for the MP4 (video_url must be fetchable by Meta; resumable upload needs Facebook Login for Business — not set up)');
+  if (!ctx.cfg.public_video_url) r.push('no PUBLIC URL for the MP4 (video_url must be fetchable by Meta; resumable upload would need the token on rupload.facebook.com, which only the proxy holds for graph.facebook.com)');
   if (!ctx.cfg.public_cover_url) r.push('no PUBLIC URL for the cover JPEG (cover_url); the creator thumbnail must be hosted publicly');
   if (mode === 'publish') { const m = (ctx.now - ctx.publishAt) / 60e3; if (m < 0 || m > PUBLISH_WINDOW_MIN) r.push(`publish runs only within ${PUBLISH_WINDOW_MIN} min after publish_at (now ${m.toFixed(1)} min)`); }
   return r;
 }
 async function checkAuth(ctx) {
+  const out = { ok: false, checks: {} };
   const r = await ctx.http('GET', `${G}/${ctx.cfg.ig_user_id}?fields=id,username`, { headers: tok() });
-  return r.ok && r.json && r.json.id ? { ok: true, account: { ig_user_id: r.json.id, username: r.json.username } } : { ok: false, detail: `HTTP ${r.status} ${JSON.stringify(r.json && r.json.error && r.json.error.message || '')}` };
+  out.checks.ig_readable = !!(r.ok && r.json && r.json.id === ctx.cfg.ig_user_id); if (out.checks.ig_readable) out.account = { ig_user_id: r.json.id, username: r.json.username };
+  const perms = await ctx.http('GET', `${G}/me/permissions`, { headers: tok() });
+  const granted = perms.ok ? (perms.json.data || []).filter(p => p.status === 'granted').map(p => p.permission) : [];
+  out.checks.missing_permissions = REQUIRED_PERMS.filter(p => !granted.includes(p));
+  const q = await ctx.http('GET', `${G}/${ctx.cfg.ig_user_id}/content_publishing_limit?fields=config,quota_usage`, { headers: tok() });
+  const d = q.ok && q.json && (q.json.data || [])[0]; out.checks.quota = d ? { used: d.quota_usage, total: d.config && d.config.quota_total, window_s: d.config && d.config.quota_duration } : null;
+  out.ok = out.checks.ig_readable && !out.checks.missing_permissions.length;
+  return out;
 }
 const container = async (ctx, id) => { const r = await ctx.http('GET', `${G}/${id}?fields=status_code,status`, { headers: tok() }); return r.ok ? r.json : { error: `HTTP ${r.status}` }; };
 async function reconcile(ctx, p) {
