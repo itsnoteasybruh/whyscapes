@@ -1,0 +1,99 @@
+Fetched 2026-11-22 12:45Z from https://developers.google.com/youtube/v3/revision_history (excerpt: Sep–Nov 2026 entries)
+
+November 16, 2026
+Starting November 16, 2026, YouTube will include co-views (multiple people
+watching together on a television screen) in public view counts across all
+video formats: long-form videos, Live, and Shorts. Concurrent viewer counts
+for live broadcasts also include co-viewers.
+Creator earnings, ad revenue, and YouTube Partner Program eligibility are
+unaffected, and engaged views don't include co-views. To learn more, see
+Understand your YouTube content
+performance.
+API documentation updates: Updated the descriptions of the viewCount
+field in the channels,
+videos, and
+videos.batchGetStats
+reference documentation and the liveStreamingDetails.concurrentViewers field
+in the videos reference
+documentation.
+Added support for the posts
+resource, which represents a YouTube post. During the pilot phase,
+the resource and its methods are available only to select launch partners
+(approved Google Cloud projects), with broader public API access planned for
+General Availability in 2027. Approved Google Cloud projects in the pilot can
+also use comments on posts.
+The
+paidProductPlacementDetails.hasPaidProductPlacement
+property no longer defaults to false. If you don't specify a value for the
+property in a videos.insert
+or videos.update request,
+the video isn't declared as free of paid product placement. To declare that a
+video doesn't contain paid product placement, explicitly set the property to
+false:
+"paidProductPlacementDetails": {
+  "hasPaidProductPlacement": false
+}
+November 3, 2026
+This update contains the following changes:
+The thumbnails.set method
+now supports uploading custom thumbnails for YouTube Shorts after video
+processing is complete.
+The thumbnails resource
+definition has been updated to include the shortsAspectRatio property for
+YouTube Shorts custom thumbnails.
+November 2, 2026
+Videos uploaded through the
+videos.insert method from
+unverified API projects are no longer restricted to private viewing mode. This
+change reverses the policy announced on
+July 28, 2020, which restricted videos uploaded
+from unverified API projects created after that date to private viewing mode
+until the project completed an audit.
+If you don't specify a value for the
+status.privacyStatus
+property in a videos.insert request, the uploaded video's privacy status
+defaults to public. Certain uploads might default to private based on
+creator account settings, as explained in the
+YouTube Help Center.
+October 15, 2026
+The videos.list method has been clarified to
+note that the status.selfDeclaredMadeForKids and status.madeForKids
+properties are only updated if specified in the request and are not overridden
+if omitted.
+September 30, 2026
+The comments resource definition
+has been updated to include the new snippet.imageUrl property, which provides
+the URL for an image or animated GIF attached to a comment.
+This feature will be available to all users in November 2026.
+September 14, 2026
+This update contains the following changes:
+The thumbnails.set method description has
+been updated to note that the maximum file size for uploaded thumbnails has
+increased from 2MB to 50MB.
+The playlistImages.insert method
+description has been updated to note that the maximum file size for uploaded
+images has increased from 2MB to 50MB.
+September 11, 2026
+The definition of the snippet.thumbnails.(key) property has been updated in
+the reference documentation for the activities,
+liveBroadcasts,
+playlistItems,
+playlists,
+search,
+and videos
+resources to note that higher-resolution thumbnail sizes are now available for
+some videos: fhd (1080p), qhd (1440p), and uhd (4K).
+September 1, 2026
+The videos.getRating method now accepts
+the https://www.googleapis.com/auth/youtube.readonly authorization scope.
+August 27, 2026
+YouTube will align public view counting for all video formats: long-form videos,
+Live, and Shorts. YouTube will count public views the moment a video begins to
+play.
+Monetization eligibility and the majority of core performance metrics are
+unaffected as they remain anchored on engaged metrics. Creator earnings will
+continue to be based on "Engaged Shorts views" and "Engaged Watch Hours," which
+you can view in YouTube Analytics > Advanced Mode.
+There is no change to YouTube Partner Program eligibility. YouTube Partner
+Program entry requirements will also now be referred to as "qualified Shorts
+views" and "qualified watch hours" (previously "valid publ

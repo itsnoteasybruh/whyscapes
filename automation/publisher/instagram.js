@@ -1,0 +1,78 @@
+// Instagram Reels adapter (Instagram Platform, Graph v27.0). Sources (fetched 2026-11-22, ./sources/meta_ig_*):
+//   POST /{ig-user-id}/media media_type=REELS (video_url on a PUBLIC server, or upload_type=resumable + rupload.facebook.com/ig-api-upload);
+//   cover_url = PUBLIC JPEG (≤ 8 MB, 9:16 recommended; overrides thumb_offset); Reels 3 s – 15 min; GET /{container}?fields=status_code
+//   (EXPIRED, ERROR, FINISHED, IN_PROGRESS, PUBLISHED; poll ≤ once/min, ≤ 5 min); POST /{ig-user-id}/media_publish creation_id;
+//   100 API posts / 24 h (GET /{ig-user-id}/content_publishing_limit). The docs describe NO scheduled-publish parameter.
+// So "scheduling" on Instagram = prepare the container in advance, then media_publish at publish_at (run by the routine).
+// Idempotency: container id stored at once; media_publish is never repeated if the container already says PUBLISHED.
+const { createOutcome } = require('./core');
+const V = 'v27.0', G = `https://graph.facebook.com/${V}`;
+const tok = () => process.env.META_IG_TOKEN ? { Authorization: `OAuth ${process.env.META_IG_TOKEN}` } : {};
+const form = o => new URLSearchParams(Object.entries(o).filter(([, v]) => v !== undefined && v !== null).map(([k, v]) => [k, String(v)]));
+const PUBLISH_WINDOW_MIN = 20;
+
+function gate(ctx, mode) {
+  const r = [];
+  if (!ctx.cfg.ig_user_id) r.push('Instagram professional account ID not configured');
+  if (ctx.video.duration < 3 || ctx.video.duration > 900) r.push(`video is ${ctx.video.duration}s; Reels API accepts 3 s – 15 min`);
+  if (!ctx.cfg.public_video_url) r.push('no PUBLIC URL for the MP4 (video_url must be fetchable by Meta; resumable upload needs Facebook Login for Business — not set up)');
+  if (!ctx.cfg.public_cover_url) r.push('no PUBLIC URL for the cover JPEG (cover_url); the creator thumbnail must be hosted publicly');
+  if (mode === 'publish') { const m = (ctx.now - ctx.publishAt) / 60e3; if (m < 0 || m > PUBLISH_WINDOW_MIN) r.push(`publish runs only within ${PUBLISH_WINDOW_MIN} min after publish_at (now ${m.toFixed(1)} min)`); }
+  return r;
+}
+async function checkAuth(ctx) {
+  const r = await ctx.http('GET', `${G}/${ctx.cfg.ig_user_id}?fields=id,username`, { headers: tok() });
+  return r.ok && r.json && r.json.id ? { ok: true, account: { ig_user_id: r.json.id, username: r.json.username } } : { ok: false, detail: `HTTP ${r.status} ${JSON.stringify(r.json && r.json.error && r.json.error.message || '')}` };
+}
+const container = async (ctx, id) => { const r = await ctx.http('GET', `${G}/${id}?fields=status_code,status`, { headers: tok() }); return r.ok ? r.json : { error: `HTTP ${r.status}` }; };
+async function reconcile(ctx, p) {
+  const r = await ctx.http('GET', `${G}/${ctx.cfg.ig_user_id}/media?fields=id,caption,timestamp,permalink,media_product_type&limit=25`, { headers: tok() });
+  if (!r.ok) return { error: `HTTP ${r.status}` };
+  const since = new Date(new Date(p.intent_at).getTime() - 10 * 60e3);
+  return { matches: (r.json.data || []).filter(m => m.caption === ctx.post.text && new Date(m.timestamp) >= since).map(m => ({ id: m.id, at: m.timestamp, url: m.permalink })) };
+}
+// step 1 (any time before publish_at, container lives 24 h): create the container and wait for FINISHED
+async function prepare(ctx, st) {
+  let p = st.p('instagram');
+  if (['PUBLISHED'].includes(p.state)) return verify(ctx, st);
+  if (p.state === 'AMBIGUOUS') return { stop: true, reason: 'unknown outcome earlier; reconcile required' };
+  if (!p.container_id) {
+    st.set('instagram', { state: 'CREATING', intent_at: new Date().toISOString(), file_sha256: ctx.videoSha, publish_at: ctx.publishAt.toISOString() }, { step: 'intent' });
+    let r;
+    try { r = await ctx.http('POST', `${G}/${ctx.cfg.ig_user_id}/media`, { headers: tok(), body: form({ media_type: 'REELS', video_url: ctx.cfg.public_video_url, cover_url: ctx.cfg.public_cover_url, caption: ctx.post.text, share_to_feed: ctx.cfg.share_to_feed }) }); }
+    catch (e) { st.set('instagram', { state: e.kind === 'not_sent' ? 'FAILED_DEFINITE' : 'NOT_STARTED' }, { step: 'container', error: e.message, note: 'a container is not a post; an orphan expires in 24 h' }); return { stop: true, reason: e.message }; }
+    if (createOutcome(r) !== 'done' || !r.json || !r.json.id) { st.set('instagram', { state: 'FAILED_DEFINITE' }, { step: 'container', http: r.status, error: r.json && r.json.error && r.json.error.message }); return { stop: true, reason: `container HTTP ${r.status}` }; }
+    p = st.set('instagram', { state: 'CREATED', container_id: r.json.id }, { step: 'container', container_id: r.json.id });
+  }
+  for (let i = 0; i < (ctx.pollTries ?? 5); i++) {
+    const c = await container(ctx, p.container_id);
+    if (c.status_code === 'FINISHED') { st.set('instagram', { container_status: 'FINISHED' }, { step: 'container-status' }); return { state: 'CREATED', prepared: true, container_id: p.container_id, note: `ready; media_publish will run at ${ctx.publishAt.toISOString()} (Instagram API has no native scheduling)` }; }
+    if (['ERROR', 'EXPIRED'].includes(c.status_code)) { st.set('instagram', { state: 'FAILED_DEFINITE', container_id: null }, { step: 'container-status', status: c.status_code }); return { stop: true, reason: 'container ' + c.status_code }; }
+    await ctx.sleep(ctx.pollMs ?? 60000);
+  }
+  return { stop: true, reason: 'container still processing; next run continues' };
+}
+// step 2 (inside the publish window): media_publish once
+async function publish(ctx, st) {
+  const p = st.p('instagram');
+  if (p.state === 'PUBLISHED') return verify(ctx, st);
+  if (!p.container_id || p.container_status !== 'FINISHED') return { stop: true, reason: 'container not prepared' };
+  const c = await container(ctx, p.container_id);
+  if (c.status_code === 'PUBLISHED') { const m = await reconcile(ctx, p); if (m.matches && m.matches.length === 1) { st.set('instagram', { state: 'PUBLISHED', remote_id: m.matches[0].id, url: m.matches[0].url }, { step: 'adopt' }); return verify(ctx, st); } st.set('instagram', { state: 'AMBIGUOUS' }, { step: 'publish', note: 'container PUBLISHED but media not uniquely found' }); return { stop: true, reason: 'ambiguous' }; }
+  st.set('instagram', { publish_attempted_at: new Date().toISOString() }, { step: 'publish-intent' });
+  let r;
+  try { r = await ctx.http('POST', `${G}/${ctx.cfg.ig_user_id}/media_publish`, { headers: tok(), body: form({ creation_id: p.container_id }) }); }
+  catch (e) { st.set('instagram', { state: e.kind === 'not_sent' ? 'CREATED' : 'AMBIGUOUS' }, { step: 'publish', error: e.message }); return { stop: true, reason: e.message }; }
+  if (r.ok && r.json && r.json.id) { st.set('instagram', { state: 'PUBLISHED', remote_id: r.json.id }, { step: 'publish', media_id: r.json.id }); return verify(ctx, st); }
+  st.set('instagram', { state: createOutcome(r) === 'rejected' ? 'CREATED' : 'AMBIGUOUS' }, { step: 'publish', http: r.status, error: r.json && r.json.error && r.json.error.message });
+  return { stop: true, reason: `publish HTTP ${r.status}` };
+}
+async function verify(ctx, st) {
+  const p = st.p('instagram');
+  if (!p.remote_id) return { state: p.state, evidence: { container_id: p.container_id || null, container_status: p.container_status || null } };
+  const r = await ctx.http('GET', `${G}/${p.remote_id}?fields=id,permalink,timestamp,media_product_type`, { headers: tok() });
+  if (!r.ok) return { stop: true, reason: `read-back HTTP ${r.status}` };
+  st.set('instagram', { state: 'PUBLISHED', url: r.json.permalink, evidence: { media_id: r.json.id, permalink: r.json.permalink, timestamp: r.json.timestamp, type: r.json.media_product_type, checked_at: new Date().toISOString() } }, { step: 'verify' });
+  return { state: 'PUBLISHED', evidence: st.p('instagram').evidence };
+}
+module.exports = { name: 'instagram', gate, checkAuth, reconcile, prepare, publish, verify, schedule: prepare };
