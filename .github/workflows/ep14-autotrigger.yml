@@ -1,0 +1,69 @@
+# EP14 automatic trigger — 24 Nov 2026 only. Three scheduled attempts (cron is UTC; WIB = UTC+7):
+#   45 8 24 11 *  → 15.45 WIB    15 9 24 11 *  → 16.15 WIB (backup)    45 9 24 11 *  → 16.45 WIB (backup)
+# Each attempt runs automation/publisher/ep14_autotrigger.js, which checks every gate (date 2026-11-24 WIB, window 15.20–20.30 WIB,
+# config = 2026-11-24 21:00, QC PASS, no hold, no earlier trigger marker, no publish-ep14 run on the day except read-only ones,
+# state NOT_STARTED, plan, check-auth, GET-only conflict check) and only then dispatches the EXISTING workflow publish-ep14.yml with
+# action=run and confirm=EP14-LIVE. All live safety stays in publish-ep14.yml, unchanged. A backup never re-triggers: the first
+# attempt leaves a durable marker on the data branch BEFORE it dispatches, and an unclear dispatch stops for reconcile (exit 3).
+# The cron lines also match 24 Nov of later years; the script refuses any date other than 2026-11-24 (WIB).
+# Manual starts can only do read-only things: dry-run (gates, no dispatch, no marker) or selftest-dispatch-plan (dispatches the
+# READ-ONLY action plan to prove the GITHUB_TOKEN can start publish-ep14.yml).
+name: ep14-autotrigger (24 Nov 2026)
+run-name: "ep14-autotrigger · ${{ github.event_name == 'schedule' && 'scheduled' || inputs.mode }}"
+
+on:
+  schedule:
+    - cron: '45 8 24 11 *'          # 15.45 WIB
+    - cron: '15 9 24 11 *'          # 16.15 WIB (backup)
+    - cron: '45 9 24 11 *'          # 16.45 WIB (backup)
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'dry-run (gates only) | selftest-dispatch-plan (read-only dispatch test)'
+        type: choice
+        options: [dry-run, selftest-dispatch-plan]
+        default: dry-run
+
+permissions: {}
+
+concurrency:                         # attempts never overlap; a later one sees the earlier one's marker / run
+  group: ep14-autotrigger
+  cancel-in-progress: false
+
+env:
+  DATA_REF: input/ep14-kulkas-i7gj8b
+  CONFIG: data/outputs/WS-EP14_v2/publish_config.json
+  MARKER: outputs/WS-EP14_v2/autotrigger_marker.json
+
+jobs:
+  gate:
+    if: github.repository == 'itsnoteasybruh/whyscapes'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write                # only to push the trigger marker to DATA_REF
+      actions: write                 # list publish-ep14 runs + dispatch publish-ep14.yml
+    env:
+      META_TOKEN: ${{ secrets.META_TOKEN }}
+      GH_TOKEN: ${{ github.token }}
+      DATA_DIR: ${{ github.workspace }}/data
+      MARKER_SYNC: ${{ github.workspace }}/.marker_sync.sh
+      MODE: ${{ github.event_name == 'schedule' && 'live-dispatch' || inputs.mode }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { path: code, persist-credentials: false }
+      - uses: actions/checkout@v4
+        with: { ref: '${{ env.DATA_REF }}', path: data }     # keeps the GITHUB_TOKEN credential for the marker push
+      - name: ffmpeg (plan measures the MP4)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
+      - name: marker sync script
+        run: |
+          cat > "$MARKER_SYNC" <<'EOF'
+          set -e; cd "$DATA_DIR"
+          git add -f "$MARKER"
+          git -c user.name="whyscape-publisher" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -q -m "ep14 autotrigger marker ($1) [skip ci]"
+          for i in 1 2 3; do git pull -q --rebase origin "$DATA_REF" && git push -q origin "HEAD:$DATA_REF" && { echo "marker pushed ($1)" >&2; exit 0; }; sleep $((i * 5)); done
+          echo "::error::could not push the trigger marker" >&2; exit 1
+          EOF
+      - name: gates → dispatch publish-ep14 (run, EP14-LIVE) only if all pass
+        run: node code/automation/publisher/ep14_autotrigger.js --mode "$MODE"

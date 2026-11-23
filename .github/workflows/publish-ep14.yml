@@ -12,6 +12,7 @@
 # State: every change (intent BEFORE a request, the remote ID right after) is committed and pushed to DATA_REF at once (STATE_SYNC),
 # so a runner that stops after a Meta request leaves a durable intent → the next run stops as AMBIGUOUS and reconciles by GET.
 name: publish-ep14 (Meta pilot)
+run-name: "publish-ep14 · ${{ inputs.action }}"        # lets ep14-autotrigger tell read-only runs from a live run
 
 on:
   workflow_dispatch:
