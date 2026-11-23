@@ -1,15 +1,23 @@
 # Whyscape EP14 — Kenapa Makanan di Kulkas Tetap Bisa Basi?
 
-- Jadwal tayang target: Selasa, 24 Nov 2026, 21.00 WIB (Asia/Jakarta), **slot editorial tentatif** sebelum EP15. Belum dijadwalkan di platform.
-- Status: **HOLD**. Thumbnail dan paket posting tersedia; VO final berdurasi maksimal 90 detik, video final, serta QC belum terkonfirmasi.
+- Jadwal tayang: **Senin, 23 Nov 2026, 21.00 WIB (Asia/Jakarta)** — slot 21.00 pertama setelah QC PASS (23 Nov 2026, 16.24 WIB), hanya bila Facebook dan Instagram sama-sama siap (persiapan Instagram selesai paling lambat 20.30 WIB). Bila syarat itu tidak terpenuhi, jadwal bergeser ke slot 21.00 berikutnya yang tidak bentrok. Keputusan creator 23 Nov 2026; menggantikan target tentatif 24 Nov 2026.
+- Status: **QC PASS** — `outputs/WS-EP14_v2/WS-EP14_v2.mp4` (65,10 detik, md5 `9ecafcabd6d8c09eff65e6fe91ded44d`); detail di `episodes/ep14_kulkas_v2/QC.md`. Dianggap terjadwal hanya setelah jadwal Facebook dibaca balik dari Meta dan job Instagram berjalan.
 - Kanal pilot: Facebook Reels dan Instagram Reels. YouTube ditangani manual di luar otomasi pilot.
 - Format target: video vertikal maksimal 90 detik. Durasi harus diperiksa dari audio dan MP4 final.
 
 ## VO final (AIDA; tag ekspresi ElevenLabs v4)
 
-**Belum tersedia dalam bahan yang dilampirkan.** Jangan membuat transkrip dari caption atau menganggap VO lama sebagai versi final. Masukkan naskah verbatim beserta tag ekspresi setelah revisi VO dan pemeriksaan durasi ≤90 detik.
+VO final: `episodes/ep14_kulkas_v2/audio/vo.mp3` (ElevenLabs v4, **62,59 detik**, sha256 `74fd0ecd596a189a1321eb33cb2e0769f488911d7926509315e9475c1498a7ed`). Isinya cocok dengan naskah yang disetujui di bawah (salinan verbatim dari `creator/MASTER_PROMPT_EP14_v2.md`; tag `[]` adalah arahan ekspresi, tidak terucap). VO sumber lama 109,48 detik tidak dipakai.
 
-Master brief EP14 mencatat VO sumber berdurasi **109,48 detik**. Angka itu melampaui batas pilot 90 detik; durasi versi terbaru belum dibuktikan dari bahan ini.
+> [curious] Bayangin... kulkas dibuka. Ada kotak makanan yang terlupa. Tutupnya diangkat... baunya bikin mundur. Padahal disimpan dingin. Kok masih bisa basi?
+>
+> Coba kita ikuti jejaknya.
+>
+> [rushed] Kulkas itu tombol pelambat, bukan tombol berhenti. Dingin memperlambat pertumbuhan banyak mikroba, tapi sebagian masih bisa tumbuh. Enzim dan udara pun terus bekerja. Perlahan, rasa, warna, atau teksturnya berubah. Tapi tanpa bau aneh pun, makanan belum tentu aman. Mikroba penyebab sakit tidak selalu memberi tanda.
+>
+> [thoughtful] Makanan mudah rusak perlu masuk kulkas dalam dua jam. Kalau suhu sekitar lebih dari tiga puluh dua derajat, batasnya satu jam. Simpan sisa masakan dalam wadah dangkal agar cepat dingin. Jaga kulkas pada empat derajat atau lebih rendah. Sisa masakan umumnya dihabiskan dalam tiga sampai empat hari; kalau lebih lama, bekukan.
+>
+> [curious] Dingin memperlambat proses, tapi waktu tetap berjalan. Lalu, dari mana bunyi “hik!” saat cegukan berasal? Tulis tebakan di komentar. Bisa jadi itu yang ditelusuri berikutnya.
 
 ## Paket posting final
 
