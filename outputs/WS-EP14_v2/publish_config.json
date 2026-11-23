@@ -9,18 +9,18 @@
     "qc_file": "episodes/ep14_kulkas_v2/QC.md"
   },
   "post_file": "episodes/ep14_kulkas_v2/creator/POST.md",
-  "expected_post_sha256": "90b5c4ce27c46f405846dc4e379f1c6a882ee59577cba530ab5a226cada31786",
+  "expected_post_sha256": "e9cc1d1d0a2f2714ffeb441312603e0005ffac5a8ea95920ac2593444171c153",
   "thumbnail_file": "episodes/ep14_kulkas_v2/creator/THUMBNAIL_received.webp",
   "schedule": {
-    "publish_at_wib": "2026-11-23 21:00",
+    "publish_at_wib": "2026-11-24 21:00",
     "platforms": [
       "facebook",
       "instagram"
     ],
-    "creator_instruction": "Keputusan creator 23 Nov 2026: EP14 tayang pada slot 21.00 WIB pertama setelah QC PASS (QC PASS 23 Nov 2026 16.24 WIB), hanya jika Facebook dan Instagram sama-sama siap; target tentatif 24 Nov di POST.md lama bukan keputusan terbaru.",
-    "status": "READY_PENDING_MERGE_AND_SECRET",
-    "note": "Workflow `run` menolak mulai setelah 20.30 WIB (batas persiapan IG). Bila tidak sempat, slot dipindah ke 21.00 berikutnya yang tidak bentrok (cek ulang dulu) — tidak pernah dipercepat atau diganti 'publish now'.",
-    "conflict_check": "23 Nov 2026 17.15 WIB (GET, read-only): Facebook Page scheduled_posts = 0; Reel terakhir EP12 (22 Nov); IG media terakhir EP12 (22 Nov); EP15 belum diproduksi/dijadwalkan. Tidak ada bentrok untuk 23 Nov 21.00 WIB."
+    "creator_instruction": "Keputusan creator 23 Nov 2026 malam: \"Saya setujui slot EP14 24 November 2026 pukul 21.00 WIB di FB dan IG.\" (slot 23 Nov 21.00 tidak terpenuhi: batas persiapan IG 20.30 terlewat).",
+    "status": "READY_PENDING_RUN_24NOV",
+    "note": "`run` hanya dipicu 24 Nov antara ±15.20 dan 20.30 WIB dengan confirm=EP14-LIVE setelah check-auth lolos. Tidak dipercepat, tidak 'publish now', jam tidak digeser tanpa keputusan creator.",
+    "conflict_check": "23 Nov 2026 21.10 WIB (GET, read-only): Facebook Page scheduled_posts = 0, tidak ada Reel berstatus scheduled (terakhir EP12 22 Nov, published); IG media terakhir EP12 22 Nov 21.06; kuota IG 0/100. Tidak ada bentrok untuk 24 Nov 2026 21.00 WIB."
   },
   "platforms": {
     "facebook": {

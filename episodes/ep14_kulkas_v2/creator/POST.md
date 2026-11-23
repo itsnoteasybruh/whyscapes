@@ -1,6 +1,6 @@
 # Whyscape EP14 — Kenapa Makanan di Kulkas Tetap Bisa Basi?
 
-- Jadwal tayang: **Senin, 23 Nov 2026, 21.00 WIB (Asia/Jakarta)** — slot 21.00 pertama setelah QC PASS (23 Nov 2026, 16.24 WIB), hanya bila Facebook dan Instagram sama-sama siap (persiapan Instagram selesai paling lambat 20.30 WIB). Bila syarat itu tidak terpenuhi, jadwal bergeser ke slot 21.00 berikutnya yang tidak bentrok. Keputusan creator 23 Nov 2026; menggantikan target tentatif 24 Nov 2026.
+- Jadwal tayang: **Selasa, 24 Nov 2026, 21.00 WIB (Asia/Jakarta)** — slot yang disetujui creator pada 23 Nov 2026 malam, setelah slot 23 Nov 21.00 tidak terpenuhi (batas persiapan Instagram 20.30 terlewat). Berlaku hanya bila Facebook dan Instagram sama-sama siap; persiapan Instagram harus selesai paling lambat 20.30 WIB. Bila tidak terpenuhi, tidak dipercepat dan jam tidak digeser tanpa keputusan creator.
 - Status: **QC PASS** — `outputs/WS-EP14_v2/WS-EP14_v2.mp4` (65,10 detik, md5 `9ecafcabd6d8c09eff65e6fe91ded44d`); detail di `episodes/ep14_kulkas_v2/QC.md`. Dianggap terjadwal hanya setelah jadwal Facebook dibaca balik dari Meta dan job Instagram berjalan.
 - Kanal pilot: Facebook Reels dan Instagram Reels. YouTube ditangani manual di luar otomasi pilot.
 - Format target: video vertikal maksimal 90 detik. Durasi harus diperiksa dari audio dan MP4 final.
