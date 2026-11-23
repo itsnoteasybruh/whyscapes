@@ -192,3 +192,27 @@ test('readPost: creator bold-label format (**Judul:** / **Caption:** / **Hashtag
   assert.deepEqual(r.hashtags, ['#Whyscape', '#Kulkas']); assert.equal(r.text, 'Paragraf satu. ❄️\n\nParagraf dua? 🔎\n\n#Whyscape #Kulkas');
   assert.equal(r.episode, 'WS-EP14'); assert.equal(r.publish_at, null);
 });
+
+test('gha_wait: waits until publish_at (WIB), refuses missing / long past / beyond the 6 h job limit', () => {
+  const Wt = require('../gha_wait'), cfg = at => ({ schedule: { publish_at_wib: at } }), now = new Date('2026-11-23T10:30:00Z');   // 17:30 WIB
+  const ok = Wt.plan(cfg('2026-11-23 21:00'), now); assert.equal(ok.ok, true); assert.equal(ok.wait_s, 3.5 * 3600 + 3); assert.equal(ok.at, '2026-11-23T21:00:00+07:00');
+  assert.equal(Wt.plan(cfg(null), now).ok, false);
+  assert.match(Wt.plan(cfg('2026-11-23 17:00'), now).reason, /passed 30 min ago/);
+  assert.equal(Wt.plan(cfg('2026-11-23 17:20'), now).wait_s, 0);                       // inside the 15 min grace: publish now (gate allows ≤ 20 min)
+  assert.match(Wt.plan(cfg('2026-11-24 21:00'), now).reason, /dispatch within 340 min/);
+});
+
+test('GitHub Actions auth: META_TOKEN becomes a Bearer header on graph.facebook.com only and never appears in the report', () => {
+  const { execFileSync } = require('child_process');
+  const d = fs.mkdtempSync(path.join(os.tmpdir(), 'gha-')), v = path.join(d, 'v.mp4'), post = path.join(d, 'POST.md'), cfgF = path.join(d, 'publish_config.json');
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'lavfi', '-i', 'testsrc=size=108x192:rate=10:duration=4', '-c:v', 'libx264', '-preset', 'ultrafast', v]);
+  fs.writeFileSync(post, '# Whyscape EP90 — x\n\n**Judul:** T\n\n**Caption:**\n\nC\n\n**Hashtag:** #W\n');
+  fs.writeFileSync(cfgF, JSON.stringify({ episode: 'WS-EP90', root: '.', video: { path: 'v.mp4', qc: 'PASS' }, post_file: 'POST.md', schedule: { publish_at_wib: null, platforms: ['facebook', 'instagram'] }, platforms: { facebook: { page_id: 'P' }, instagram: { ig_user_id: 'I' } } }));
+  const out = execFileSync(process.execPath, [path.resolve(__dirname, '../publish.js'), '--config', cfgF, 'plan'], { env: { ...process.env, META_TOKEN: 'EAAsecretTOKENvalue1234567890', HTTPS_PROXY: '', https_proxy: '' } }).toString();
+  assert.ok(!out.includes('EAAsecretTOKENvalue1234567890')); assert.equal(JSON.parse(out).platforms.facebook.would_send.title, 'T');
+  const S = require('../cloud/support'), seen = [];
+  const h = S.withGraphAuth(async (m, u, o) => { seen.push([u, (o.headers || {}).Authorization]); return {}; }, 'EAAsecretTOKENvalue1234567890');
+  return Promise.all([h('GET', 'https://graph.facebook.com/v27.0/me', {}), h('GET', 'https://raw.githubusercontent.com/x', {})]).then(() => {
+    assert.equal(seen[0][1], 'Bearer EAAsecretTOKENvalue1234567890'); assert.equal(seen[1][1], undefined);
+  });
+});

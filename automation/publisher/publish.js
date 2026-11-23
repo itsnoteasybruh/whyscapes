@@ -47,6 +47,14 @@ function load(cfgFile, { now = new Date() } = {}) {
   return { cfg, root, video, videoMd5, videoSha, post, publishAt, sched, platforms, thumbs, problems, now, stateFile: path.join(path.dirname(path.resolve(cfgFile)), 'publish_state.json') };
 }
 
+// token facts without the value: type, validity, expiry, granted scopes (GET /debug_token with the token inspecting itself)
+async function tokenInfo(http, t) {
+  try {
+    const r = await http('GET', `https://graph.facebook.com/v27.0/debug_token?input_token=${encodeURIComponent(t)}`, {});
+    const d = (r.json && r.json.data) || {}, when = s => s === 0 ? 'never' : s ? new Date(s * 1000).toISOString() : null;
+    return { http: r.status, type: d.type || null, is_valid: d.is_valid ?? null, expires_at: when(d.expires_at), data_access_expires_at: when(d.data_access_expires_at), scopes: d.scopes || null, error: r.ok ? undefined : C.redact(r.json && r.json.error && r.json.error.message) };
+  } catch (e) { return { error: C.redact(e.message) }; }
+}
 function main() {
 const a = process.argv.slice(2), opt = (f, d) => { const i = a.indexOf(f); return i >= 0 ? a[i + 1] : d; }, flag = f => a.includes(f);
 const MODES = ['plan', 'check-auth', 'schedule', 'publish', 'verify', 'reconcile'];
@@ -55,7 +63,11 @@ if (!mode || !cfgFile) { console.error(`usage: publish.js --config <publish_conf
 
 (async () => {
   const L = load(cfgFile, { now: opt('--now') ? new Date(opt('--now')) : new Date() });
-  const st = new C.State(L.stateFile, L.cfg.episode), http = C.makeTransport({ timeoutMs: +(opt('--timeout-ms', 300000)) });
+  const st = new C.State(L.stateFile, L.cfg.episode);
+  // GitHub Actions: META_TOKEN (repository secret) is added as "Authorization: Bearer" on graph.facebook.com only — what the Claude-cloud
+  // egress proxy does with its network secret. The value stays in this process; every output goes through redact().
+  const META = process.env.META_TOKEN || '';
+  const http = META ? require('./cloud/support').withGraphAuth(C.makeTransport({ timeoutMs: +(opt('--timeout-ms', 300000)) }), META) : C.makeTransport({ timeoutMs: +(opt('--timeout-ms', 300000)) });
   const only = opt('--platform'), targets = Object.keys(ADAPTERS).filter(p => (!only || p === only));
   const report = { episode: L.cfg.episode, mode, executed: flag('--execute'), at: C.timeEvidence(L.now), video: { path: path.relative(L.root, L.video.path), md5: L.videoMd5, duration_s: L.video.duration, size: L.video.size, wh: `${L.video.width}x${L.video.height}` },
     schedule: L.publishAt ? { ...C.timeEvidence(L.publishAt), source: L.sched.source } : null, episode_problems: L.problems, platforms: {} };
@@ -69,6 +81,7 @@ if (!mode || !cfgFile) { console.error(`usage: publish.js --config <publish_conf
       out.would_send = { title: L.post.title, text: L.post.text };
       continue;
     }
+    if (mode === 'check-auth' && META && flag('--execute') && !report.token) report.token = await tokenInfo(http, META);
     if (mode === 'check-auth') { if (!flag('--execute')) { out.note = 'dry run: add --execute to call the read-only identity endpoint'; continue; } try { out.auth = await A.checkAuth(ctx); } catch (e) { out.auth = { ok: false, detail: e.message }; } continue; }
     if (!flag('--execute')) { out.note = 'dry run: nothing sent (add --execute)'; continue; }
     if (mode === 'verify') { out.result = C.redact(await A.verify(ctx, st)); continue; }

@@ -1,0 +1,127 @@
+# Whyscape publisher — EP14 pilot (Facebook Reels + Instagram Reels). Runs ONLY when started by hand (workflow_dispatch):
+# no schedule, no push / pull_request triggers, so nothing here runs by itself and forks never see the secret.
+#   check-auth          read-only: token type/expiry/scopes (no value), Page + IG readable, permissions, IG quota
+#   plan                no network: gates + the exact title/caption that would be sent
+#   facebook-schedule   LIVE: upload the Reel and let META hold it SCHEDULED at publish_at; read the schedule back
+#   instagram-run       LIVE: prepare the container now, wait on the runner until publish_at, media_publish once, read back
+#   verify              read back both platforms and record the evidence
+# LIVE actions need the input confirm = EP14-LIVE and a publish_at_wib in the config. Platform state is committed to DATA_REF.
+name: publish-ep14 (Meta pilot)
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'check-auth | plan | facebook-schedule | instagram-run | verify'
+        type: choice
+        options: [check-auth, plan, facebook-schedule, instagram-run, verify]
+        default: check-auth
+      confirm:
+        description: 'Live actions only: type EP14-LIVE'
+        type: string
+        required: false
+        default: ''
+
+permissions: {}                      # nothing by default; each job asks for the minimum below
+
+concurrency:                         # one run per action at a time; a second instagram-run waits and then finds the state
+  group: publish-ws-ep14-${{ inputs.action }}
+  cancel-in-progress: false
+
+env:
+  DATA_REF: input/ep14-kulkas-i7gj8b                      # episode files + publish_config.json + publish_state.json
+  CONFIG: data/outputs/WS-EP14_v2/publish_config.json
+  STATE: outputs/WS-EP14_v2/publish_state.json
+
+jobs:
+  readonly:
+    if: inputs.action == 'check-auth' || inputs.action == 'plan'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with: { path: code, persist-credentials: false }
+      - uses: actions/checkout@v4
+        with: { ref: '${{ env.DATA_REF }}', path: data, persist-credentials: false }
+      - name: ffmpeg (duration check + thumbnail conversion)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
+      - name: ${{ inputs.action }} (read-only)
+        env:
+          META_TOKEN: ${{ secrets.META_TOKEN }}
+          ACTION: ${{ inputs.action }}
+        run: |
+          if [ -z "$META_TOKEN" ] && [ "$ACTION" = check-auth ]; then echo "::error::secret META_TOKEN is not set"; exit 1; fi
+          node code/automation/publisher/publish.js --config "$CONFIG" "$ACTION" --execute
+
+  live:
+    if: inputs.action == 'facebook-schedule' || inputs.action == 'instagram-run' || inputs.action == 'verify'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 355             # instagram-run waits on the runner (GitHub-hosted job limit: 6 h)
+    permissions:
+      contents: write                # only to commit publish_state.json to DATA_REF (no other scope)
+    steps:
+      - name: guard
+        id: guard
+        env:
+          ACTION: ${{ inputs.action }}
+          CONFIRM: ${{ inputs.confirm }}
+        run: |
+          if [ "$ACTION" != verify ] && [ "$CONFIRM" != EP14-LIVE ]; then echo "::error::live action needs confirm = EP14-LIVE"; exit 1; fi
+      - uses: actions/checkout@v4
+        with: { path: code, persist-credentials: false }
+      - uses: actions/checkout@v4
+        with: { ref: '${{ env.DATA_REF }}', path: data }     # keeps the GITHUB_TOKEN credential for the state push
+      - name: ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
+      - name: state helper
+        run: |
+          cat > "$RUNNER_TEMP/save.sh" <<'EOF'
+          set -e; cd data
+          git add -f "$STATE"
+          if git diff --cached --quiet; then echo "state unchanged"; exit 0; fi
+          git -c user.name="whyscape-publisher" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -q -m "publisher state ($1) [skip ci]"
+          for i in 1 2 3; do git pull -q --rebase origin "$DATA_REF" && git push -q origin "HEAD:$DATA_REF" && { echo "state saved ($1)"; exit 0; }; sleep $((i * 5)); done
+          echo "::error::could not push publish_state.json"; exit 1
+          EOF
+
+      # ---------- Facebook: Meta holds the schedule ----------
+      - name: facebook — upload + SCHEDULED
+        if: inputs.action == 'facebook-schedule'
+        env: { META_TOKEN: '${{ secrets.META_TOKEN }}' }
+        run: node code/automation/publisher/publish.js --config "$CONFIG" schedule --platform facebook --execute
+      - name: save state
+        if: always() && steps.guard.outcome == 'success' && inputs.action == 'facebook-schedule'
+        run: bash "$RUNNER_TEMP/save.sh" facebook-schedule
+
+      # ---------- Instagram: container now, media_publish at publish_at ----------
+      - name: instagram — check the wait fits this job (before creating anything)
+        if: inputs.action == 'instagram-run'
+        run: node code/automation/publisher/gha_wait.js --config "$CONFIG" --dry
+      - name: instagram — prepare container (FINISHED)
+        if: inputs.action == 'instagram-run'
+        env: { META_TOKEN: '${{ secrets.META_TOKEN }}' }
+        run: node code/automation/publisher/publish.js --config "$CONFIG" schedule --platform instagram --execute
+      - name: save state
+        if: always() && steps.guard.outcome == 'success' && inputs.action == 'instagram-run'
+        run: bash "$RUNNER_TEMP/save.sh" instagram-prepare
+      - name: instagram — wait on the runner until publish_at
+        if: inputs.action == 'instagram-run'
+        run: node code/automation/publisher/gha_wait.js --config "$CONFIG"
+      - name: instagram — media_publish (once; never repeated if the container already says PUBLISHED)
+        if: inputs.action == 'instagram-run'
+        env: { META_TOKEN: '${{ secrets.META_TOKEN }}' }
+        run: node code/automation/publisher/publish.js --config "$CONFIG" publish --platform instagram --execute
+      - name: save state
+        if: always() && steps.guard.outcome == 'success' && inputs.action == 'instagram-run'
+        run: bash "$RUNNER_TEMP/save.sh" instagram-publish
+
+      # ---------- read back ----------
+      - name: verify (read-only)
+        if: always() && steps.guard.outcome == 'success' && (inputs.action == 'verify' || inputs.action == 'facebook-schedule' || inputs.action == 'instagram-run')
+        env: { META_TOKEN: '${{ secrets.META_TOKEN }}' }
+        run: sleep 20 && node code/automation/publisher/publish.js --config "$CONFIG" verify --execute
+      - name: save state
+        if: always() && steps.guard.outcome == 'success'
+        run: bash "$RUNNER_TEMP/save.sh" verify

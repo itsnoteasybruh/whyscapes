@@ -52,7 +52,7 @@ async function prepare(ctx, st) {
   if (!p.container_id) {
     await st.set('instagram', { state: 'CREATING', intent_at: new Date().toISOString(), file_sha256: ctx.videoSha, publish_at: ctx.publishAt.toISOString() }, { step: 'intent' });
     let r;
-    try { r = await ctx.http('POST', `${G}/${ctx.cfg.ig_user_id}/media`, { headers: tok(), body: form({ media_type: 'REELS', video_url: ctx.cfg.public_video_url, cover_url: ctx.cfg.public_cover_url, caption: ctx.post.text, share_to_feed: ctx.cfg.share_to_feed }) }); }
+    try { r = await ctx.http('POST', `${G}/${ctx.cfg.ig_user_id}/media`, { headers: tok(), body: form({ media_type: 'REELS', video_url: ctx.cfg.public_video_url, cover_url: ctx.cfg.public_cover_url, caption: ctx.post.text, share_to_feed: ctx.cfg.share_to_feed, is_ai_generated: (ctx.cfg.declarations || {}).is_ai_generated }) }); }   // AI self-disclosure (docs: is_ai_generated on the container)
     catch (e) { await st.set('instagram', { state: e.kind === 'not_sent' ? 'FAILED_DEFINITE' : 'NOT_STARTED' }, { step: 'container', error: e.message, note: 'a container is not a post; an orphan expires in 24 h' }); return { stop: true, reason: e.message }; }
     if (createOutcome(r) !== 'done' || !r.json || !r.json.id) { await st.set('instagram', { state: 'FAILED_DEFINITE' }, { step: 'container', http: r.status, error: r.json && r.json.error && r.json.error.message }); return { stop: true, reason: `container HTTP ${r.status}` }; }
     p = await st.set('instagram', { state: 'CREATED', container_id: r.json.id }, { step: 'container', container_id: r.json.id });
