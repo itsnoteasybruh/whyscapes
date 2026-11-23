@@ -1,6 +1,6 @@
 # Runbook produksi otomatis (EP15 dan seterusnya)
 
-Runbook ini dijalankan oleh **sesi Claude Code cloud baru yang dibuat terjadwal** pukul **16.00 WIB pada tanggal tayang** episode. Sesi itu tidak bergantung pada laptop creator atau sesi Claude lain yang terbuka. Aturan waktunya ada di `automation/schedule_rules.js`; skill yang memasang pemicunya adalah `.claude/skills/eksekusizip/SKILL.md`.
+Runbook ini dijalankan oleh **routine harian yang dibuat creator di claude.ai** (`ROUTINE_SETUP.md`) pukul **16.00 WIB**, untuk episode yang tanggal tayangnya hari ini. Sesi itu tidak bergantung pada laptop creator atau sesi Claude lain yang terbuka. Aturan waktunya ada di `automation/schedule_rules.js`; skill yang memasang pemicunya adalah `.claude/skills/eksekusizip/SKILL.md`.
 
 ## Batas keras
 - Jangan memanggil API Meta, jangan menjadwalkan, dan jangan mempublikasikan. Publikasi hanya dilakukan oleh workflow GitHub setelah QC PASS.

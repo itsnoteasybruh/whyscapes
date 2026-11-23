@@ -24,7 +24,7 @@ Creator (Elang) adalah pembuat editorial plan dan penyedia bahan. Claude adalah 
    - menurunkan `VO.mp3`, `THUMBNAIL.png`, `VO_SCRIPT.md`, `BRIEF.md`, `POST.md` dari MD **tanpa mengubah teks** (hanya potongan persis dari MD);
    - menjalankan `preflight.js` dan menulis `queue/queue.json`.
 3. **Episode bermasalah ditahan** (`_hold/…/HOLD.json` atau `NEEDS_CREATOR_FIX`) dengan alasan spesifik, dan episode lain tetap diproses. Laporkan hanya masalah yang memang perlu keputusan creator.
-4. Commit dan push `inbox/<batch>/` serta `queue/queue.json` ke branch data. Untuk tiap episode `QUEUED`, pasang **pemicu produksi**: sesi cloud baru sekali jalan pada **tanggal tayang pukul 16.00 WIB** (`create_trigger`, `run_once_at`, `create_new_session_on_fire`) dengan prompt "jalankan `automation/production/RUNBOOK.md` untuk WS-EPnn". Catat ID pemicu di entri antrean.
+4. Commit dan push `inbox/<batch>/` serta `queue/queue.json` ke branch `data/episodes` (sesi ini dipanggil creator, jadi push termasuk instruksinya). **Produksi pukul 16.00 dijalankan oleh routine harian yang dibuat creator di claude.ai** (`automation/production/ROUTINE_SETUP.md`). Routine itu mengambil episode `QUEUED` dengan tanggal tayang hari ini. Pemicu yang dibuat Claude sendiri **tidak cukup**: terbukti tidak membawa repo, atau tidak boleh push tanpa instruksi creator. Pastikan routine harian itu ada dan aktif; jika tidak ada, laporkan bahwa episode **belum bisa diproduksi otomatis**.
 5. Laporan akhir: per episode ID, slot dari MD, kanal, status (`QUEUED` / ditahan + alasan), dan ID pemicu produksi. Jangan menyebut episode "terjadwal" di Meta. Status itu hanya boleh dipakai setelah baca balik dari Meta.
 
 ## Aturan waktu (`automation/schedule_rules.js`, satu-satunya sumber)
