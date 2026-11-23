@@ -77,14 +77,21 @@ const createOutcome = r => r.ok ? 'done' : (r.status >= 400 && r.status < 500 &&
 
 // ---------- creator materials (verbatim) ----------
 function section(body, name) { const m = body.match(new RegExp(`^##\\s+${name}\\s*\\n([\\s\\S]*?)(?=^##\\s|$(?![\\s\\S]))`, 'mi')); return m ? m[1].replace(/^>.*$/gm, '').trim() : null; }
+function boldLabel(body, name) { const m = body.match(new RegExp(`^\\*\\*(?:${name}):\\*\\*[ \\t]*(\\S.*)$`, 'mi')); return m ? m[1].trim() : null; }
+function boldBlock(body, name) {
+  const m = body.match(new RegExp(`^\\*\\*(?:${name}):\\*\\*[ \\t]*\\n([\\s\\S]*?)(?=^\\*\\*[^*\\n]+:\\*\\*|^#{1,6}\\s|(?![\\s\\S]))`, 'mi'));
+  const v = m ? m[1].trim() : ''; return v || null;
+}
 function readPost(file) {
   const raw = fs.readFileSync(file, 'utf8'), fmm = raw.match(/^---\s*\n([\s\S]*?)\n---\s*\n/), fm = {};
   if (fmm) for (const l of fmm[1].split('\n')) { const i = l.indexOf(':'); if (i > 0) fm[l.slice(0, i).trim().toLowerCase()] = l.slice(i + 1).trim(); }
   const body = fmm ? raw.slice(fmm[0].length) : raw;
-  const title = fm.title || (section(body, 'Judul') || '').split('\n')[0].trim() || null;
-  const caption = section(body, 'Caption'), hashtags = ((section(body, 'Hashtags?') || '').match(/#[\p{L}\p{N}_]+/gu) || []);
+  // also accepted (creator format 23 Nov 2026): bold labels "**Judul:** …", "**Caption:**" + paragraphs, "**Hashtag:** #…" — read verbatim
+  const title = fm.title || (section(body, 'Judul') || '').split('\n')[0].trim() || boldLabel(body, 'Judul|Title') || null;
+  const caption = section(body, 'Caption') || boldBlock(body, 'Caption'), hashtags = (((section(body, 'Hashtags?') || boldLabel(body, 'Hashtags?')) || '').match(/#[\p{L}\p{N}_]+/gu) || []);
+  const h1 = (body.match(/^#\s+Whyscape\s+(EP\d{2,3})\b/mi) || [])[1];
   return { sha256: sha256(file), title, caption, hashtags, text: caption && hashtags.length ? `${caption}\n\n${hashtags.join(' ')}` : caption,
-    episode: fm.episode || (body.match(/^#\s+POST\s*[—–-]\s*(\S+)/mi) || [])[1] || null,
+    episode: fm.episode || (body.match(/^#\s+POST\s*[—–-]\s*(\S+)/mi) || [])[1] || (h1 ? `WS-${h1.toUpperCase()}` : null),
     publish_at: fm.publish_at || ((section(body, 'Jadwal(?: tayang)?') || '').match(/\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}/) || [])[0] || null,
     platforms: (fm.platforms || section(body, 'Platforms?') || '').split(/[,\n]+/).map(s => s.replace(/^[-*]\s*/, '').trim().toLowerCase()).filter(Boolean) };
 }

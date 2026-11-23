@@ -183,3 +183,12 @@ test('publisher: the real WS-EP14 config is blocked (112.47 s > 90 s and creator
   const P = require('../publish'), L = P.load(path.resolve(__dirname, '../../../outputs/WS-EP14/publish_config.json'));
   assert.ok(L.problems.some(p => /112\.47 s, above the 90 s/.test(p))); assert.ok(L.problems.some(p => /ON HOLD/.test(p)));
 });
+
+test('readPost: creator bold-label format (**Judul:** / **Caption:** / **Hashtag:**) is read verbatim; schedule text is not taken as publish_at', () => {
+  const d = fs.mkdtempSync(path.join(os.tmpdir(), 'pb-')), f = path.join(d, 'POST.md');
+  fs.writeFileSync(f, '# Whyscape EP14 — Judul kerja\n\n- Jadwal tayang target: Selasa, 24 Nov 2026, 21.00 WIB\n\n## Paket posting final\n\n**Judul:** Makanan Bisa Basi di Kulkas?\n\n**Caption:**\n\nParagraf satu. ❄️\n\nParagraf dua? 🔎\n\n**Hashtag:** #Whyscape #Kulkas\n\n## Thumbnail final\n- x\n');
+  const r = C.readPost(f);
+  assert.equal(r.title, 'Makanan Bisa Basi di Kulkas?'); assert.equal(r.caption, 'Paragraf satu. ❄️\n\nParagraf dua? 🔎');
+  assert.deepEqual(r.hashtags, ['#Whyscape', '#Kulkas']); assert.equal(r.text, 'Paragraf satu. ❄️\n\nParagraf dua? 🔎\n\n#Whyscape #Kulkas');
+  assert.equal(r.episode, 'WS-EP14'); assert.equal(r.publish_at, null);
+});
