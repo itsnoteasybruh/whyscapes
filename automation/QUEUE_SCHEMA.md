@@ -5,9 +5,9 @@ Schema 1 (draf sebelumnya: `inbox/<batch>/<NN>_<slug>/{vo.mp3, brief.md}`, tangg
 
 ## Berkas
 ```json
-{ "schema": 2, "tz": "Asia/Jakarta", "produce_at": "17:00", "produce_offset_days": 1, "episodes": [ … ] }
+{ "schema": 2, "tz": "Asia/Jakarta", "produce_at": "16:00", "produce_offset_days": 0, "episodes": [ … ] }
 ```
-Produksi berjalan H-1 pukul 17.00 WIB dari tanggal tayang. Nilai ini default dan bisa diubah creator.
+Produksi berjalan pukul **16.00 WIB pada tanggal tayang** (`automation/schedule_rules.js`, keputusan creator 23 Nov 2026; menggantikan H-1 17.00 dan syarat input 28 jam). Paket harus diterima sebelum waktu itu.
 
 ## Satu entri = satu folder `epNN` dari batch creator
 | Kolom | Isi |
@@ -17,7 +17,7 @@ Produksi berjalan H-1 pukul 17.00 WIB dari tanggal tayang. Nilai ini default dan
 | `post_title` | `title:` dari POST.md (judul posting, dikunci) |
 | `video_title` | `Judul video:`/`Judul cover:` dari BRIEF.md (boleh beda dari `post_title`; `null` = producer membaca brief/standar seri) |
 | `publish_at` | `2026-12-01T21:00+07:00` (dari POST.md) |
-| `target_date` / `produce_date` | tanggal tayang WIB / H-1 |
+| `target_date` / `produce_date` | tanggal tayang WIB / sama dengan tanggal tayang (produksi 16.00 WIB) |
 | `files` | path kelima file creator |
 | `sha256` | sidik jari kelima file (`vo`, `vo_script`, `brief`, `thumbnail`, `post`): bukti file tidak berubah antara preflight, produksi, dan posting |
 | `vo_seconds` | durasi VO |
@@ -36,7 +36,7 @@ Produksi berjalan H-1 pukul 17.00 WIB dari tanggal tayang. Nilai ini default dan
 
 ## Aturan alur
 - `preflight.js` menulis atau mengganti entri NEEDS_CREATOR_FIX/PREFLIGHT_INCOMPLETE. Entri QUEUED atau lebih jauh tidak pernah diganti oleh preflight.
-- `claim.js` hanya mengambil `status == QUEUED` dengan `produce_date == hari ini (WIB)`, satu per run.
+- `claim.js` hanya mengambil `status == QUEUED` dengan `produce_date == hari ini (WIB)`, satu per run. Klaim `PRODUCING` yang macet tidak diambil alih otomatis (exit 5, dilaporkan).
 - Hanya `READY` yang boleh dipublikasikan, dan hanya saat `publish_at` tiba. Publisher belum ada.
 - Masalah pada source creator, baik ditemukan di preflight maupun QC, menghasilkan `NEEDS_CREATOR_FIX`. Claude tidak mengubah kelima file creator.
 

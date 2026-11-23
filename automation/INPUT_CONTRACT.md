@@ -1,5 +1,7 @@
 # Whyscape: kontrak input dan pembagian peran (berlaku sejak 22 Nov 2026)
 
+> **Aturan waktu (keputusan creator 23 Nov 2026; sumber tunggal: `automation/schedule_rules.js`).** Paket yang diterima (termasuk lewat `/eksekusizip`, ZIP/RAR berisi MD gabungan + VO MP3 + thumbnail) hanya diperiksa, dipecah menjadi lima file di bawah, dan diantrekan. **Produksi mulai pukul 16.00 WIB pada tanggal tayang**, lalu render dan QC sampai PASS (paling lambat 20.00), persiapan Instagram selesai sebelum 20.30, dan tayang di slot dari MD. Aturan lama (produksi H-1 pukul 17.00, input ≥ 28 jam, produksi langsung saat ZIP dikirim) tidak berlaku lagi. Pemecahan MD gabungan: `automation/intake/split_md.js` (potongan teks persis, tanpa menulis ulang).
+
 Status: **fondasi**. Belum ada jadwal aktif. Publisher belum dibangun dan tidak memposting apa pun.
 
 ## 1. Peran
@@ -110,7 +112,7 @@ WHISPER_DIR=… node automation/preflight.js forecast_batch_01 [--queue queue/qu
 | 4 | Judul THUMBNAIL.png ↔ judul POST.md konsisten (OCR tesseract, skor ≥ 0,85). Thumbnail **tidak** dibandingkan dengan frame video | NEEDS_CREATOR_FIX (creator memperbaiki atau mengonfirmasi) |
 | 5 | Judul video dari BRIEF dicatat; boleh beda dari judul posting | info |
 | 6 | VO_SCRIPT ↔ VO.mp3 (Whisper; audio = kebenaran): ≥ 0,90 lolos dengan daftar selisih; < 0,90 perlu perbaikan naskah; < 0,80 kemungkinan file beda episode | NEEDS_CREATOR_FIX |
-| 7 | Jadwal: format `YYYY-MM-DD HH:MM` WIB valid, di masa depan, ≥ 28 jam sebelum tayang (produksi H-1 17.00); tidak bentrok (hari sama atau < 12 jam) dengan antrean atau batch | NEEDS_CREATOR_FIX |
+| 7 | Jadwal: format `YYYY-MM-DD HH:MM` WIB valid, di masa depan; paket diterima **sebelum 16.00 WIB pada tanggal tayang** (produksi mulai saat itu) dan slot ≥ 5 jam setelah 16.00 (`automation/schedule_rules.js`); tidak bentrok (hari sama atau < 12 jam) dengan antrean atau batch | NEEDS_CREATOR_FIX |
 | 8 | Ganda: VO sama dengan episode yang sudah diproduksi/antre; ID sudah ada; thumbnail atau judul posting sama | NEEDS_CREATOR_FIX |
 | 9 | POST.md: judul, caption, hashtag, platform dikenal, batas karakter/hashtag per platform. **Tidak dipotong otomatis** | NEEDS_CREATOR_FIX |
 | 10 | Klaim berisiko: kata mutlak/jaminan (pasti, 100 %, tidak berbahaya, menyembuhkan, …) atau angka bersyarat di bagian "klaim" BRIEF yang tidak diucapkan VO | NEEDS_CREATOR_FIX |
@@ -137,7 +139,7 @@ PREFLIGHT_INCOMPLETE ─(sistem diperbaiki, preflight ulang)─────┤
                                            └─ gagal teknis (attempts+1, maks 3 → FAILED)
                               QC menemukan masalah di source creator → NEEDS_CREATOR_FIX
 ```
-- Hanya **QUEUED** yang bisa diklaim producer (`claim.js`, pada `produce_date` = H-1 dari tanggal tayang).
+- Hanya **QUEUED** yang bisa diklaim producer (`claim.js`, pada `produce_date` = tanggal tayang, pukul 16.00 WIB). Klaim yang macet tidak diambil alih otomatis.
 - Hanya **READY** yang boleh dipublikasikan.
 - Episode NEEDS_CREATOR_FIX, PREFLIGHT_INCOMPLETE, FAILED, atau REJECTED tidak pernah ke READY atau PUBLISH.
 
