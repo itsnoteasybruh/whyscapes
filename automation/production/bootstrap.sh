@@ -10,7 +10,9 @@ python3 -c "import numpy, scipy, sherpa_onnx" 2>/dev/null || pip install -q nump
 M=/root/models/sherpa-onnx-whisper-turbo
 if [ ! -s "$M/turbo-encoder.int8.onnx" ]; then
   mkdir -p /root/models
-  curl -sL --max-time 900 -o /tmp/wt.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-turbo.tar.bz2
+  # resumable + retried: a fresh session saw the 564 MB download cut at 370 MB (24 Nov smoke test)
+  URL=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-turbo.tar.bz2
+  for i in 1 2 3 4 5; do curl -sL --retry 5 --retry-delay 5 --retry-all-errors -C - --max-time 900 -o /tmp/wt.tar.bz2 "$URL" && bzip2 -tq /tmp/wt.tar.bz2 && break; echo "model download attempt $i incomplete, resuming" >&2; sleep 5; done
   tar -xjf /tmp/wt.tar.bz2 -C /root/models sherpa-onnx-whisper-turbo/turbo-encoder.int8.onnx sherpa-onnx-whisper-turbo/turbo-decoder.int8.onnx sherpa-onnx-whisper-turbo/turbo-tokens.txt
   rm -f /tmp/wt.tar.bz2
 fi
