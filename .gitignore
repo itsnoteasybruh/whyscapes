@@ -15,6 +15,12 @@
 !/episodes/_template_epXX/
 !/episodes/ep13_lebah_pulang/
 !/episodes/ep14_kulkas/
+!/episodes/ep14_kulkas_v2/
+/episodes/ep14_kulkas_v2/stills/
+/episodes/ep14_kulkas_v2/out/
+/episodes/ep14_kulkas_v2/qc/pt/
+/episodes/ep14_kulkas_v2/qc/num/
+/episodes/ep14_kulkas_v2/_render_*.log
 !/.claude/
 /.claude/*
 !/.claude/skills/

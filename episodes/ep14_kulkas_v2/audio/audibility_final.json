@@ -1,0 +1,338 @@
+[
+ [
+  0.04,
+  "id",
+  "cover pembuka (logo)",
+  21.6
+ ],
+ [
+  1.3,
+  "movement",
+  "Mpi meraih gagang",
+  -3.1
+ ],
+ [
+  2.97,
+  "hero",
+  "pintu kulkas terbuka, lampu & dengung",
+  5.0
+ ],
+ [
+  4.09,
+  "movement",
+  "kotak ditarik dari rak",
+  -3.6
+ ],
+ [
+  6.41,
+  "hero",
+  "tutup wadah diangkat: klik",
+  -1.5
+ ],
+ [
+  7.04,
+  "movement",
+  "aroma naik dari wadah",
+  -2.7
+ ],
+ [
+  8.28,
+  "hero",
+  "Mpi mundur kaget",
+  -2.5
+ ],
+ [
+  9.3,
+  "movement",
+  "pintu kulkas menutup",
+  -4.2
+ ],
+ [
+  9.38,
+  "movement",
+  "awan pikiran muncul",
+  -2.7
+ ],
+ [
+  11.33,
+  "hero",
+  "tanda tanya \"basi?\"",
+  7.0
+ ],
+ [
+  12.39,
+  "id",
+  "\"Coba kita ikuti jejaknya\": tapak → portal ke permukaan makanan",
+  -14.6
+ ],
+ [
+  12.88,
+  "hero",
+  "perubahan skala: masuk ke permukaan makanan",
+  -2.9
+ ],
+ [
+  13.6,
+  "movement",
+  "label DI KULKAS",
+  -6.5
+ ],
+ [
+  14.11,
+  "movement",
+  "tombol muncul",
+  -12.5
+ ],
+ [
+  14.32,
+  "hero",
+  "tombol PELAMBAT ditekan",
+  -10.3
+ ],
+ [
+  14.45,
+  "movement",
+  "dunia mikro melambat",
+  -8.9
+ ],
+ [
+  15.37,
+  "hero",
+  "tombol BERHENTI ditekan … tidak mempan",
+  -12.3
+ ],
+ [
+  15.85,
+  "movement",
+  "tombol berhenti dicoret",
+  6.7
+ ],
+ [
+  16.61,
+  "hero",
+  "dua jalur: hangat cepat vs dingin lambat",
+  -5.6
+ ],
+ [
+  17.65,
+  "movement",
+  "jalur dingin: satu pembelahan pelan",
+  -6.3
+ ],
+ [
+  17.81,
+  "movement",
+  "jalur dingin mengambil layar",
+  -5.8
+ ],
+ [
+  19.41,
+  "hero",
+  "sebagian disorot",
+  -1.0
+ ],
+ [
+  20.41,
+  "hero",
+  "sebagian masih tumbuh",
+  0.1
+ ],
+ [
+  21.45,
+  "hero",
+  "panel ENZIM: rantai dipotong",
+  -5.3
+ ],
+ [
+  21.75,
+  "hero",
+  "panel UDARA: oksigen menyentuh permukaan",
+  -6.2
+ ],
+ [
+  22.85,
+  "movement",
+  "bercak cokelat menyebar",
+  -4.2
+ ],
+ [
+  23.52,
+  "movement",
+  "time-lapse permukaan makanan",
+  -7.0
+ ],
+ [
+  24.52,
+  "hero",
+  "kartu RASA",
+  -2.4
+ ],
+ [
+  24.7,
+  "hero",
+  "kartu WARNA",
+  -3.1
+ ],
+ [
+  26.04,
+  "hero",
+  "kartu TEKSTUR",
+  -2.9
+ ],
+ [
+  28.47,
+  "movement",
+  "Mpi mencium: tidak ada bau aneh",
+  -8.4
+ ],
+ [
+  29.42,
+  "hero",
+  "kartu AMAN? + tanda tanya",
+  -0.9
+ ],
+ [
+  31.15,
+  "hero",
+  "lensa: penyebab sakit tak terlihat",
+  -9.7
+ ],
+ [
+  33.19,
+  "movement",
+  "label TAK SELALU ADA TANDA",
+  -4.7
+ ],
+ [
+  35.55,
+  "movement",
+  "jam: waktu berjalan",
+  -10.8
+ ],
+ [
+  36.2,
+  "hero",
+  "\"2 JAM\"",
+  -3.2
+ ],
+ [
+  37.33,
+  "movement",
+  "termometer ruang muncul",
+  -11.9
+ ],
+ [
+  38.52,
+  "hero",
+  "\"> 32 °C\": termometer naik",
+  -2.9
+ ],
+ [
+  40.22,
+  "hero",
+  "\"1 JAM\": batas dipendekkan",
+  3.0
+ ],
+ [
+  41.59,
+  "movement",
+  "menuang ke wadah 1",
+  -8.8
+ ],
+ [
+  42.44,
+  "movement",
+  "menuang ke wadah 2",
+  -7.2
+ ],
+ [
+  42.63,
+  "hero",
+  "wadah dangkal",
+  -1.9
+ ],
+ [
+  43.53,
+  "movement",
+  "penampang: dangkal cepat dingin",
+  -3.4
+ ],
+ [
+  44.92,
+  "movement",
+  "termometer kulkas ditaruh",
+  -19.9
+ ],
+ [
+  45.4,
+  "hero",
+  "jarum ke 4 °C",
+  -8.4
+ ],
+ [
+  47.88,
+  "hero",
+  "label tanggal ditulis",
+  -8.1
+ ],
+ [
+  49.52,
+  "hero",
+  "kalender: 3–4 hari",
+  -5.1
+ ],
+ [
+  51.11,
+  "movement",
+  "freezer dibuka",
+  -12.8
+ ],
+ [
+  52.14,
+  "hero",
+  "bekukan: kristal es",
+  -4.7
+ ],
+ [
+  52.83,
+  "movement",
+  "kamera ke kotak semula",
+  -7.1
+ ],
+ [
+  53.46,
+  "hero",
+  "lensa: proses melambat",
+  -6.3
+ ],
+ [
+  55.09,
+  "hero",
+  "jam: waktu tetap berjalan",
+  -0.7
+ ],
+ [
+  59.1,
+  "movement",
+  "tanda tanya cegukan",
+  -5.1
+ ],
+ [
+  59.93,
+  "hero",
+  "gelembung komentar",
+  -7.5
+ ],
+ [
+  62.26,
+  "movement",
+  "jejak oranye keluar layar",
+  -5.7
+ ],
+ [
+  63.65,
+  "id",
+  "cover penutup (logo)",
+  -2.5
+ ]
+]

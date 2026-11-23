@@ -1,0 +1,39 @@
+{
+  "episode": "WS-EP14",
+  "version": "v2 (VO baru 62,59 s; render r3)",
+  "root": "../..",
+  "video": {
+    "path": "outputs/WS-EP14_v2/WS-EP14_v2.mp4",
+    "expected_md5": "9ecafcabd6d8c09eff65e6fe91ded44d",
+    "qc": "PASS",
+    "qc_file": "episodes/ep14_kulkas_v2/QC.md"
+  },
+  "post_file": "episodes/ep14_kulkas_v2/creator/POST.md",
+  "expected_post_sha256": "7f87ccbde71df5e0ea11a788c42033ea0a16f0aee206340871edf4775d4970f7",
+  "thumbnail_file": "episodes/ep14_kulkas_v2/creator/THUMBNAIL_received.webp",
+  "schedule": {
+    "publish_at_wib": null,
+    "platforms": ["facebook", "instagram"],
+    "creator_instruction": "Master prompt EP14 (23 Nov 2026): jadwalkan langsung setelah QC PASS pada pukul 21.00 WIB pertama yang masih layak setelah kedua kanal siap; FB harus terbaca terjadwal dan pemicu cloud IG terdaftar + teruji paling lambat 20.30 WIB; jangan jadwalkan FB sendirian seolah dua kanal selesai.",
+    "status": "SCHEDULE_BLOCKED_INFRA",
+    "note": "publish_at_wib sengaja kosong: kanal Instagram belum siap (publisher Google Cloud belum di-deploy), jadi belum ada slot yang memenuhi aturan."
+  },
+  "platforms": {
+    "facebook": {
+      "enabled": true,
+      "page_id": "1421016024432912",
+      "declarations": { "is_ai_generated": true, "source": "master prompt EP14 v2: 'Isi deklarasi AI yang relevan (is_ai_generated bila didukung)'; VO ElevenLabs v4" },
+      "auth": "network secret on graph.facebook.com (user token); Page token derived in-process"
+    },
+    "instagram": {
+      "enabled": true,
+      "ig_user_id": "17841464723522892",
+      "public_video_url": null,
+      "public_cover_url": null,
+      "share_to_feed": true,
+      "share_to_feed_source": "master prompt EP14 v2: 'set share_to_feed=true'",
+      "auth": "network secret on graph.facebook.com (user token)"
+    }
+  },
+  "scope_note": "Pilot automation: Facebook Reels + Instagram Reels saja. YouTube dikelola manual di YouTube Studio."
+}

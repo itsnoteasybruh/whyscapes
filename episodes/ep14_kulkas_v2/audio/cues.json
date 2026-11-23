@@ -1,0 +1,1040 @@
+{
+ "duration": 65.08,
+ "fade": 1.2,
+ "fadeIn": 0.4,
+ "voOffset": 1,
+ "kitchen": [
+  [
+   0,
+   12.68
+  ]
+ ],
+ "micro": [
+  [
+   12.68,
+   23.52
+  ]
+ ],
+ "before": [
+  [
+   23.52,
+   27.49
+  ]
+ ],
+ "risk": [
+  [
+   27.49,
+   33.89
+  ]
+ ],
+ "steps": [
+  [
+   33.89,
+   53.03
+  ]
+ ],
+ "close": [
+  [
+   53.03,
+   66.08
+  ]
+ ],
+ "lift": [
+  [
+   0,
+   1,
+   4
+  ],
+  [
+   12.18,
+   13.719999999999999,
+   2.5
+  ],
+  [
+   14.35,
+   15.549999999999999,
+   2
+  ],
+  [
+   63.129999999999995,
+   65.08,
+   4
+  ]
+ ],
+ "duckMusic": [
+  [
+   2.89,
+   3.47,
+   -3
+  ],
+  [
+   6.33,
+   6.91,
+   -3
+  ],
+  [
+   8.2,
+   8.78,
+   -3
+  ],
+  [
+   11.25,
+   11.83,
+   -3
+  ],
+  [
+   12.8,
+   13.38,
+   -3
+  ],
+  [
+   14.24,
+   14.82,
+   -3
+  ],
+  [
+   15.29,
+   15.87,
+   -3
+  ],
+  [
+   16.53,
+   17.11,
+   -3
+  ],
+  [
+   19.330000000000002,
+   19.91,
+   -3
+  ],
+  [
+   20.330000000000002,
+   20.91,
+   -3
+  ],
+  [
+   21.37,
+   21.95,
+   -3
+  ],
+  [
+   21.67,
+   22.25,
+   -3
+  ],
+  [
+   24.44,
+   25.02,
+   -3
+  ],
+  [
+   24.62,
+   25.2,
+   -3
+  ],
+  [
+   25.96,
+   26.54,
+   -3
+  ],
+  [
+   29.340000000000003,
+   29.92,
+   -3
+  ],
+  [
+   31.07,
+   31.65,
+   -3
+  ],
+  [
+   36.120000000000005,
+   36.7,
+   -3
+  ],
+  [
+   38.440000000000005,
+   39.02,
+   -3
+  ],
+  [
+   40.14,
+   40.72,
+   -3
+  ],
+  [
+   42.550000000000004,
+   43.13,
+   -3
+  ],
+  [
+   45.32,
+   45.9,
+   -3
+  ],
+  [
+   47.800000000000004,
+   48.38,
+   -3
+  ],
+  [
+   49.440000000000005,
+   50.02,
+   -3
+  ],
+  [
+   52.06,
+   52.64,
+   -3
+  ],
+  [
+   53.38,
+   53.96,
+   -3
+  ],
+  [
+   55.010000000000005,
+   55.59,
+   -3
+  ],
+  [
+   59.85,
+   60.43,
+   -3
+  ],
+  [
+   27.49,
+   33.79,
+   -2.5
+  ],
+  [
+   35.900000000000006,
+   36.96,
+   -2
+  ],
+  [
+   38.220000000000006,
+   41.019999999999996,
+   -2
+  ],
+  [
+   45.400000000000006,
+   47.46,
+   -2
+  ],
+  [
+   49.32,
+   51.08,
+   -2
+  ],
+  [
+   57.63,
+   58.53,
+   -4
+  ]
+ ],
+ "duckAmb": [],
+ "sheetHead": "# EP14 v2 — cue sheet audio (timestamp = waktu VIDEO; VO Genesius 1,00x mulai di 1 s di balik cover)\n\nKolom: waktu · anchor VO | aksi di layar | kelas | sumber/file | level relatif (pre-mix) | tujuan | lisensi. Fase musik di `cues.json` (kitchen → micro → before → risk → steps → close).\nBunyi \"hik!\" sudah ada di VO (58.03 s video) dan sengaja TIDAK diberi SFX. Semua bunyi disintesis dengan kode; tidak ada rekaman pihak ketiga dan tidak ada suara orang.\n\n",
+ "sfx": [
+  {
+   "cls": "ambience",
+   "label": "dapur Mpi: udara ruang, dengung kulkas rendah, burung jauh sesekali (tanpa suara orang) (kitchen)",
+   "name": "amb_kitchen",
+   "t": 0,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "shot kitchen",
+   "args": {
+    "dur": 3.92
+   }
+  },
+  {
+   "cls": "id",
+   "label": "cover pembuka (logo)",
+   "name": "chime",
+   "t": 0.04,
+   "pan": 0,
+   "trim": 0,
+   "gain": 0.7,
+   "why": "",
+   "anchor": "frame 0"
+  },
+  {
+   "cls": "movement",
+   "label": "Mpi meraih gagang",
+   "name": "swish",
+   "t": 1.3,
+   "pan": 0.2,
+   "trim": -3,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "hero",
+   "label": "pintu kulkas terbuka, lampu & dengung",
+   "name": "fridgeopen",
+   "t": 2.97,
+   "pan": 0.3,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"dibuka\""
+  },
+  {
+   "cls": "ambience",
+   "label": "dalam kulkas: dengung lebih dekat + udara dingin (insideOut)",
+   "name": "amb_fridge",
+   "t": 3.27,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "shot insideOut",
+   "args": {
+    "dur": 2.69
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "kotak ditarik dari rak",
+   "name": "boxslide",
+   "t": 4.09,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "dur": 0.8
+   }
+  },
+  {
+   "cls": "ambience",
+   "label": "dapur Mpi: udara ruang, dengung kulkas rendah, burung jauh sesekali (tanpa suara orang) (openBox, question)",
+   "name": "amb_kitchen",
+   "t": 5.31,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "shot openBox",
+   "args": {
+    "dur": 7.72
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "tutup wadah diangkat: klik",
+   "name": "lidclick",
+   "t": 6.41,
+   "pan": 0.1,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"diangkat\""
+  },
+  {
+   "cls": "movement",
+   "label": "aroma naik dari wadah",
+   "name": "odor",
+   "t": 7.04,
+   "pan": 0.1,
+   "trim": -3,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "dur": 1.2
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "Mpi mundur kaget",
+   "name": "recoil",
+   "t": 8.28,
+   "pan": -0.3,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"mundur\""
+  },
+  {
+   "cls": "movement",
+   "label": "pintu kulkas menutup",
+   "name": "fridgeclose",
+   "t": 9.3,
+   "pan": 0.4,
+   "trim": -3,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "movement",
+   "label": "awan pikiran muncul",
+   "name": "bubblein",
+   "t": 9.38,
+   "pan": -0.2,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "hero",
+   "label": "tanda tanya \"basi?\"",
+   "name": "qpop",
+   "t": 11.33,
+   "pan": -0.1,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"basi?\""
+  },
+  {
+   "cls": "ambience",
+   "label": "dunia mikro dingin: udara berkilau pelan (enterMicro, twoTracks, spoilers, players)",
+   "name": "amb_micro",
+   "t": 12.38,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "shot enterMicro",
+   "args": {
+    "dur": 11.24
+   }
+  },
+  {
+   "cls": "id",
+   "label": "\"Coba kita ikuti jejaknya\": tapak → portal ke permukaan makanan",
+   "name": "motif_transisi",
+   "t": 12.39,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "motif signature tidak diubah",
+   "anchor": "\"Coba\""
+  },
+  {
+   "cls": "hero",
+   "label": "perubahan skala: masuk ke permukaan makanan",
+   "name": "scale",
+   "t": 12.88,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "portal",
+   "args": {
+    "dur": 1.3
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "label DI KULKAS",
+   "name": "tagpop",
+   "t": 13.6,
+   "pan": 0,
+   "trim": -3,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "movement",
+   "label": "tombol muncul",
+   "name": "uipop",
+   "t": 14.11,
+   "pan": -0.3,
+   "trim": -3,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "hero",
+   "label": "tombol PELAMBAT ditekan",
+   "name": "button",
+   "t": 14.32,
+   "pan": -0.3,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"pelambat\""
+  },
+  {
+   "cls": "movement",
+   "label": "dunia mikro melambat",
+   "name": "slowmo",
+   "t": 14.45,
+   "pan": 0,
+   "trim": -2,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "dur": 1.2
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "tombol BERHENTI ditekan … tidak mempan",
+   "name": "button",
+   "t": 15.37,
+   "pan": 0.3,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"berhenti\"",
+   "args": {
+    "pitch": 1.2
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "tombol berhenti dicoret",
+   "name": "pausefail",
+   "t": 15.85,
+   "pan": 0.4,
+   "trim": -1,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "hero",
+   "label": "dua jalur: hangat cepat vs dingin lambat",
+   "name": "divide",
+   "t": 16.61,
+   "pan": -0.3,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"Dingin\"",
+   "args": {
+    "n": 6,
+    "iv": 0.3,
+    "pitch": 1.1
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "jalur dingin: satu pembelahan pelan",
+   "name": "divide",
+   "t": 17.65,
+   "pan": 0.3,
+   "trim": -2,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "n": 1,
+    "pitch": 0.8
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "jalur dingin mengambil layar",
+   "name": "swish",
+   "t": 17.81,
+   "pan": 0,
+   "trim": -3,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "hero",
+   "label": "sebagian disorot",
+   "name": "ringpulse",
+   "t": 19.41,
+   "pan": -0.2,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"sebagian\"",
+   "args": {
+    "pitch": 0.9
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "sebagian masih tumbuh",
+   "name": "divide",
+   "t": 20.41,
+   "pan": 0.2,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"tumbuh\"",
+   "args": {
+    "n": 4,
+    "iv": 0.15,
+    "pitch": 0.9
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "panel ENZIM: rantai dipotong",
+   "name": "snip",
+   "t": 21.45,
+   "pan": -0.3,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"Enzim\"",
+   "args": {
+    "n": 3,
+    "iv": 0.5
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "panel UDARA: oksigen menyentuh permukaan",
+   "name": "o2",
+   "t": 21.75,
+   "pan": 0.3,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"udara\""
+  },
+  {
+   "cls": "movement",
+   "label": "bercak cokelat menyebar",
+   "name": "smear",
+   "t": 22.85,
+   "pan": 0.3,
+   "trim": -3,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "ambience",
+   "label": "dunia penjelas: udara lembut (changes)",
+   "name": "amb_paper",
+   "t": 22.97,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "shot changes",
+   "args": {
+    "dur": 4.72
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "time-lapse permukaan makanan",
+   "name": "microbes",
+   "t": 23.52,
+   "pan": 0,
+   "trim": -3,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "dur": 1.4
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "kartu RASA",
+   "name": "card",
+   "t": 24.52,
+   "pan": -0.4,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"rasa\"",
+   "args": {
+    "pitch": 1
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "kartu WARNA",
+   "name": "card",
+   "t": 24.7,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"warna\"",
+   "args": {
+    "pitch": 1.12
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "kartu TEKSTUR",
+   "name": "card",
+   "t": 26.04,
+   "pan": 0.4,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"teksturnya\"",
+   "args": {
+    "pitch": 1.26
+   }
+  },
+  {
+   "cls": "ambience",
+   "label": "dapur Mpi: udara ruang, dengung kulkas rendah, burung jauh sesekali (tanpa suara orang) (sniffRisk, stepTime, stepShallow)",
+   "name": "amb_kitchen",
+   "t": 27.04,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "shot sniffRisk",
+   "args": {
+    "dur": 17.63
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "Mpi mencium: tidak ada bau aneh",
+   "name": "sparkle",
+   "t": 28.47,
+   "pan": 0.3,
+   "trim": -3,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "hero",
+   "label": "kartu AMAN? + tanda tanya",
+   "name": "qpop",
+   "t": 29.42,
+   "pan": -0.3,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"belum tentu\""
+  },
+  {
+   "cls": "hero",
+   "label": "lensa: penyebab sakit tak terlihat",
+   "name": "lens",
+   "t": 31.15,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"Mikroba penyebab sakit\""
+  },
+  {
+   "cls": "movement",
+   "label": "label TAK SELALU ADA TANDA",
+   "name": "tagpop",
+   "t": 33.19,
+   "pan": 0,
+   "trim": -3,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "movement",
+   "label": "jam: waktu berjalan",
+   "name": "ticks",
+   "t": 35.55,
+   "pan": 0.2,
+   "trim": -3,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "hero",
+   "label": "\"2 JAM\"",
+   "name": "tagpop",
+   "t": 36.2,
+   "pan": 0.2,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"2 jam\""
+  },
+  {
+   "cls": "movement",
+   "label": "termometer ruang muncul",
+   "name": "tap",
+   "t": 37.33,
+   "pan": -0.4,
+   "trim": 8,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "hero",
+   "label": "\"> 32 °C\": termometer naik",
+   "name": "needle",
+   "t": 38.52,
+   "pan": -0.4,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"32 derajat\"",
+   "args": {
+    "dur": 0.6
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "\"1 JAM\": batas dipendekkan",
+   "name": "tagpop",
+   "t": 40.22,
+   "pan": 0.2,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"1 jam\"",
+   "args": {
+    "pitch": 1.2
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "menuang ke wadah 1",
+   "name": "pour",
+   "t": 41.59,
+   "pan": 0.1,
+   "trim": -3,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "movement",
+   "label": "menuang ke wadah 2",
+   "name": "pour",
+   "t": 42.44,
+   "pan": 0.3,
+   "trim": -4,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "hero",
+   "label": "wadah dangkal",
+   "name": "pour",
+   "t": 42.63,
+   "pan": 0.5,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"dangkal\""
+  },
+  {
+   "cls": "movement",
+   "label": "penampang: dangkal cepat dingin",
+   "name": "coldair",
+   "t": 43.53,
+   "pan": 0.3,
+   "trim": -3,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "dur": 1.2
+   }
+  },
+  {
+   "cls": "ambience",
+   "label": "dalam kulkas: dengung lebih dekat + udara dingin (stepThermo)",
+   "name": "amb_fridge",
+   "t": 44.02,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "shot stepThermo",
+   "args": {
+    "dur": 3.69
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "termometer kulkas ditaruh",
+   "name": "tap",
+   "t": 44.92,
+   "pan": 0.4,
+   "trim": 10,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "hero",
+   "label": "jarum ke 4 °C",
+   "name": "needle",
+   "t": 45.4,
+   "pan": 0.3,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"4 derajat\"",
+   "args": {
+    "dur": 0.6
+   }
+  },
+  {
+   "cls": "ambience",
+   "label": "dapur Mpi: udara ruang, dengung kulkas rendah, burung jauh sesekali (tanpa suara orang) (stepLabel, stepFreeze, payoff, teaser)",
+   "name": "amb_kitchen",
+   "t": 47.06,
+   "pan": 0,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "shot stepLabel",
+   "args": {
+    "dur": 18.02
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "label tanggal ditulis",
+   "name": "scribble",
+   "t": 47.88,
+   "pan": 0.1,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"Sisa masakan\"",
+   "args": {
+    "dur": 0.6
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "kalender: 3–4 hari",
+   "name": "calendar",
+   "t": 49.52,
+   "pan": 0.2,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"3–4 hari\"",
+   "args": {
+    "n": 4
+   }
+  },
+  {
+   "cls": "movement",
+   "label": "freezer dibuka",
+   "name": "fridgeopen",
+   "t": 51.11,
+   "pan": 0.4,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "hero",
+   "label": "bekukan: kristal es",
+   "name": "frost",
+   "t": 52.14,
+   "pan": 0.3,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"bekukan\""
+  },
+  {
+   "cls": "movement",
+   "label": "kamera ke kotak semula",
+   "name": "zoomout",
+   "t": 52.83,
+   "pan": 0,
+   "trim": -3,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "dur": 1.4
+   }
+  },
+  {
+   "cls": "hero",
+   "label": "lensa: proses melambat",
+   "name": "lens",
+   "t": 53.46,
+   "pan": 0.3,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"memperlambat proses\""
+  },
+  {
+   "cls": "hero",
+   "label": "jam: waktu tetap berjalan",
+   "name": "clocklapse",
+   "t": 55.09,
+   "pan": 0.3,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"waktu tetap berjalan\""
+  },
+  {
+   "cls": "movement",
+   "label": "tanda tanya cegukan",
+   "name": "qpop",
+   "t": 59.1,
+   "pan": 0.1,
+   "trim": -3,
+   "gain": 1,
+   "why": "",
+   "anchor": ""
+  },
+  {
+   "cls": "hero",
+   "label": "gelembung komentar",
+   "name": "uipop",
+   "t": 59.93,
+   "pan": 0.3,
+   "trim": 0,
+   "gain": 1,
+   "why": "",
+   "anchor": "\"Tulis tebakan\""
+  },
+  {
+   "cls": "movement",
+   "label": "jejak oranye keluar layar",
+   "name": "extend",
+   "t": 62.26,
+   "pan": 0.5,
+   "trim": -3,
+   "gain": 1,
+   "why": "",
+   "anchor": "",
+   "args": {
+    "dur": 0.9
+   }
+  },
+  {
+   "cls": "id",
+   "label": "cover penutup (logo)",
+   "name": "chime",
+   "t": 63.65,
+   "pan": 0,
+   "trim": 0,
+   "gain": 0.65,
+   "why": "",
+   "anchor": "END − 1,43"
+  }
+ ]
+}
