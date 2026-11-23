@@ -1,0 +1,132 @@
+# Whyscape publisher for EP15+ (Facebook Reels + Instagram Reels) — same live safety as publish-ep14.yml (which EP14 keeps using,
+# unchanged). Started ONLY by workflow_dispatch: by hand, or by episode-autotrigger.yml after every gate passed.
+# Inputs: episode (WS-EPnn, nn ≥ 15), action (check-auth | plan | run | verify | reconcile), confirm (= "<episode>-LIVE" for run/reconcile).
+# Data: branch data/episodes, files outputs/<episode>/{publish_config.json, publish_state.json}.
+name: publish-episode (Meta)
+run-name: "publish-episode · ${{ inputs.episode }} · ${{ inputs.action }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      episode:
+        description: 'WS-EPnn (15 or later)'
+        type: string
+        required: true
+      action:
+        description: 'check-auth | plan | run | verify | reconcile'
+        type: choice
+        options: [check-auth, plan, run, verify, reconcile]
+        default: check-auth
+      confirm:
+        description: 'run / reconcile only: type <episode>-LIVE, e.g. WS-EP15-LIVE'
+        type: string
+        required: false
+        default: ''
+
+permissions: {}                      # nothing by default; each job asks for the minimum below
+
+concurrency:                         # ONE group for every action: Facebook and Instagram state writes never overlap
+  group: publish-${{ inputs.episode }}
+  cancel-in-progress: false
+
+env:
+  DATA_REF: data/episodes                                  # written by the 16.00 production session after QC PASS
+  CONFIG: data/outputs/${{ inputs.episode }}/publish_config.json
+  STATE: outputs/${{ inputs.episode }}/publish_state.json
+
+jobs:
+  readonly:
+    if: inputs.action == 'check-auth' || inputs.action == 'plan'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: episode id
+        env: { EPISODE: '${{ inputs.episode }}' }
+        run: '[[ "$EPISODE" =~ ^WS-EP([0-9]{2,3})$ ]] && (( 10#${BASH_REMATCH[1]} >= 15 )) || { echo "::error::episode must be WS-EPnn with nn ≥ 15 (EP14 uses publish-ep14.yml)"; exit 1; }'
+      - uses: actions/checkout@v4
+        with: { path: code, persist-credentials: false }
+      - uses: actions/checkout@v4
+        with: { ref: '${{ env.DATA_REF }}', path: data, persist-credentials: false }
+      - name: ffmpeg (duration check + thumbnail conversion)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
+      - name: ${{ inputs.action }} (read-only)
+        env:
+          META_TOKEN: ${{ secrets.META_TOKEN }}
+          ACTION: ${{ inputs.action }}
+        run: node code/automation/publisher/publish.js --config "$CONFIG" "$ACTION" --execute
+
+  live:
+    if: inputs.action == 'run' || inputs.action == 'verify' || inputs.action == 'reconcile'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 355             # run waits on the runner until publish_at (GitHub-hosted job limit: 6 h)
+    permissions:
+      contents: write                # only to commit publish_state.json to DATA_REF (no other scope)
+    env:
+      META_TOKEN: ${{ secrets.META_TOKEN }}
+      STATE_SYNC: ${{ github.workspace }}/.state_sync.sh
+    steps:
+      - name: guard
+        id: guard
+        env:
+          ACTION: ${{ inputs.action }}
+          CONFIRM: ${{ inputs.confirm }}
+          EPISODE: ${{ inputs.episode }}
+        run: |
+          [[ "$EPISODE" =~ ^WS-EP([0-9]{2,3})$ ]] && (( 10#${BASH_REMATCH[1]} >= 15 )) || { echo "::error::episode must be WS-EPnn with nn ≥ 15 (EP14 uses publish-ep14.yml)"; exit 1; }
+          if [ "$ACTION" != verify ] && [ "$CONFIRM" != "$EPISODE-LIVE" ]; then echo "::error::$ACTION needs confirm = $EPISODE-LIVE"; exit 1; fi
+          if [ -z "$META_TOKEN" ]; then echo "::error::secret META_TOKEN is not set"; exit 1; fi
+      - uses: actions/checkout@v4
+        with: { path: code, persist-credentials: false }
+      - uses: actions/checkout@v4
+        with: { ref: '${{ env.DATA_REF }}', path: data }     # keeps the GITHUB_TOKEN credential for the state push
+      - name: ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
+      - name: state sync script (commit + push publish_state.json; called on every state change)
+        run: |
+          cat > "$STATE_SYNC" <<'EOF'
+          set -e; cd "$GITHUB_WORKSPACE/data"
+          git add -f "$STATE"
+          if git diff --cached --quiet; then exit 0; fi
+          git -c user.name="whyscape-publisher" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -q -m "publisher state ($1) [skip ci]"
+          for i in 1 2 3; do git pull -q --rebase origin "$DATA_REF" && git push -q origin "HEAD:$DATA_REF" && { echo "state pushed ($1)" >&2; exit 0; }; sleep $((i * 5)); done
+          echo "::error::could not push publish_state.json — stopping before any further request" >&2; exit 1
+          EOF
+
+      # ---------- run: strict order ----------
+      - name: 1 check-auth (must pass)
+        if: inputs.action == 'run'
+        run: node code/automation/publisher/publish.js --config "$CONFIG" check-auth --execute
+      - name: 2 preparation deadline (IG must be prepared ≥ 30 min before publish_at)
+        if: inputs.action == 'run'
+        run: node code/automation/publisher/gha_wait.js --config "$CONFIG" --prep-deadline-min 30 --dry
+      - name: 3 Instagram container → FINISHED (not published)
+        if: inputs.action == 'run'
+        run: node code/automation/publisher/publish.js --config "$CONFIG" schedule --platform instagram --execute
+      - name: 4 Facebook Reel → SCHEDULED by Meta
+        if: inputs.action == 'run'
+        run: node code/automation/publisher/publish.js --config "$CONFIG" schedule --platform facebook --execute
+      - name: 5 Facebook read-back (publish_time = publish_at, preferred cover)
+        if: inputs.action == 'run'
+        run: node code/automation/publisher/publish.js --config "$CONFIG" verify --platform facebook --execute
+      - name: 6 wait on the runner until publish_at
+        if: inputs.action == 'run'
+        run: node code/automation/publisher/gha_wait.js --config "$CONFIG"
+      - name: 7 Instagram media_publish (once; container status read first)
+        if: inputs.action == 'run'
+        run: node code/automation/publisher/publish.js --config "$CONFIG" publish --platform instagram --execute
+      - name: 8 read back both platforms
+        if: inputs.action == 'run' || inputs.action == 'verify'
+        run: sleep 20 && node code/automation/publisher/publish.js --config "$CONFIG" verify --execute
+
+      # ---------- reconcile (GET only) ----------
+      - name: reconcile Facebook then Instagram (GET only)
+        if: inputs.action == 'reconcile'
+        run: |
+          node code/automation/publisher/publish.js --config "$CONFIG" reconcile --platform facebook --execute
+          node code/automation/publisher/publish.js --config "$CONFIG" reconcile --platform instagram --execute
+
+      - name: final state push (also after a failure)
+        if: always() && steps.guard.outcome == 'success'
+        run: bash "$STATE_SYNC" final
