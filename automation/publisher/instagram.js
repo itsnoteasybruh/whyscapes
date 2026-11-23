@@ -48,13 +48,14 @@ async function reconcile(ctx, p) {
 async function prepare(ctx, st) {
   let p = st.p('instagram');
   if (['PUBLISHED'].includes(p.state)) return verify(ctx, st);
-  if (p.state === 'AMBIGUOUS') return { stop: true, reason: 'unknown outcome earlier; reconcile required' };
+  if (p.state === 'AMBIGUOUS') return { stop: true, reason: 'unknown outcome earlier; reconcile (GET) required' };
+  if (p.state === 'CREATING' && !p.container_id) { await st.set('instagram', { state: 'AMBIGUOUS' }, { step: 'resume', note: 'intent without container_id from an earlier run; reconcile (GET) first' }); return { stop: true, reason: 'intent without container_id: reconcile (GET) required' }; }
   if (!p.container_id) {
     await st.set('instagram', { state: 'CREATING', intent_at: new Date().toISOString(), file_sha256: ctx.videoSha, publish_at: ctx.publishAt.toISOString() }, { step: 'intent' });
     let r;
     try { r = await ctx.http('POST', `${G}/${ctx.cfg.ig_user_id}/media`, { headers: tok(), body: form({ media_type: 'REELS', video_url: ctx.cfg.public_video_url, cover_url: ctx.cfg.public_cover_url, caption: ctx.post.text, share_to_feed: ctx.cfg.share_to_feed, is_ai_generated: (ctx.cfg.declarations || {}).is_ai_generated }) }); }   // AI self-disclosure (docs: is_ai_generated on the container)
-    catch (e) { await st.set('instagram', { state: e.kind === 'not_sent' ? 'FAILED_DEFINITE' : 'NOT_STARTED' }, { step: 'container', error: e.message, note: 'a container is not a post; an orphan expires in 24 h' }); return { stop: true, reason: e.message }; }
-    if (createOutcome(r) !== 'done' || !r.json || !r.json.id) { await st.set('instagram', { state: 'FAILED_DEFINITE' }, { step: 'container', http: r.status, error: r.json && r.json.error && r.json.error.message }); return { stop: true, reason: `container HTTP ${r.status}` }; }
+    catch (e) { await st.set('instagram', { state: e.kind === 'not_sent' ? 'FAILED_DEFINITE' : 'AMBIGUOUS' }, { step: 'container', error: e.message, note: 'outcome unknown: stop; reconcile (GET) before a new container (an orphan container is not a post and expires in 24 h)' }); return { stop: true, reason: e.message }; }
+    if (createOutcome(r) !== 'done' || !r.json || !r.json.id) { await st.set('instagram', { state: createOutcome(r) === 'ambiguous' ? 'AMBIGUOUS' : 'FAILED_DEFINITE' }, { step: 'container', http: r.status, error: r.json && r.json.error && r.json.error.message }); return { stop: true, reason: `container HTTP ${r.status}` }; }
     p = await st.set('instagram', { state: 'CREATED', container_id: r.json.id }, { step: 'container', container_id: r.json.id });
   }
   for (let i = 0; i < (ctx.pollTries ?? 5); i++) {

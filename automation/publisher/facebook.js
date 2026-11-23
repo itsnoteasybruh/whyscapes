@@ -69,7 +69,9 @@ const status = async (ctx, id) => { const r = await ctx.http('GET', `${G}/${id}?
 async function schedule(ctx, st) {
   let p = st.p('facebook');
   if (['SCHEDULED', 'PUBLISHED'].includes(p.state)) return verify(ctx, st);
-  if (p.state === 'AMBIGUOUS') return { stop: true, reason: 'previous create had an unknown outcome; reconcile or creator instruction required' };
+  if (p.state === 'AMBIGUOUS') return { stop: true, reason: 'previous create had an unknown outcome; reconcile (GET) required before any retry' };
+  // intent recorded but no video_id: the run stopped after (or during) the start request → never re-send blindly
+  if (p.state === 'CREATING' && !p.remote_id) { await st.set('facebook', { state: 'AMBIGUOUS' }, { step: 'resume', note: 'intent without video_id from an earlier run; reconcile (GET) first' }); return { stop: true, reason: 'intent without video_id: reconcile (GET) required' }; }
   const token = await pt(ctx);                                    // fails closed (not_sent) before anything is created
   if (!p.remote_id) {
     await st.set('facebook', { state: 'CREATING', intent_at: new Date().toISOString(), file_sha256: ctx.videoSha, publish_at: ctx.publishAt.toISOString() }, { step: 'intent' });
@@ -94,6 +96,7 @@ async function schedule(ctx, st) {
     const fd = new FormData(); fd.append('access_token', token); fd.append('is_preferred', 'true'); fd.append('source', new Blob([fs.readFileSync(ctx.thumb.path)], { type: ctx.thumb.mime }), 'thumbnail.' + ctx.thumb.ext);
     const r = await ctx.http('POST', `${G}/${p.remote_id}/thumbnails`, { body: fd });
     await st.set('facebook', { thumbnail: r.ok ? 'set' : 'failed' }, { step: 'thumbnail', http: r.status });
+    if (!r.ok) return { stop: true, reason: `cover (thumbnail) upload failed: HTTP ${r.status}; the Reel is NOT scheduled` };   // never schedule without the creator's cover
   }
   // finish → SCHEDULED, only if Meta does not already show it scheduled/published
   const s1 = await status(ctx, p.remote_id), pub = (s1.status && s1.status.publishing_phase) || {};
@@ -113,7 +116,15 @@ async function verify(ctx, st) {
   if (ph.publish_status === 'published') state = 'PUBLISHED';
   else if (ph.publish_status === 'scheduled' && ph.publish_time) state = 'SCHEDULED';
   const want = Math.floor(ctx.publishAt / 1000), got = ph.publish_time ? +ph.publish_time : null;
-  await st.set('facebook', { state, url: s.permalink_url || `https://www.facebook.com/reel/${p.remote_id}`, evidence: { video_id: p.remote_id, video_status: vs, publish_status: ph.publish_status || null, publish_time_unix: got, publish_time_matches: got === want, permalink_url: s.permalink_url || null, checked_at: new Date().toISOString() } }, { step: 'verify', video_status: vs, publish_status: ph.publish_status, publish_time: got });
-  return { state, evidence: st.p('facebook').evidence };
+  // cover read-back: the Reel must carry a preferred custom thumbnail (the one this system uploaded)
+  const th = await ctx.http('GET', `${G}/${p.remote_id}/thumbnails?${form({ fields: 'id,is_preferred', access_token: await pt(ctx) })}`, {});
+  const coverOk = p.thumbnail === 'set' && th.ok && ((th.json && th.json.data) || []).some(x => x.is_preferred);
+  const evidence = { video_id: p.remote_id, video_status: vs, publish_status: ph.publish_status || null, publish_time_unix: got, publish_time_wib: got ? require('./core').wibISO(new Date(got * 1000)) : null, publish_time_matches: got === want, cover_preferred: coverOk, permalink_url: s.permalink_url || null, checked_at: new Date().toISOString() };
+  await st.set('facebook', { state, url: s.permalink_url || `https://www.facebook.com/reel/${p.remote_id}`, evidence }, { step: 'verify', video_status: vs, publish_status: ph.publish_status, publish_time: got, cover_preferred: coverOk });
+  const fail = [];
+  if (state === 'SCHEDULED' && got !== want) fail.push(`publish_time ${evidence.publish_time_wib} ≠ ${require('./core').wibISO(ctx.publishAt)}`);
+  if (['SCHEDULED', 'PUBLISHED'].includes(state) && !coverOk) fail.push('cover not confirmed (no preferred custom thumbnail)');
+  if (state !== 'SCHEDULED' && state !== 'PUBLISHED') fail.push(`state is ${state}, not SCHEDULED`);
+  return fail.length ? { stop: true, reason: 'verify failed: ' + fail.join('; '), state, evidence } : { state, evidence };
 }
 module.exports = { name: 'facebook', gate, checkAuth, reconcile, schedule, verify, REQUIRED_PERMS };

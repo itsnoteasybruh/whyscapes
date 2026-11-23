@@ -75,6 +75,7 @@ test('Facebook: Page token derived in-process, sent only as access_token / ruplo
     { m: (m, u, o) => m === 'POST' && u.endsWith('/P/video_reels') && String(o.body).includes('upload_phase=start'), res: (m, u, o) => { assert.equal(new URLSearchParams(o.body).get('access_token'), PT); return { status: 200, json: { video_id: 'FV1' } }; } },
     { m: (m, u) => m === 'GET' && u.includes('/FV1?'), res: (m, u) => { assert.ok(u.includes('access_token=')); statusCalls++; return statusCalls === 1 ? { status: 200, json: { status: { uploading_phase: { status: 'in_progress', bytes_transfered: 400 } } } } : statusCalls === 2 ? { status: 200, json: { status: { uploading_phase: { status: 'completed' }, publishing_phase: { status: 'not_started' } } } } : { status: 200, json: { permalink_url: 'https://fb/reel/FV1', status: { video_status: 'ready', publishing_phase: { status: 'completed', publish_status: 'scheduled', publish_time: String(Math.floor(pa / 1000)) } } } }; } },
     { m: (m, u) => m === 'POST' && u.includes('rupload'), res: (m, u, o) => { assert.equal(o.headers.Authorization, `OAuth ${PT}`); assert.equal(o.headers.offset, '400'); assert.equal(o.body.length, 600); return { status: 200, json: { success: true } }; } },
+    { m: (m, u) => m === 'GET' && u.includes('/FV1/thumbnails'), res: { status: 200, json: { data: [{ id: 'T1', is_preferred: true }] } } },
     { m: (m, u) => u.includes('/FV1/thumbnails'), res: (m, u, o) => { assert.equal(o.body.get('access_token'), PT); return { status: 200, json: { success: true } }; } },
     { m: (m, u, o) => m === 'POST' && String(o.body).includes('upload_phase=finish'), res: (m, u, o) => { finished++; const b = new URLSearchParams(o.body); assert.equal(b.get('video_state'), 'SCHEDULED'); assert.equal(b.get('scheduled_publish_time'), String(Math.floor(pa / 1000))); assert.equal(b.get('description'), POST.text); assert.equal(b.get('access_token'), PT); return { status: 200, json: { success: true } }; } },
   ]);
@@ -215,4 +216,100 @@ test('GitHub Actions auth: META_TOKEN becomes a Bearer header on graph.facebook.
   return Promise.all([h('GET', 'https://graph.facebook.com/v27.0/me', {}), h('GET', 'https://raw.githubusercontent.com/x', {})]).then(() => {
     assert.equal(seen[0][1], 'Bearer EAAsecretTOKENvalue1234567890'); assert.equal(seen[1][1], undefined);
   });
+});
+
+// ---------- duplicate safety after a runner stop, cover + publish_time verification, check-auth failures (audit 23 Nov 2026) ----------
+const pageTok = { m: (m, u) => u.endsWith('fields=access_token'), res: { status: 200, json: { access_token: 'EAAPAGETOKENzzzzzzzzzzzzzzzzzzzzzz' } } };
+test('state: the intent is pushed (onSave) BEFORE the create request; an intent without an ID from a stopped run → AMBIGUOUS, nothing re-sent', async () => {
+  const d = tmp(), st = new C.State(path.join(d, 's.json'), 'E'), saved = [];
+  st.onSave = () => saved.push(JSON.parse(fs.readFileSync(path.join(d, 's.json'), 'utf8')).platforms.facebook.state);
+  let stateAtRequest = null;
+  const f = fake([pageTok, { m: (m, u, o) => m === 'POST' && u.endsWith('/P/video_reels'), res: () => { stateAtRequest = saved.at(-1); return new C.TransportError('ambiguous', 'runner stopped'); } }]);
+  const c = ctxFor(d, f.http, { page_id: 'P', declarations: { is_ai_generated: true } });
+  await FB.schedule(c, st); assert.equal(stateAtRequest, 'CREATING'); assert.equal(st.p('facebook').state, 'AMBIGUOUS');
+  // a fresh runner finds CREATING without video_id (the run died before the response was written): it must not start again
+  const d2 = tmp(), st2 = new C.State(path.join(d2, 's.json'), 'E'); st2.set('facebook', { state: 'CREATING', intent_at: new Date().toISOString() }, {});
+  const f2 = fake([pageTok]); const r = await FB.schedule(ctxFor(d2, f2.http, { page_id: 'P', declarations: { is_ai_generated: true } }), st2);
+  assert.equal(r.stop, true); assert.equal(st2.p('facebook').state, 'AMBIGUOUS'); assert.ok(!f2.calls.some(x => x.method === 'POST'));
+  // same for Instagram: intent without container_id → AMBIGUOUS, no new container
+  const st3 = new C.State(path.join(d2, 'i.json'), 'E'); st3.set('instagram', { state: 'CREATING', intent_at: new Date().toISOString() }, {});
+  const f3 = fake([]); const r3 = await IG.prepare(ctxFor(d2, f3.http, { ig_user_id: 'I', public_video_url: 'https://h/v', public_cover_url: 'https://h/c' }), st3);
+  assert.equal(r3.stop, true); assert.equal(st3.p('instagram').state, 'AMBIGUOUS'); assert.equal(f3.calls.length, 0);
+});
+
+test('Facebook: cover upload fails → stop BEFORE finish (not scheduled); verify fails on publish_time ≠ 21:00 WIB or no preferred cover', async () => {
+  const d = tmp(), st = new C.State(path.join(d, 's.json'), 'E'), pa = C.parseWIB('2026-11-23 21:00');
+  st.set('facebook', { state: 'CREATED', remote_id: 'FV', intent_at: new Date().toISOString() }, {});
+  const f = fake([pageTok,
+    { m: (m, u) => m === 'GET' && u.includes('/FV?'), res: { status: 200, json: { status: { uploading_phase: { status: 'complete' }, publishing_phase: { status: 'not_started' } } } } },
+    { m: (m, u) => m === 'POST' && u.includes('/FV/thumbnails'), res: { status: 400, json: { error: { message: 'bad image' } } } },
+    { m: (m, u, o) => m === 'POST' && String(o.body).includes('upload_phase=finish'), res: () => { throw new Error('finish must not be sent'); } }]);
+  const c = ctxFor(d, f.http, { page_id: 'P', declarations: { is_ai_generated: true } }, { publishAt: pa, now: new Date('2026-11-23T10:00:00Z') });
+  const r = await FB.schedule(c, st); assert.equal(r.stop, true); assert.match(r.reason, /cover/); assert.equal(st.p('facebook').state, 'CREATED');
+  const vf = (publish_time, preferred) => fake([pageTok,
+    { m: (m, u) => m === 'GET' && u.includes('/FV?'), res: { status: 200, json: { status: { video_status: 'upcoming', publishing_phase: { publish_status: 'scheduled', publish_time } } } } },
+    { m: (m, u) => m === 'GET' && u.includes('/FV/thumbnails'), res: { status: 200, json: { data: [{ id: 'T', is_preferred: preferred }] } } }]);
+  st.set('facebook', { thumbnail: 'set' }, {});
+  const ok = await FB.verify({ ...c, http: vf(Math.floor(pa / 1000), true).http }, st); assert.ok(!ok.stop, JSON.stringify(ok)); assert.equal(ok.evidence.publish_time_wib, '2026-11-23T21:00:00+07:00');
+  const late = await FB.verify({ ...c, http: vf(Math.floor(pa / 1000) + 3600, true).http }, st); assert.equal(late.stop, true); assert.match(late.reason, /22:00:00\+07:00 ≠ 2026-11-23T21:00/);
+  const nocover = await FB.verify({ ...c, http: vf(Math.floor(pa / 1000), false).http }, st); assert.equal(nocover.stop, true); assert.match(nocover.reason, /cover not confirmed/);
+});
+
+// CLI-level (publish.js) with a fake fetch preload: reconcile by GET, check-auth exit codes
+function cliFixture() {
+  const { execFileSync } = require('child_process'), d = tmp(), v = path.join(d, 'v.mp4');
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'lavfi', '-i', 'testsrc=size=108x192:rate=10:duration=4', '-c:v', 'libx264', '-preset', 'ultrafast', v]);
+  fs.writeFileSync(path.join(d, 'POST.md'), '# Whyscape EP90 — x\n\n**Judul:** T\n\n**Caption:**\n\nC\n\n**Hashtag:** #W\n');
+  fs.writeFileSync(path.join(d, 'publish_config.json'), JSON.stringify({ episode: 'WS-EP90', root: '.', video: { path: 'v.mp4', qc: 'PASS' }, post_file: 'POST.md',
+    schedule: { publish_at_wib: '2026-11-23 21:00', creator_instruction: 'test', platforms: ['facebook', 'instagram'] },
+    platforms: { facebook: { page_id: 'P', declarations: { is_ai_generated: true } }, instagram: { ig_user_id: 'I', public_video_url: 'https://h/v', public_cover_url: 'https://h/c' } } }));
+  return d;
+}
+function cli(d, args, routes, env = {}) {
+  const { spawnSync } = require('child_process');
+  const r = spawnSync(process.execPath, ['--require', path.join(__dirname, 'fake_fetch.js'), path.resolve(__dirname, '../publish.js'), '--config', path.join(d, 'publish_config.json'), ...args, '--now', '2026-11-23T10:00:00Z'],
+    { env: { ...process.env, HTTPS_PROXY: '', https_proxy: '', STATE_SYNC: '', GITHUB_ACTIONS: '', FAKE_ROUTES: JSON.stringify(routes), ...env } });
+  const out = r.stdout.toString(); return { code: r.status, out, json: out.includes('{') ? JSON.parse(out.slice(out.indexOf('{'))) : null };
+}
+test('reconcile (GET only): FB nothing found → retry safe; FB one match → adopted; IG container FINISHED → may publish; IG container PUBLISHED + 1 media → adopted', () => {
+  const d = cliFixture(), sf = path.join(d, 'publish_state.json'), intent = new Date('2026-11-23T09:55:00Z').toISOString();
+  const seed = (p, x) => { const s = fs.existsSync(sf) ? JSON.parse(fs.readFileSync(sf)) : { schema: 1, episode: 'WS-EP90', platforms: {} }; s.platforms[p] = { state: 'AMBIGUOUS', history: [], intent_at: intent, ...x }; fs.writeFileSync(sf, JSON.stringify(s)); };
+  const PT = ['GET', 'fields=access_token', 200, { access_token: 'EAAPAGETOKENzzzzzzzzzzzzzzzzzzzzzz' }];
+  seed('facebook', {});
+  let r = cli(d, ['reconcile', '--platform', 'facebook', '--execute'], [PT, ['GET', '/P/video_reels', 200, { data: [] }]]);
+  assert.equal(JSON.parse(fs.readFileSync(sf)).platforms.facebook.state, 'NOT_STARTED', r.out);
+  seed('facebook', {});
+  r = cli(d, ['reconcile', '--platform', 'facebook', '--execute'], [PT, ['GET', '/P/video_reels', 200, { data: [{ id: 'FV9', created_time: '2026-11-23T09:56:00+0000' }] }]]);
+  const fb = JSON.parse(fs.readFileSync(sf)).platforms.facebook; assert.equal(fb.state, 'CREATED'); assert.equal(fb.remote_id, 'FV9');
+  seed('instagram', { container_id: 'C7' });
+  cli(d, ['reconcile', '--platform', 'instagram', '--execute'], [['GET', '/C7?fields=status_code', 200, { status_code: 'FINISHED' }]]);
+  let ig = JSON.parse(fs.readFileSync(sf)).platforms.instagram; assert.equal(ig.state, 'CREATED'); assert.equal(ig.container_status, 'FINISHED');
+  seed('instagram', { container_id: 'C7' });
+  cli(d, ['reconcile', '--platform', 'instagram', '--execute'], [['GET', '/C7?fields=status_code', 200, { status_code: 'PUBLISHED' }], ['GET', '/I/media?', 200, { data: [{ id: 'M9', caption: 'C\n\n#W', timestamp: '2026-11-23T14:00:05+0000', permalink: 'https://ig/p/M9' }] }]]);
+  ig = JSON.parse(fs.readFileSync(sf)).platforms.instagram; assert.equal(ig.state, 'PUBLISHED'); assert.equal(ig.remote_id, 'M9');
+});
+
+test('check-auth exits 2 on: missing secret in Actions, invalid/expiring token, missing scope, wrong linked IG account, auth not ok; exits 0 when all good', () => {
+  const d = cliFixture(), exp = s => Math.floor(Date.parse(s) / 1000);
+  const good = (o = {}) => [
+    ['GET', 'debug_token', 200, { data: { type: 'USER', is_valid: o.valid ?? true, expires_at: o.exp ?? 0, data_access_expires_at: exp('2027-02-01T00:00:00Z'), scopes: o.scopes || ['pages_show_list', 'pages_read_engagement', 'pages_manage_posts', 'instagram_basic', 'instagram_content_publish', 'business_management'] } }],
+    ['GET', '/P?fields=id,name', 200, { id: 'P', name: 'Page' }],
+    ['GET', '/P?fields=access_token', 200, { access_token: 'EAAPAGETOKENzzzzzzzzzzzzzzzzzzzzzz' }],
+    ['GET', '/P?fields=instagram_business_account', 200, { instagram_business_account: { id: o.ig ?? 'I' } }],
+    ['GET', '/me/permissions', 200, { data: ['pages_show_list', 'pages_read_engagement', 'pages_manage_posts', 'instagram_basic', 'instagram_content_publish'].map(permission => ({ permission, status: 'granted' })) }],
+    ['GET', '/me?', 200, { id: 'P' }],
+    ['GET', '/I?fields=id,username', 200, { id: 'I', username: 'u' }],
+    ['GET', '/I/content_publishing_limit', 200, { data: [{ quota_usage: 0, config: { quota_total: 100, quota_duration: 86400 } }] }]];
+  const T = { META_TOKEN: 'EAAsecretTOKENvalue1234567890' };
+  const ok = cli(d, ['check-auth', '--execute'], good(), T); assert.equal(ok.code, 0, ok.out); assert.deepEqual(ok.json.check_auth_failures, []); assert.ok(!ok.out.includes('EAAsecret'));
+  assert.match(cli(d, ['check-auth', '--execute'], good(), { GITHUB_ACTIONS: 'true' }).json.check_auth_failures.join(), /META_TOKEN is not set/);
+  const bad = [[{ valid: false }, /not valid/], [{ exp: exp('2026-11-23T14:30:00Z') }, /expires_at .* before/], [{ scopes: ['pages_show_list'] }, /lacks scopes/], [{ ig: 'OTHER' }, /account mismatch/]];
+  for (const [o, re] of bad) { const r = cli(d, ['check-auth', '--execute'], good(o), T); assert.equal(r.code, 2, JSON.stringify(o)); assert.match(r.json.check_auth_failures.join(' | '), re); }
+  const noIg = cli(d, ['check-auth', '--execute'], good().filter(x => x[1] !== '/I?fields=id,username'), T); assert.equal(noIg.code, 2); assert.match(noIg.json.check_auth_failures.join(), /instagram: auth not ok/);
+});
+
+test('gha_wait: the 20.30 preparation deadline (30 min before a 21.00 slot) is enforced at the start of a run', () => {
+  const Wt = require('../gha_wait'), cfg = { schedule: { publish_at_wib: '2026-11-23 21:00' } };
+  assert.equal(Wt.plan(cfg, new Date('2026-11-23T13:29:00Z'), 340, 30).ok, true);                  // 20.29 WIB
+  assert.match(Wt.plan(cfg, new Date('2026-11-23T13:31:00Z'), 340, 30).reason, /preparation deadline/);   // 20.31 WIB
 });

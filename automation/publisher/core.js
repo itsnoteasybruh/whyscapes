@@ -44,7 +44,9 @@ class State {
     if (val === null) delete d[key]; else d[key] = val;
     fs.writeFileSync(f, JSON.stringify(d), { mode: 0o600 }); return val;
   }
-  save() { fs.mkdirSync(path.dirname(this.file), { recursive: true }); const tmp = this.file + '.tmp'; fs.writeFileSync(tmp, JSON.stringify(this.data, null, 2) + '\n'); fs.renameSync(tmp, this.file); }   // atomic
+  // atomic write; then onSave (GitHub Actions: commit + push the state at once). Called by set() — i.e. the intent is durable BEFORE the
+  // create request and the remote ID the moment it is known. onSave throwing stops the caller before any further request (fail closed).
+  save() { fs.mkdirSync(path.dirname(this.file), { recursive: true }); const tmp = this.file + '.tmp'; fs.writeFileSync(tmp, JSON.stringify(this.data, null, 2) + '\n'); fs.renameSync(tmp, this.file); if (this.onSave) this.onSave(); }
 }
 
 // ---------- transport: classify failures so the caller knows whether a request may have had an effect ----------

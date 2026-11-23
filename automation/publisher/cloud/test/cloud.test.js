@@ -129,7 +129,7 @@ function fbFake(f, calls) {
         finished = b.get('video_state') === 'SCHEDULED' && +b.get('scheduled_publish_time') === at; return ok({ success: true });
       }
       if (u.startsWith('https://rupload.facebook.com/')) { uploaded = /^OAuth /.test((opt.headers || {}).Authorization || ''); return ok({ success: true }); }
-      if (u.endsWith('/thumbnails')) return ok({ success: true });
+      if (u.endsWith('/thumbnails')) return method === 'GET' ? ok({ data: [{ id: 'T1', is_preferred: true }] }) : ok({ success: true });
       if (method === 'GET' && u.endsWith('/FBV90')) return ok({ permalink_url: 'https://www.facebook.com/reel/FBV90', status: { video_status: finished ? 'upcoming' : 'processing',
         uploading_phase: { status: uploaded ? 'complete' : 'not_started', bytes_transfered: 0 }, publishing_phase: finished ? { publish_status: 'scheduled', publish_time: at } : { status: 'not_started' } } });
       return { ok: false, status: 400, json: { error: { message: 'unexpected ' + u } }, headers: {} };
@@ -143,7 +143,7 @@ test('job: approved ≤ 90 s episode → Facebook Reel uploaded + SCHEDULED at p
   const f = fakeCloud(), calls = []; seed(f); const http = fbFake(f, calls);
   const r = await run(f, http);
   const fb = r.reports[0].platforms.facebook;
-  assert.equal(fb.state, 'SCHEDULED', JSON.stringify(r.reports)); assert.equal(fb.evidence.video_id, 'FBV90'); assert.equal(fb.evidence.publish_status, 'scheduled'); assert.equal(fb.evidence.publish_time_matches, true);
+  assert.equal(fb.state, 'SCHEDULED', JSON.stringify(r.reports)); assert.equal(fb.evidence.video_id, 'FBV90'); assert.equal(fb.evidence.publish_status, 'scheduled'); assert.equal(fb.evidence.publish_time_matches, true); assert.equal(fb.evidence.cover_preferred, true);
   assert.ok(calls.includes('POST https://rupload.facebook.com/video-upload/v27.0/FBV90') && calls.some(c => c.endsWith('/FBV90/thumbnails')));
   assert.ok(f.objs.has('reports/2026-11-30/WS-EP90_tick.json')); assert.ok(!f.objs.has('locks/WS-EP90.json'));
   assert.ok(![...f.objs.values()].some(o => /PAGE_TOKEN_SECRET|SA_TOKEN_SECRET/.test(o.data.toString('latin1'))), 'no token in any stored object');

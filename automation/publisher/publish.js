@@ -55,6 +55,27 @@ async function tokenInfo(http, t) {
     return { http: r.status, type: d.type || null, is_valid: d.is_valid ?? null, expires_at: when(d.expires_at), data_access_expires_at: when(d.data_access_expires_at), scopes: d.scopes || null, error: r.ok ? undefined : C.redact(r.json && r.json.error && r.json.error.message) };
   } catch (e) { return { error: C.redact(e.message) }; }
 }
+// check-auth must FAIL (exit 2) when any of these is true: an account is not readable / not the configured one, a permission is
+// missing, the Page is not linked to the configured Instagram account, or the token is invalid / expires before publish_at + 2 h.
+const NEED_SCOPES = ['pages_show_list', 'pages_read_engagement', 'pages_manage_posts', 'instagram_basic', 'instagram_content_publish'];
+async function authFailures({ report, targets, http, META, L }) {
+  const fails = [];
+  for (const p of targets) { const a = report.platforms[p].auth; if (!a || !a.ok) fails.push(`${p}: auth not ok (${JSON.stringify((a && (a.checks || a.detail)) || null)})`); }
+  const fb = (L.cfg.platforms || {}).facebook || {}, ig = (L.cfg.platforms || {}).instagram || {};
+  if (targets.includes('facebook') && targets.includes('instagram')) {
+    const r = await http('GET', `https://graph.facebook.com/v27.0/${fb.page_id}?fields=instagram_business_account`, {});
+    const linked = r.ok && r.json && r.json.instagram_business_account ? r.json.instagram_business_account.id : null;
+    report.account_link = { page_id: fb.page_id, instagram_linked: linked, configured: ig.ig_user_id, matches: linked === ig.ig_user_id };
+    if (linked !== ig.ig_user_id) fails.push(`account mismatch: Page ${fb.page_id} is linked to IG ${linked}, config says ${ig.ig_user_id}`);
+  }
+  if (META) {
+    const f = report.meta_token_facts || {}, mustLast = L.publishAt ? new Date(L.publishAt.getTime() + 2 * 3600e3) : new Date(Date.now() + 6 * 3600e3);
+    if (f.is_valid !== true) fails.push(`token is not valid (${f.error || 'is_valid=' + f.is_valid})`);
+    const miss = NEED_SCOPES.filter(x => !(f.scopes || []).includes(x)); if (miss.length) fails.push(`token lacks scopes: ${miss.join(', ')}`);
+    for (const k of ['expires_at', 'data_access_expires_at']) if (f[k] && f[k] !== 'never' && new Date(f[k]) < mustLast) fails.push(`token ${k} ${f[k]} is before ${mustLast.toISOString()} (publish_at + 2 h)`);
+  } else if (process.env.GITHUB_ACTIONS === 'true') fails.push('secret META_TOKEN is not set');
+  return fails;
+}
 function main() {
 const a = process.argv.slice(2), opt = (f, d) => { const i = a.indexOf(f); return i >= 0 ? a[i + 1] : d; }, flag = f => a.includes(f);
 const MODES = ['plan', 'check-auth', 'schedule', 'publish', 'verify', 'reconcile'];
@@ -68,6 +89,8 @@ if (!mode || !cfgFile) { console.error(`usage: publish.js --config <publish_conf
   // egress proxy does with its network secret. The value stays in this process; every output goes through redact().
   const META = process.env.META_TOKEN || '';
   const http = META ? require('./cloud/support').withGraphAuth(C.makeTransport({ timeoutMs: +(opt('--timeout-ms', 300000)) }), META) : C.makeTransport({ timeoutMs: +(opt('--timeout-ms', 300000)) });
+  // GitHub Actions: STATE_SYNC = script that commits + pushes publish_state.json; run on EVERY state change (intent before a request, ID right after)
+  if (process.env.STATE_SYNC && flag('--execute')) st.onSave = () => require('child_process').execFileSync('bash', [process.env.STATE_SYNC, `${mode}`], { stdio: ['ignore', 2, 2] });
   const only = opt('--platform'), targets = Object.keys(ADAPTERS).filter(p => (!only || p === only));
   const report = { episode: L.cfg.episode, mode, executed: flag('--execute'), at: C.timeEvidence(L.now), video: { path: path.relative(L.root, L.video.path), md5: L.videoMd5, duration_s: L.video.duration, size: L.video.size, wh: `${L.video.width}x${L.video.height}` },
     schedule: L.publishAt ? { ...C.timeEvidence(L.publishAt), source: L.sched.source } : null, episode_problems: L.problems, platforms: {} };
@@ -86,10 +109,20 @@ if (!mode || !cfgFile) { console.error(`usage: publish.js --config <publish_conf
     if (!flag('--execute')) { out.note = 'dry run: nothing sent (add --execute)'; continue; }
     if (mode === 'verify') { out.result = C.redact(await A.verify(ctx, st)); continue; }
     if (mode === 'reconcile') {
+      // GET-only reconciliation after an unknown outcome; decides whether a retry is safe. Never sends a create/publish request.
       const pst = st.p(p); if (!['AMBIGUOUS', 'CREATING'].includes(pst.state)) { out.result = { note: `state ${pst.state}: nothing to reconcile` }; continue; }
-      const m = await A.reconcile(ctx, pst); out.result = C.redact(m);
-      if (m.matches && m.matches.length === 1) await st.set(p, { state: p === 'instagram' ? 'PUBLISHED' : 'CREATED', remote_id: m.matches[0].id }, { step: 'reconcile-adopt', id: m.matches[0].id });
-      else await st.set(p, { state: 'AMBIGUOUS' }, { step: 'reconcile', found: m.matches ? m.matches.length : 'error', note: 'no automatic retry; a creator instruction decides' });
+      if (p === 'instagram' && pst.container_id) {
+        const c = await http('GET', `https://graph.facebook.com/v27.0/${pst.container_id}?fields=status_code`, {}), code = c.ok && c.json ? c.json.status_code : null;
+        out.result = { container_id: pst.container_id, container_status: code };
+        if (code === 'FINISHED') { await st.set(p, { state: 'CREATED', container_status: 'FINISHED' }, { step: 'reconcile', container: code, note: 'container NOT published: media_publish may run inside the window' }); continue; }
+        if (['ERROR', 'EXPIRED'].includes(code)) { await st.set(p, { state: 'NOT_STARTED', container_id: null, container_status: null }, { step: 'reconcile', container: code, note: 'dead container, nothing published: a new container may be prepared' }); continue; }
+        if (code !== 'PUBLISHED') { await st.set(p, { state: 'AMBIGUOUS' }, { step: 'reconcile', container: code || `HTTP ${c.status}`, note: 'not decidable yet; no retry' }); continue; }
+      }
+      const m = await A.reconcile(ctx, pst); out.result = { ...(out.result || {}), ...C.redact(m) };
+      if (m.error) { await st.set(p, { state: 'AMBIGUOUS' }, { step: 'reconcile', error: m.error, note: 'read failed; no retry' }); continue; }
+      if (m.matches.length === 1) await st.set(p, p === 'instagram' ? { state: 'PUBLISHED', remote_id: m.matches[0].id, url: m.matches[0].url || null } : { state: 'CREATED', remote_id: m.matches[0].id }, { step: 'reconcile-adopt', id: m.matches[0].id });
+      else if (m.matches.length === 0 && !(p === 'instagram' && pst.container_id)) await st.set(p, { state: 'NOT_STARTED', intent_at: null }, { step: 'reconcile', found: 0, note: 'GET found nothing created after the intent: a retry is safe' });
+      else await st.set(p, { state: 'AMBIGUOUS' }, { step: 'reconcile', found: m.matches.length, note: 'not exactly one match: creator decides; no retry' });
       continue;
     }
     if (blockers.length) { out.result = { stop: true, reason: 'blocked', blockers }; await st.set(p, { state: ['NOT_STARTED', 'BLOCKED'].includes(st.p(p).state) ? 'BLOCKED' : st.p(p).state, blockers }, { step: 'gate' }); continue; }
@@ -98,8 +131,9 @@ if (!mode || !cfgFile) { console.error(`usage: publish.js --config <publish_conf
     catch (e) { await st.set(p, { state: e.kind === 'not_sent' ? st.p(p).state : 'AMBIGUOUS' }, { step: mode, error: e.message }); out.result = { stop: true, reason: e.message }; }
     out.state = st.p(p).state;
   }
+  if (mode === 'check-auth' && flag('--execute')) report.check_auth_failures = await authFailures({ report, targets, http, META, L });
   console.log(JSON.stringify(C.redact(report), null, 2));
-  process.exit(Object.values(report.platforms).some(x => x.result && x.result.stop) ? 2 : 0);
+  process.exit(Object.values(report.platforms).some(x => x.result && x.result.stop) || (report.check_auth_failures || []).length ? 2 : 0);
 })().catch(e => { console.error(C.redact(String(e && e.stack || e))); process.exit(2); });
 }
 module.exports = { load };
