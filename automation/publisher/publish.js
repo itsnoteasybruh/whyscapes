@@ -81,7 +81,7 @@ if (!mode || !cfgFile) { console.error(`usage: publish.js --config <publish_conf
       out.would_send = { title: L.post.title, text: L.post.text };
       continue;
     }
-    if (mode === 'check-auth' && META && flag('--execute') && !report.token) report.token = await tokenInfo(http, META);
+    if (mode === 'check-auth' && META && flag('--execute') && !report.meta_token_facts) report.meta_token_facts = await tokenInfo(http, META);   // facts only, never the value
     if (mode === 'check-auth') { if (!flag('--execute')) { out.note = 'dry run: add --execute to call the read-only identity endpoint'; continue; } try { out.auth = await A.checkAuth(ctx); } catch (e) { out.auth = { ok: false, detail: e.message }; } continue; }
     if (!flag('--execute')) { out.note = 'dry run: nothing sent (add --execute)'; continue; }
     if (mode === 'verify') { out.result = C.redact(await A.verify(ctx, st)); continue; }
