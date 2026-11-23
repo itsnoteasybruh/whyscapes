@@ -9,7 +9,12 @@ Angka di dokumen ini adalah nilai yang benar-benar dipakai di kode. Jika dokumen
 ---
 
 ## 0. Aturan umum (berlaku untuk semua episode)
-- **Format video:** vertikal 1080×1920, 30 fps, durasi 1–2 menit. Durasi video **mengikuti VO**. VO tidak boleh dipotong, dipercepat, atau diganti.
+- **Format video:** vertikal 1080×1920, 30 fps. Durasi video **mengikuti VO**. VO tidak boleh dipotong, dipercepat, atau diganti.
+- **Durasi baku (keputusan creator, 22 Nov 2026; berlaku EP14-revisi dan seterusnya):** MP4 final **maksimal 90 detik**, target produksi **80–85 detik**.
+  - Dengan VO mulai 1,0 s di balik cover dan ekor logo 2,3 s, VO harus ≤ 86,7 s (target VO 76,7–81,7 s).
+  - VO yang terlalu panjang diperbaiki creator lewat naskah/VO baru. Tidak boleh dipercepat atau dipotong.
+  - MP4 di atas 90 s tidak boleh diunggah. Publisher menolaknya setelah mengukur file final (`automation/format_rules.js`).
+  - Episode lama (EP01–EP13, EP14 versi 112,47 s) tidak memenuhi aturan ini dan tidak dijadwalkan ulang tanpa revisi.
 - **Larangan di layar:**
   - Tidak ada watermark, @handle, atau header permanen.
   - Logo hanya muncul di pembuka dan penutup.
@@ -308,3 +313,16 @@ Komponen seri yang mengatur logo, wordmark, timing, blur, dan loop. **Latar bela
   - `panorama(t, camX, {gy, zoom, warm, sunX, hi, dip})`: 6 lapis parallax (langit/awan, garis langit .12, rumah .4, pagar .8, utama 1, tanah 1,1/1,25, depan 1,6). Tanah selalu bertekstur, tidak pernah bidang polos.
   - `topMap()`: peta atas dengan koordinat yang sama.
 - **Pola "VO di belakang cover":** lihat §16. `transcript.json` = alignment + offset (`tools/apply_offset.py`); mix memakai `adelay`.
+
+## 18. Kit v1.15 (EP14 "Kok Basi di Kulkas?") — dua file baru, opt-in, tidak ada file lama diubah
+- **`series/world/fridge.js`:** dapur Mpi dengan kulkas dan properti penyimpanan makanan.
+  - `kitchenView(t, {cam, door, freezer, inside, under, over, clockMin})`: `kitchen.front` digeser (−330) + kulkas di kanan (`FX`, `FY`). Pintu berengsel kanan; saat terbuka, cahaya kulkas tumpah ke lantai.
+  - `fridge()`, `interior()` (rak kaca, lampu, barang generik tanpa merek, `back` untuk barang di belakang), magnet hidup di pintu.
+  - `box()` wadah makanan: `lid` (tutup terangkat di engsel belakang), `spoil` (warna/tekstur berubah, bukan menjijikkan), `label`, `condense`, `fuzz`, jenis `box | big | shallow | small`.
+  - `pot()`, `remote()` (slow / pause / rewind), `thermoDial()` (angka hanya lewat `o.num`, diisi scene saat VO mengucapkannya), `heatSection()` (penampang pendinginan: tepi dingin dulu), `dateLabel()`, `calendar()`, `odor()` (garis aroma lembut), `snow()`.
+- **`series/creatures/microbe.js`:** mikroba sebagai **visualisasi penjelas**, tanpa wajah atau nama spesies.
+  - `cell(kind)`: `rod`, `coccus`, `yeast`, `mold`; `hidden: true` = garis putus-putus (risiko yang tak tampak).
+  - `colony(t, {rate})`: pertumbuhan deterministik dengan laju yang diintegrasikan. Sel baru meluncur dari induknya; melambat tidak pernah memundurkan sel.
+  - `hyphae()`, `chain()` + `enzyme()` (enzim memotong rantai).
+- **Pola "angka saat diucapkan":** termometer, jam, dan kalender tidak memuat angka sampai kata angkanya terdengar (EP14: "2", "4", "3–4"). Kata pembatas di VO ("umumnya", "beberapa bahan") ikut tampil sebagai pil kecil.
+- **Pola "lambat, bukan berhenti":** proses yang diperlambat selalu tetap bergerak (dial berputar pelan, sel tetap membelah). Simbol pause hanya muncul sebagai lelucon yang gagal.

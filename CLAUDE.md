@@ -18,6 +18,13 @@ Baca dulu `HANDOFF.md` (status paket), lalu `series/STANDARDS.md` (standar terku
   - Catat setiap perubahan di `docs/KIT_CHANGELOG_*.md` dan `series/STANDARDS.md`.
 - **Keamanan:** jangan pernah meminta, menampilkan, atau menyimpan API key.
 
+## Kontrak input & peran (22 Nov 2026) — `automation/INPUT_CONTRACT.md`
+- **Creator (user)** menyerahkan batch `forecast_batch_NN/epNN/{VO.mp3, VO_SCRIPT.md, BRIEF.md, THUMBNAIL.png, POST.md}`. **Claude = executor**: preflight, antre, produksi video dari VO + BRIEF, QC, output; publisher nanti.
+- Claude tidak membuat, mengganti, atau melengkapi kelima file itu: tidak ada topik, VO, thumbnail, judul, caption, atau hashtag buatan Claude, dan tidak ada paket contoh/dummy. Masalah di file creator → `NEEDS_CREATOR_FIX` dengan alasan spesifik.
+- THUMBNAIL.png hanya untuk thumbnail posting media sosial, tidak pernah menjadi pembuka/penutup video. Opening/closing tetap standar seri; judul video dari BRIEF.
+- **Durasi baku:** MP4 final ≤ 90 s, target 80–85 s (VO ≤ 86,7 s). Tidak boleh dipercepat; terlalu panjang = revisi naskah/VO. Publisher menolak MP4 > 90 s (`automation/format_rules.js`).
+- Belum ada jadwal aktif atau posting. Keduanya hanya boleh diaktifkan atas instruksi creator.
+
 ## Perintah inti (dari folder ini)
 ```
 node series/engine/render.js episodes/<ep> stills <t…>

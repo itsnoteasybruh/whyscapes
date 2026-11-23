@@ -14,11 +14,16 @@
 /episodes/*
 !/episodes/_template_epXX/
 !/episodes/ep13_lebah_pulang/
+!/episodes/ep14_kulkas/
 !/.claude/
 /.claude/*
 !/.claude/skills/
 
 # never, anywhere
+client_secret*.json
+*oauth*token*
+*.token.json
+credentials*.json
 *.wav
 *.mp4
 *.mov
@@ -31,6 +36,7 @@
 **/settings.local.json
 **/out/
 **/qc/
+**/stills/
 **/final/
 **/__pycache__/
 **/_*.log
