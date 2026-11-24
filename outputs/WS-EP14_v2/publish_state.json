@@ -17,12 +17,18 @@
           "step": "container",
           "container_id": "17978680527157451",
           "state": "CREATED"
+        },
+        {
+          "at": "2026-11-24T10:11:05.042Z",
+          "step": "container-status",
+          "state": "CREATED"
         }
       ],
       "intent_at": "2026-11-24T10:09:59.576Z",
       "file_sha256": "2057cbafc492398bf6a216377c7068f349ab1d41349bf375f0e042aea4e24e5b",
       "publish_at": "2026-11-24T14:00:00.000Z",
-      "container_id": "17978680527157451"
+      "container_id": "17978680527157451",
+      "container_status": "FINISHED"
     }
   }
 }
