@@ -88,13 +88,17 @@ jobs:
           cat > "$STATE_SYNC" <<'EOF'
           set -e; cd "$GITHUB_WORKSPACE/data"
           git add -f "$STATE"
+          RES="$(dirname "$STATE")/publish_result.json"; [ -f "$RES" ] && git add -f "$RES"
           if git diff --cached --quiet; then exit 0; fi
           git -c user.name="whyscape-publisher" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -q -m "publisher state ($1) [skip ci]"
           for i in 1 2 3; do git pull -q --rebase origin "$DATA_REF" && git push -q origin "HEAD:$DATA_REF" && { echo "state pushed ($1)" >&2; exit 0; }; sleep $((i * 5)); done
           echo "::error::could not push publish_state.json — stopping before any further request" >&2; exit 1
           EOF
 
-      # ---------- run: strict order ----------
+      # ---------- run: each chosen channel goes its own way; the FINAL report decides success ----------
+      # EP14 (24 Nov 2026, run 45372023511): one failed Facebook read-back skipped the wait and the Instagram publish. Now a channel
+      # failing stops only that channel (continue-on-error + step outcomes). Channels the creator did not choose are no-ops.
+      # The job is green ONLY if step 7 reads every chosen channel PUBLISHED with a permalink (GET).
       - name: 1 check-auth (must pass)
         if: inputs.action == 'run'
         run: node code/automation/publisher/publish.js --config "$CONFIG" check-auth --execute
@@ -102,23 +106,26 @@ jobs:
         if: inputs.action == 'run'
         run: node code/automation/publisher/gha_wait.js --config "$CONFIG" --prep-deadline-min 30 --dry
       - name: 3 Instagram container → FINISHED (not published)
+        id: ig
         if: inputs.action == 'run'
+        continue-on-error: true
         run: node code/automation/publisher/publish.js --config "$CONFIG" schedule --platform instagram --execute
-      - name: 4 Facebook Reel → SCHEDULED by Meta
+      - name: 4 Facebook Reel → SCHEDULED + read-back (publish_time, cover; waits while Meta processes)
+        id: fb
         if: inputs.action == 'run'
+        continue-on-error: true
         run: node code/automation/publisher/publish.js --config "$CONFIG" schedule --platform facebook --execute
-      - name: 5 Facebook read-back (publish_time = publish_at, preferred cover)
-        if: inputs.action == 'run'
-        run: node code/automation/publisher/publish.js --config "$CONFIG" verify --platform facebook --execute
-      - name: 6 wait on the runner until publish_at
-        if: inputs.action == 'run'
+      - name: 5 wait on the runner until publish_at
+        id: wait
+        if: inputs.action == 'run' && (steps.ig.outcome == 'success' || steps.fb.outcome == 'success')
         run: node code/automation/publisher/gha_wait.js --config "$CONFIG"
-      - name: 7 Instagram media_publish (once; container status read first)
-        if: inputs.action == 'run'
+      - name: 6 Instagram media_publish (once; re-reads a container that was still processing; no-op if IG not chosen / no container / AMBIGUOUS)
+        if: inputs.action == 'run' && steps.wait.outcome == 'success'
+        continue-on-error: true
         run: node code/automation/publisher/publish.js --config "$CONFIG" publish --platform instagram --execute
-      - name: 8 read back both platforms
-        if: inputs.action == 'run' || inputs.action == 'verify'
-        run: sleep 20 && node code/automation/publisher/publish.js --config "$CONFIG" verify --execute
+      - name: 7 FINAL report (GET) — every chosen channel PUBLISHED with a permalink, else red
+        if: always() && steps.guard.outcome == 'success' && ((inputs.action == 'run' && steps.wait.outcome == 'success') || inputs.action == 'verify')
+        run: node code/automation/publisher/publish.js --config "$CONFIG" report --execute
 
       # ---------- reconcile (GET only) ----------
       - name: reconcile Facebook then Instagram (GET only)

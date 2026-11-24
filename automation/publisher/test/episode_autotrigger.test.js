@@ -124,3 +124,12 @@ test('selftest-dispatch-plan: only publish-episode WS-EP999 action=plan, no conf
   assert.ok(!r.calls.some(c => c.includes('graph.facebook.com'))); assert.equal(r.marker, null);
   const amb = cli(d, T1630, [['POST', '/dispatches', 0, null]], 'selftest-dispatch-plan'); assert.equal(amb.code, 3); assert.equal(dispatches(amb.calls).length, 1);
 });
+
+test('plan gate: a channel the creator did not choose never blocks the trigger; a blocked CHOSEN channel does; no channel at all blocks', () => {
+  const EP = ET.epFor('WS-EP15', '2026-11-25 21:00'), now = new Date(T1630), cfg = { episode: 'WS-EP15', video: { qc: 'PASS' }, schedule: { publish_at_wib: '2026-11-25 21:00' } };
+  const okAuth = { code: 0, json: { check_auth_failures: [] } }, okConflict = { ok: true };
+  const g = platforms => ET.gates({ EP, now, cfg, runs: [], plan: { json: { episode_problems: [], platforms } }, auth: okAuth, conflict: okConflict });
+  assert.deepEqual(g({ facebook: { requested: true, blockers: [] }, instagram: { requested: false, blockers: ["instagram is not among the creator's platforms"] } }), []);
+  assert.match(g({ facebook: { requested: true, blockers: ['no thumbnail file from the creator'] }, instagram: { requested: false, blockers: ['x'] } }).join(), /facebook blocked/);
+  assert.match(g({ facebook: { requested: false, blockers: ['x'] }, instagram: { requested: false, blockers: ['y'] } }).join(), /no channel chosen/);
+});

@@ -98,18 +98,24 @@ async function schedule(ctx, st) {
     await st.set('facebook', { thumbnail: r.ok ? 'set' : 'failed' }, { step: 'thumbnail', http: r.status });
     if (!r.ok) return { stop: true, reason: `cover (thumbnail) upload failed: HTTP ${r.status}; the Reel is NOT scheduled` };   // never schedule without the creator's cover
   }
-  // finish → SCHEDULED, only if Meta does not already show it scheduled/published
+  // finish → SCHEDULED: sent AT MOST ONCE per video_id. The intent (finish_sent_at) is durable before the request, so a later run
+  // that finds the Reel still processing only reads status (EP14 24 Nov: Meta needed ~1 min after finish to report "scheduled").
   const s1 = await status(ctx, p.remote_id), pub = (s1.status && s1.status.publishing_phase) || {};
-  if (!(['scheduled', 'published'].includes(pub.publish_status) || DONE(pub.status) || pub.status === 'in_progress')) {
+  if (!p.finish_sent_at && !(['scheduled', 'published'].includes(pub.publish_status) || DONE(pub.status) || pub.status === 'in_progress')) {
+    await st.set('facebook', { finish_sent_at: new Date().toISOString() }, { step: 'finish-intent' });
     let r;
     try { r = await ctx.http('POST', `${G}/${ctx.cfg.page_id}/video_reels`, { body: form({ upload_phase: 'finish', video_id: p.remote_id, video_state: 'SCHEDULED', scheduled_publish_time: Math.floor(ctx.publishAt / 1000), description: ctx.post.text, title: ctx.post.title, is_ai_generated: ctx.cfg.declarations.is_ai_generated, access_token: token }) }); }
     catch (e) { await st.set('facebook', {}, { step: 'finish', error: e.message, note: 'read status before any new finish' }); return verify(ctx, st); }
-    await st.set('facebook', {}, { step: 'finish', http: r.status, error: r.json && r.json.error && r.json.error.message });
+    const fo = createOutcome(r);
+    await st.set('facebook', fo === 'rejected' ? { state: 'FAILED_DEFINITE' } : {}, { step: 'finish', http: r.status, error: r.json && r.json.error && r.json.error.message });
+    if (fo === 'rejected') return { stop: true, reason: `finish rejected HTTP ${r.status}: the Reel is NOT scheduled` };
   }
   return verify(ctx, st);
 }
-async function verify(ctx, st) {
-  const p = st.p('facebook'); if (!p.remote_id) return { stop: true, reason: 'nothing uploaded' };
+// verify(ctx, st)                   → before publish_at: SCHEDULED at publish_at with the preferred cover (PUBLISHED also accepted)
+// verify(ctx, st, { final: true })  → after publish_at: must read PUBLISHED with a permalink; waits (GET) for Meta to flip the Reel
+async function verify(ctx, st, opt = {}) {
+  const p = st.p('facebook'); if (!p.remote_id) return { stop: true, reason: `nothing uploaded (state ${p.state})`, state: p.state };
   // Meta reports publish_status only after processing ends (24 Nov 2026, EP14 run #4: verify 2 s after finish read
   // video_status "processing", publish_status null; 1 min later the same Reel read "scheduled" 21:00). So wait, GET only,
   // while the Reel is still processing and has no publish_status yet. Never re-sends anything.
@@ -117,24 +123,28 @@ async function verify(ctx, st) {
   for (let i = 0; ; i++) {
     s = await status(ctx, p.remote_id); if (s.error) return { stop: true, reason: 'read-back failed: ' + s.error };
     ph = (s.status || {}).publishing_phase || {}; vs = (s.status || {}).video_status;
-    const settled = ['scheduled', 'published', 'error'].includes(ph.publish_status) || ['error', 'expired'].includes(vs);
-    if (settled || i >= (ctx.fbVerifyTries ?? 20) - 1) break;
+    const settled = opt.final ? ph.publish_status === 'published' || ph.publish_status === 'error' || ['error', 'expired'].includes(vs)
+      : ['scheduled', 'published', 'error'].includes(ph.publish_status) || ['error', 'expired'].includes(vs);
+    if (settled || i >= (opt.final ? ctx.fbPublishTries ?? 40 : ctx.fbVerifyTries ?? 20) - 1) break;
     await st.set('facebook', {}, { step: 'verify-wait', try: i + 1, video_status: vs || null, publish_status: ph.publish_status || null });
     await ctx.sleep(ctx.fbVerifyMs ?? 15000);
   }
   let state = p.state;
-  if (ph.publish_status === 'published') state = 'PUBLISHED';
+  if (ph.publish_status === 'error' || ['error', 'expired'].includes(vs)) state = 'FAILED_DEFINITE';
+  else if (ph.publish_status === 'published') state = 'PUBLISHED';
   else if (ph.publish_status === 'scheduled' && ph.publish_time) state = 'SCHEDULED';
   const want = Math.floor(ctx.publishAt / 1000), got = ph.publish_time ? +ph.publish_time : null;
   // cover read-back: the Reel must carry a preferred custom thumbnail (the one this system uploaded)
   const th = await ctx.http('GET', `${G}/${p.remote_id}/thumbnails?${form({ fields: 'id,is_preferred', access_token: await pt(ctx) })}`, {});
   const coverOk = p.thumbnail === 'set' && th.ok && ((th.json && th.json.data) || []).some(x => x.is_preferred);
   const evidence = { video_id: p.remote_id, video_status: vs, publish_status: ph.publish_status || null, publish_time_unix: got, publish_time_wib: got ? require('./core').wibISO(new Date(got * 1000)) : null, publish_time_matches: got === want, cover_preferred: coverOk, permalink_url: s.permalink_url || null, checked_at: new Date().toISOString() };
-  await st.set('facebook', { state, url: s.permalink_url || `https://www.facebook.com/reel/${p.remote_id}`, evidence }, { step: 'verify', video_status: vs, publish_status: ph.publish_status, publish_time: got, cover_preferred: coverOk });
+  const abs = u => !u ? null : u.startsWith('/') ? `https://www.facebook.com${u}` : u;   // Meta returns "/reel/<id>/"
+  await st.set('facebook', { state, url: abs(s.permalink_url) || `https://www.facebook.com/reel/${p.remote_id}`, evidence }, { step: 'verify', video_status: vs, publish_status: ph.publish_status, publish_time: got, cover_preferred: coverOk });
   const fail = [];
   if (state === 'SCHEDULED' && got !== want) fail.push(`publish_time ${evidence.publish_time_wib} ≠ ${require('./core').wibISO(ctx.publishAt)}`);
   if (['SCHEDULED', 'PUBLISHED'].includes(state) && !coverOk) fail.push('cover not confirmed (no preferred custom thumbnail)');
-  if (state !== 'SCHEDULED' && state !== 'PUBLISHED') fail.push(`state is ${state}, not SCHEDULED`);
+  if (opt.final) { if (state !== 'PUBLISHED') fail.push(`state is ${state}, not PUBLISHED after publish_at`); else if (!s.permalink_url) fail.push('published but no permalink_url'); }
+  else if (state !== 'SCHEDULED' && state !== 'PUBLISHED') fail.push(`state is ${state}, not SCHEDULED`);
   return fail.length ? { stop: true, reason: 'verify failed: ' + fail.join('; '), state, evidence } : { state, evidence };
 }
 module.exports = { name: 'facebook', gate, checkAuth, reconcile, schedule, verify, REQUIRED_PERMS };

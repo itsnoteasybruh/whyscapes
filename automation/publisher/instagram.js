@@ -58,20 +58,28 @@ async function prepare(ctx, st) {
     if (createOutcome(r) !== 'done' || !r.json || !r.json.id) { await st.set('instagram', { state: createOutcome(r) === 'ambiguous' ? 'AMBIGUOUS' : 'FAILED_DEFINITE' }, { step: 'container', http: r.status, error: r.json && r.json.error && r.json.error.message }); return { stop: true, reason: `container HTTP ${r.status}` }; }
     p = await st.set('instagram', { state: 'CREATED', container_id: r.json.id }, { step: 'container', container_id: r.json.id });
   }
-  for (let i = 0; i < (ctx.pollTries ?? 5); i++) {
+  // Meta processing can be slow: poll once a minute (docs: ≤ 1/min) for up to 20 min; the 20.30 deadline is checked before this step
+  for (let i = 0; i < (ctx.pollTries ?? 20); i++) {
     const c = await container(ctx, p.container_id);
     if (c.status_code === 'FINISHED') { await st.set('instagram', { container_status: 'FINISHED' }, { step: 'container-status' }); return { state: 'CREATED', prepared: true, container_id: p.container_id, note: `ready; media_publish will run at ${ctx.publishAt.toISOString()} (Instagram API has no native scheduling)` }; }
     if (['ERROR', 'EXPIRED'].includes(c.status_code)) { await st.set('instagram', { state: 'FAILED_DEFINITE', container_id: null }, { step: 'container-status', status: c.status_code }); return { stop: true, reason: 'container ' + c.status_code }; }
     await ctx.sleep(ctx.pollMs ?? 60000);
   }
-  return { stop: true, reason: 'container still processing; next run continues' };
+  await st.set('instagram', { container_status: 'IN_PROGRESS' }, { step: 'container-status', note: 'still processing after the prepare polls; the publish step re-reads it' });
+  return { stop: true, reason: 'container still processing after the prepare polls; publish step will re-read it inside its window' };
 }
 // step 2 (inside the publish window): media_publish once
 async function publish(ctx, st) {
   const p = st.p('instagram');
   if (p.state === 'PUBLISHED') return verify(ctx, st);
-  if (!p.container_id || p.container_status !== 'FINISHED') return { stop: true, reason: 'container not prepared' };
-  const c = await container(ctx, p.container_id);
+  if (p.state === 'AMBIGUOUS') return { stop: true, reason: 'unknown outcome earlier; reconcile (GET) required, no retry' };
+  if (!p.container_id) return { stop: true, reason: `no container (state ${p.state}); nothing to publish` };
+  let c = await container(ctx, p.container_id);
+  // a container that was still processing at prepare time may finish now: wait (GET, once a minute) inside the publish window
+  for (let i = 0; c.status_code === 'IN_PROGRESS' && i < (ctx.publishPollTries ?? 15); i++) { await ctx.sleep(ctx.pollMs ?? 60000); c = await container(ctx, p.container_id); }
+  if (['ERROR', 'EXPIRED'].includes(c.status_code)) { await st.set('instagram', { state: 'FAILED_DEFINITE', container_status: c.status_code }, { step: 'publish-precheck', status: c.status_code }); return { stop: true, reason: 'container ' + c.status_code + '; nothing published' }; }
+  if (c.status_code === 'FINISHED' && p.container_status !== 'FINISHED') await st.set('instagram', { container_status: 'FINISHED' }, { step: 'container-status', note: 'finished after prepare' });
+  if (!['FINISHED', 'PUBLISHED'].includes(c.status_code)) return { stop: true, reason: `container ${c.status_code || c.error || 'unreadable'}: not ready inside the publish window; nothing published` };
   if (c.status_code === 'PUBLISHED') { const m = await reconcile(ctx, p); if (m.matches && m.matches.length === 1) { await st.set('instagram', { state: 'PUBLISHED', remote_id: m.matches[0].id, url: m.matches[0].url }, { step: 'adopt' }); return verify(ctx, st); } await st.set('instagram', { state: 'AMBIGUOUS' }, { step: 'publish', note: 'container PUBLISHED but media not uniquely found' }); return { stop: true, reason: 'ambiguous' }; }
   await st.set('instagram', { publish_attempted_at: new Date().toISOString() }, { step: 'publish-intent' });
   let r;
@@ -81,11 +89,14 @@ async function publish(ctx, st) {
   await st.set('instagram', { state: createOutcome(r) === 'rejected' ? 'CREATED' : 'AMBIGUOUS' }, { step: 'publish', http: r.status, error: r.json && r.json.error && r.json.error.message });
   return { stop: true, reason: `publish HTTP ${r.status}` };
 }
-async function verify(ctx, st) {
+// verify(ctx, st, { final: true }) after publish_at: the media must exist (GET by id) as a REELS item with a permalink. A FINISHED
+// container alone is NOT a post; no media id = not published.
+async function verify(ctx, st, opt = {}) {
   const p = st.p('instagram');
-  if (!p.remote_id) return { state: p.state, evidence: { container_id: p.container_id || null, container_status: p.container_status || null } };
+  if (!p.remote_id) { const ev = { container_id: p.container_id || null, container_status: p.container_status || null }; return opt.final ? { stop: true, reason: `not published (state ${p.state}, container ${ev.container_status || 'none'})`, state: p.state, evidence: ev } : { state: p.state, evidence: ev }; }
   const r = await ctx.http('GET', `${G}/${p.remote_id}?fields=id,permalink,timestamp,media_product_type`, { headers: tok() });
-  if (!r.ok) return { stop: true, reason: `read-back HTTP ${r.status}` };
+  if (!r.ok) return { stop: true, reason: `read-back HTTP ${r.status} (state kept ${p.state}; re-run verify)`, state: p.state };
+  if (opt.final && (!r.json.permalink || r.json.media_product_type !== 'REELS')) return { stop: true, reason: `media ${p.remote_id} has permalink ${r.json.permalink || 'none'}, type ${r.json.media_product_type}`, state: p.state };
   await st.set('instagram', { state: 'PUBLISHED', url: r.json.permalink, evidence: { media_id: r.json.id, permalink: r.json.permalink, timestamp: r.json.timestamp, type: r.json.media_product_type, checked_at: new Date().toISOString() } }, { step: 'verify' });
   return { state: 'PUBLISHED', evidence: st.p('instagram').evidence };
 }
