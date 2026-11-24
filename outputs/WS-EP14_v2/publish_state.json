@@ -31,14 +31,20 @@
       "container_status": "FINISHED"
     },
     "facebook": {
-      "state": "CREATING",
-      "remote_id": null,
+      "state": "CREATED",
+      "remote_id": "1499850452207824",
       "url": null,
       "history": [
         {
           "at": "2026-11-24T10:11:08.448Z",
           "step": "intent",
           "state": "CREATING"
+        },
+        {
+          "at": "2026-11-24T10:11:12.245Z",
+          "step": "start",
+          "video_id": "1499850452207824",
+          "state": "CREATED"
         }
       ],
       "intent_at": "2026-11-24T10:11:08.447Z",
