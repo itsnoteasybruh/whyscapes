@@ -45,6 +45,13 @@
           "step": "start",
           "video_id": "1499850452207824",
           "state": "CREATED"
+        },
+        {
+          "at": "2026-11-24T10:11:19.732Z",
+          "step": "upload",
+          "http": 200,
+          "from_byte": 0,
+          "state": "CREATED"
         }
       ],
       "intent_at": "2026-11-24T10:11:08.447Z",
