@@ -17,13 +17,13 @@ Lakukan setelah PR `/eksekusizip` di-merge ke `main`, dan setelah EP14 tayang se
    - **Environment:** `whyscapes`.
    - **Jadwal:** setiap hari pukul **16.00**, zona **Asia/Jakarta**.
 3. Tempel prompt di bawah apa adanya.
-4. Uji sekali dengan **Run now** pada hari tanpa episode. Hasil yang benar: bootstrap lulus, lalu "tidak ada episode hari ini", tanpa push.
+4. Uji sekali dengan **Run now** pada hari tanpa episode. Hasil yang benar: bootstrap lulus, penanda `_writetest/routine_*.json` muncul di branch `data/episodes` (SHA dilaporkan), lalu "tidak ada episode hari ini". Tanpa penanda itu, izin simpan routine belum terbukti.
 
 ## Prompt routine (tempel apa adanya)
 ```
 Saya (Elang, creator Whyscape) menugaskan routine harian ini. Jalankan automation/production/RUNBOOK.md dari branch main.
 1. bash automation/production/bootstrap.sh (harus exit 0; jika gagal, laporkan dan berhenti).
-2. git fetch origin data/episodes. Jika branch itu belum ada, atau queue/queue.json tidak punya episode berstatus QUEUED dengan tanggal tayang hari ini (WIB): laporkan "tidak ada episode hari ini" dan selesai tanpa commit.
+2. git fetch origin data/episodes. Tulis penanda non-episode _writetest/routine_<UTC>.json (waktu, ID sesi), commit, dan push ke data/episodes; laporkan SHA-nya. Push gagal = STOPPED_SETUP, laporkan dan berhenti. Jika queue/queue.json tidak punya episode berstatus QUEUED dengan tanggal tayang hari ini (WIB): laporkan "tidak ada episode hari ini" dan selesai.
 3. Jika ada: produksi, render, dan QC episode itu sampai PASS sesuai RUNBOOK. VO 1,00× utuh, MP4 ≤ 90 s, editorial tidak diubah, EP14 tidak disentuh, tidak memanggil Meta, tidak memicu workflow.
 4. Saya mengizinkan commit dan push HANYA ke branch data/episodes: hasil episode di outputs/<ID>/, publish_config.json, QC.md, dan status antrean (PRODUCING → READY, atau STOPPED_* dengan alasan).
 5. Batas QC PASS 20.00 WIB. Jika terlewat, status STOPPED_DEADLINE dan laporkan. Tidak ada publish now dan slot tidak digeser.
