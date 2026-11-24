@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "episode": "WS-EP14",
+  "platforms": {
+    "instagram": {
+      "state": "CREATING",
+      "remote_id": null,
+      "url": null,
+      "history": [
+        {
+          "at": "2026-11-24T10:09:59.576Z",
+          "step": "intent",
+          "state": "CREATING"
+        }
+      ],
+      "intent_at": "2026-11-24T10:09:59.576Z",
+      "file_sha256": "2057cbafc492398bf6a216377c7068f349ab1d41349bf375f0e042aea4e24e5b",
+      "publish_at": "2026-11-24T14:00:00.000Z"
+    }
+  }
+}
