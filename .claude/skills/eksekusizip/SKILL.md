@@ -42,6 +42,8 @@ Creator (Elang) adalah pembuat editorial plan dan penyedia bahan. Claude adalah 
   1. `check-auth` (token, scope, akun, tautan Page↔IG), bentrok, state, dan duplikasi.
   2. Facebook dijadwalkan Meta pada `publish_at`. Disebut **terjadwal** hanya setelah status, waktu, dan cover terbaca balik.
   3. Instagram: container `FINISHED` sebelum 20.30, lalu runner menunggu dan `media_publish` sekali pada 21.00. Disebut **siap** hanya jika container dan job penunggu terbukti.
+  4. Setiap kanal berjalan sendiri: kegagalan satu kanal tidak menghentikan kanal lain, dan kanal yang tidak dipilih creator dilewati.
+  5. Laporan akhir (`publish.js report`, hanya GET) setelah `publish_at` menulis `publish_result.json`. Sebuah kanal disebut **tayang** hanya bila terbaca PUBLISHED dengan permalink. Workflow hijau di langkah lain, atau container IG `FINISHED`, bukan bukti tayang.
 - Intent dan ID disimpan sebelum dan sesudah setiap request ke Meta. Hasil yang ambigu → berhenti, rekonsiliasi lewat GET, tanpa retry live.
 - Gagal di tahap mana pun (produksi, QC, akses, bentrok, batas waktu) → episode itu berhenti dan dilaporkan. Tidak ada publish now, slot tidak digeser, dan hasil ambigu tidak dicoba ulang.
 

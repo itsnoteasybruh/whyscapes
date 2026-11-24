@@ -9,6 +9,10 @@
 //   publish     Instagram only, inside the publish window (the routine calls it at publish_at)
 //   verify      read back every platform that has an ID; updates state with evidence
 //   reconcile   look for an upload this system may already have made (after an AMBIGUOUS outcome); adopts exactly one match, never more
+//   report      FINAL check after publish_at, GET only: every channel the creator chose must read PUBLISHED with a permalink
+//               (Facebook: Reel publish_status published; Instagram: media id → REELS + permalink). Writes publish_result.json.
+//               Exit 2 unless every chosen channel is verified. A green earlier step or a FINISHED container is never "success".
+// Channels the creator did not choose are skipped (no state change, no failure), so a Facebook-only or Instagram-only episode works.
 // State: <outputs>/<id>/publish_state.json (committed) + publish_state.local.json (never committed). Exit 0 ok, 2 blocked/stop, 3 usage.
 const fs = require('fs'), path = require('path');
 const C = require('./core');
@@ -76,27 +80,19 @@ async function authFailures({ report, targets, http, META, L }) {
   } else if (process.env.GITHUB_ACTIONS === 'true') fails.push('secret META_TOKEN is not set');
   return fails;
 }
-function main() {
-const a = process.argv.slice(2), opt = (f, d) => { const i = a.indexOf(f); return i >= 0 ? a[i + 1] : d; }, flag = f => a.includes(f);
-const MODES = ['plan', 'check-auth', 'schedule', 'publish', 'verify', 'reconcile'];
-const mode = a.find(x => MODES.includes(x)), cfgFile = opt('--config');
-if (!mode || !cfgFile) { console.error(`usage: publish.js --config <publish_config.json> <${MODES.join('|')}> [--platform p] [--execute]`); process.exit(3); }
-
-(async () => {
-  const L = load(cfgFile, { now: opt('--now') ? new Date(opt('--now')) : new Date() });
+const MODES = ['plan', 'check-auth', 'schedule', 'publish', 'verify', 'reconcile', 'report'];
+// one mode, in-process (the CLI and the end-to-end tests both call this). Returns { report, code }; never calls process.exit.
+async function runMode({ cfgFile, mode, only = null, execute = false, now = new Date(), http, META = '', sleep = ms => new Promise(r => setTimeout(r, ms)), onSave = null, tune = {} }) {
+  const flag = f => f === '--execute' ? execute : false;
+  const L = load(cfgFile, { now });
   const st = new C.State(L.stateFile, L.cfg.episode);
-  // GitHub Actions: META_TOKEN (repository secret) is added as "Authorization: Bearer" on graph.facebook.com only — what the Claude-cloud
-  // egress proxy does with its network secret. The value stays in this process; every output goes through redact().
-  const META = process.env.META_TOKEN || '';
-  const http = META ? require('./cloud/support').withGraphAuth(C.makeTransport({ timeoutMs: +(opt('--timeout-ms', 300000)) }), META) : C.makeTransport({ timeoutMs: +(opt('--timeout-ms', 300000)) });
-  // GitHub Actions: STATE_SYNC = script that commits + pushes publish_state.json; run on EVERY state change (intent before a request, ID right after)
-  if (process.env.STATE_SYNC && flag('--execute')) st.onSave = () => require('child_process').execFileSync('bash', [process.env.STATE_SYNC, `${mode}`], { stdio: ['ignore', 2, 2] });
-  const only = opt('--platform'), targets = Object.keys(ADAPTERS).filter(p => (!only || p === only));
-  const report = { episode: L.cfg.episode, mode, executed: flag('--execute'), at: C.timeEvidence(L.now), video: { path: path.relative(L.root, L.video.path), md5: L.videoMd5, duration_s: L.video.duration, size: L.video.size, wh: `${L.video.width}x${L.video.height}` },
+  if (onSave && execute) st.onSave = onSave;
+  const targets = Object.keys(ADAPTERS).filter(p => (!only || p === only));
+  const report = { episode: L.cfg.episode, mode, executed: execute, at: C.timeEvidence(L.now), video: { path: path.relative(L.root, L.video.path), md5: L.videoMd5, duration_s: L.video.duration, size: L.video.size, wh: `${L.video.width}x${L.video.height}` },
     schedule: L.publishAt ? { ...C.timeEvidence(L.publishAt), source: L.sched.source } : null, episode_problems: L.problems, platforms: {} };
   for (const p of targets) {
     const A = ADAPTERS[p], pc = (L.cfg.platforms || {})[p] || {};
-    const ctx = { cfg: pc, video: L.video, videoSha: L.videoSha, post: L.post, publishAt: L.publishAt, now: L.now, thumb: L.thumbs[p] || null, http, sleep: ms => new Promise(r => setTimeout(r, ms)) };
+    const ctx = { cfg: pc, video: L.video, videoSha: L.videoSha, post: L.post, publishAt: L.publishAt, now: L.now, thumb: L.thumbs[p] || null, http, sleep, ...tune };
     const requested = L.platforms.includes(p) && pc.enabled !== false;
     const blockers = [...L.problems, ...(requested ? [] : [`${p} is not among the creator's platforms`]), ...(L.publishAt ? A.gate(ctx, mode) : [])];
     const out = report.platforms[p] = { requested, blockers, state: st.p(p).state, thumbnail: ctx.thumb ? { file: path.relative(L.root, ctx.thumb.path), conversion: ctx.thumb.conversion && { ...ctx.thumb.conversion, to: path.relative(L.root, ctx.thumb.conversion.to) } } : null };
@@ -107,7 +103,23 @@ if (!mode || !cfgFile) { console.error(`usage: publish.js --config <publish_conf
     if (mode === 'check-auth' && META && flag('--execute') && !report.meta_token_facts) report.meta_token_facts = await tokenInfo(http, META);   // facts only, never the value
     if (mode === 'check-auth') { if (!flag('--execute')) { out.note = 'dry run: add --execute to call the read-only identity endpoint'; continue; } try { out.auth = await A.checkAuth(ctx); } catch (e) { out.auth = { ok: false, detail: e.message }; } continue; }
     if (!flag('--execute')) { out.note = 'dry run: nothing sent (add --execute)'; continue; }
+    // a channel the creator did not choose is not part of this episode: nothing is sent, read or changed for it
+    if (!requested && ['schedule', 'publish', 'verify', 'report'].includes(mode)) { out.result = { skipped: `${p} not chosen by the creator` }; continue; }
     if (mode === 'verify') { out.result = C.redact(await A.verify(ctx, st)); continue; }
+    if (mode === 'report') {
+      if (L.publishAt && L.now < L.publishAt) {   // before the slot: read-back of the PREPARATION only; never called "verified"
+        let r; try { r = await A.verify(ctx, st); } catch (e) { r = { stop: true, reason: 'read-back error: ' + e.message }; }
+        const ps = st.p(p), ready = p === 'facebook' ? !r.stop && ps.state === 'SCHEDULED' : ps.state === 'CREATED' && ps.container_status === 'FINISHED';
+        out.result = C.redact(r);
+        out.final = { stage: 'before publish_at', verified: false, prepared: ready, state: ps.state, container_status: ps.container_status || undefined, reason: ready ? null : C.redact(r.reason || `not prepared (state ${ps.state})`), checked_at: new Date().toISOString() };
+        continue;
+      }
+      let r; try { r = await A.verify(ctx, st, { final: true }); } catch (e) { r = { stop: true, reason: 'read-back error: ' + e.message }; }
+      const ps = st.p(p);
+      out.result = C.redact(r);
+      out.final = { verified: !r.stop, state: ps.state, permalink: !r.stop ? ps.url : null, remote_id: ps.remote_id || null, reason: r.stop ? C.redact(r.reason) : null, checked_at: new Date().toISOString() };
+      continue;
+    }
     if (mode === 'reconcile') {
       // GET-only reconciliation after an unknown outcome; decides whether a retry is safe. Never sends a create/publish request.
       const pst = st.p(p); if (!['AMBIGUOUS', 'CREATING'].includes(pst.state)) { out.result = { note: `state ${pst.state}: nothing to reconcile` }; continue; }
@@ -132,11 +144,39 @@ if (!mode || !cfgFile) { console.error(`usage: publish.js --config <publish_conf
     out.state = st.p(p).state;
   }
   if (mode === 'check-auth' && flag('--execute')) report.check_auth_failures = await authFailures({ report, targets, http, META, L });
-  console.log(JSON.stringify(C.redact(report), null, 2));
-  process.exit(Object.values(report.platforms).some(x => x.result && x.result.stop) || (report.check_auth_failures || []).length ? 2 : 0);
-})().catch(e => { console.error(C.redact(String(e && e.stack || e))); process.exit(2); });
+  if (mode === 'report') {
+    const chosen = Object.entries(report.platforms).filter(([, v]) => v.requested);
+    const before = L.publishAt && L.now < L.publishAt;
+    report.final = { stage: before ? 'before publish_at (preparation only)' : 'after publish_at', all_verified: !before && chosen.length > 0 && chosen.every(([, v]) => v.final && v.final.verified),
+      all_prepared: before ? chosen.length > 0 && chosen.every(([, v]) => v.final && v.final.prepared) : undefined,
+      channels: Object.fromEntries(chosen.map(([k, v]) => [k, v.final || { verified: false, reason: (v.result && v.result.reason) || 'not checked' }])) };
+    if (execute) fs.writeFileSync(path.join(path.dirname(L.stateFile), 'publish_result.json'), JSON.stringify(C.redact({ episode: report.episode, at: report.at, schedule: report.schedule, ...report.final }), null, 2) + '\n');
+  }
+  const code = Object.values(report.platforms).some(x => x.result && x.result.stop) || (report.check_auth_failures || []).length || (report.final && !(report.final.all_verified || report.final.all_prepared)) ? 2 : 0;
+  return { report: C.redact(report), code };
 }
-module.exports = { load };
+function main() {
+  const a = process.argv.slice(2), opt = (f, d) => { const i = a.indexOf(f); return i >= 0 ? a[i + 1] : d; }, flag = f => a.includes(f);
+  const mode = a.find(x => MODES.includes(x)), cfgFile = opt('--config');
+  if (!mode || !cfgFile) { console.error(`usage: publish.js --config <publish_config.json> <${MODES.join('|')}> [--platform p] [--execute]`); process.exit(3); }
+  // GitHub Actions: META_TOKEN (repository secret) is added as "Authorization: Bearer" on graph.facebook.com only — what the Claude-cloud
+  // egress proxy does with its network secret. The value stays in this process; every output goes through redact().
+  const META = process.env.META_TOKEN || '';
+  const base = C.makeTransport({ timeoutMs: +(opt('--timeout-ms', 300000)) });
+  const http = META ? require('./cloud/support').withGraphAuth(base, META) : base;
+  // GitHub Actions: STATE_SYNC = script that commits + pushes publish_state.json; run on EVERY state change (intent before a request, ID right after)
+  const onSave = process.env.STATE_SYNC ? () => require('child_process').execFileSync('bash', [process.env.STATE_SYNC, `${mode}`], { stdio: ['ignore', 2, 2] }) : null;
+  runMode({ cfgFile, mode, only: opt('--platform') || null, execute: flag('--execute'), now: opt('--now') ? new Date(opt('--now')) : new Date(), http, META, onSave }).then(({ report, code }) => {
+    console.log(JSON.stringify(report, null, 2));
+    if (report.final && process.env.GITHUB_STEP_SUMMARY) {
+      const L = [`### ${report.episode}: hasil akhir per kanal`, '', '| Kanal | Terverifikasi | State | Permalink | Alasan |', '|---|---|---|---|---|'];
+      for (const [k, v] of Object.entries(report.final.channels)) L.push(`| ${k} | ${v.verified ? 'YA' : 'TIDAK'} | ${v.state || '-'} | ${v.permalink || '-'} | ${v.reason || '-'} |`);
+      fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, L.join('\n') + '\n');
+    }
+    process.exit(code);
+  }, e => { console.error(C.redact(String(e && e.stack || e))); process.exit(2); });
+}
+module.exports = { load, runMode, MODES };
 if (require.main === module) {
   // Node's built-in fetch ignores HTTPS_PROXY unless NODE_USE_ENV_PROXY=1 (Node ≥ 22.21); re-exec once so every request uses the egress proxy
   if ((process.env.HTTPS_PROXY || process.env.https_proxy) && process.env.NODE_USE_ENV_PROXY !== '1') {

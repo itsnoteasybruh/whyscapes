@@ -44,7 +44,9 @@ function gates({ EP, now, cfg, state, marker, runs, plan, auth, conflict, stage 
   if (!plan || !plan.json) r.push(`plan: no report (exit ${plan && plan.code})`);
   else {
     if ((plan.json.episode_problems || []).length) r.push('plan: ' + plan.json.episode_problems.join('; '));
-    for (const [p, v] of Object.entries(plan.json.platforms || {})) if ((v.blockers || []).length) r.push(`plan: ${p} blocked: ${v.blockers.join('; ')}`);
+    const chosen = Object.entries(plan.json.platforms || {}).filter(([, v]) => v.requested);   // a channel the creator did not choose is not a blocker
+    if (!chosen.length) r.push('plan: no channel chosen by the creator');
+    for (const [p, v] of chosen) if ((v.blockers || []).length) r.push(`plan: ${p} blocked: ${v.blockers.join('; ')}`);
   }
   if (!auth || auth.code !== 0 || !auth.json || (auth.json.check_auth_failures || []).length) r.push('check-auth: ' + (auth && auth.json ? (auth.json.check_auth_failures || []).join('; ') || `exit ${auth.code}` : `no report (exit ${auth && auth.code})`));
   if (!conflict || !conflict.ok) r.push(...((conflict && conflict.reasons) || ['conflict: not checked']).map(x => 'conflict: ' + x));
