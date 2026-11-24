@@ -58,6 +58,12 @@
           "step": "thumbnail",
           "http": 200,
           "state": "CREATED"
+        },
+        {
+          "at": "2026-11-24T10:11:32.024Z",
+          "step": "finish",
+          "http": 200,
+          "state": "CREATED"
         }
       ],
       "intent_at": "2026-11-24T10:11:08.447Z",
