@@ -1,4 +1,7 @@
 {
-  "schema": 1,
+  "schema": 2,
+  "tz": "Asia/Jakarta",
+  "produce_at": "16:00",
+  "produce_offset_days": 0,
   "episodes": []
 }
