@@ -7,7 +7,12 @@
 // = queue time, QC PASS, no hold, no marker, no non-read-only run for that episode on the day, state NOT_STARTED, plan, check-auth,
 // GET-only conflict check; marker pushed BEFORE the dispatch; unclear dispatch → exit 3, never a second one.
 // Today's episode not READY: exit 0 (waiting) until 20.00 WIB, then exit 2 (red → e-mail): production/QC missed the deadline.
-//   node automation/publisher/episode_autotrigger.js --mode dry-run | live-dispatch [--now ISO]
+// Two live callers, ONE gate: the 16.00 production routine dispatches this workflow (mode routine-dispatch) right after it writes READY,
+// and the cron runs stay as backup. Both run in the same concurrency group and stop at the same marker / run check, so at most one
+// publish-episode run is ever dispatched per episode. The marker records which caller made the attempt (TRIGGER_SOURCE).
+// selftest-dispatch-plan: dispatches publish-episode for the non-episode fixture WS-EP999 (on hold) with action=plan (read-only) and
+// confirms the run appeared. No marker, no queue, no Meta call. Proves the dispatch chain routine → autotrigger → publish-episode.
+//   node automation/publisher/episode_autotrigger.js --mode dry-run | live-dispatch | selftest-dispatch-plan [--now ISO]
 //   env: DATA_DIR (data branch checkout), QUEUE (path in DATA_DIR), MARKER_SYNC, META_TOKEN, GH_TOKEN, GITHUB_REPOSITORY
 const fs = require('fs'), path = require('path'), { spawnSync } = require('child_process');
 const C = require('./core'), W = require('./gha_wait'), { withGraphAuth } = require('./cloud/support');
@@ -16,7 +21,7 @@ const BASE = { workflow: 'publish-episode.yml', ref: 'main', maxWaitMin: 340, pr
 const SR = require('../schedule_rules');
 const epFor = (id, publishAtWib) => ({ ...BASE, episode: id, date: publishAtWib.slice(0, 10), publishAt: publishAtWib });
 const READ_ONLY_RUN = /·\s*(check-auth|plan|verify)\s*$/;      // run-name of publish-episode.yml is "publish-episode · <ID> · <action>"
-const G = 'https://graph.facebook.com/v27.0';
+const G = 'https://graph.facebook.com/v27.0', SELFTEST_EP = 'WS-EP999';
 
 const wibDate = d => new Date(d.getTime() + 7 * 3600e3).toISOString().slice(0, 10);
 
@@ -83,9 +88,20 @@ const node = (args, env) => { const r = spawnSync(process.execPath, args, { env,
 async function main(argv = process.argv.slice(2), env = process.env) {
   const opt = (f, d) => { const i = argv.indexOf(f); return i >= 0 ? argv[i + 1] : d; };
   const mode = opt('--mode', 'dry-run'), now = opt('--now') ? new Date(opt('--now')) : new Date();
-  if (!['dry-run', 'live-dispatch'].includes(mode)) { console.error('bad --mode'); return 2; }
+  if (!['dry-run', 'live-dispatch', 'selftest-dispatch-plan'].includes(mode)) { console.error('bad --mode'); return 2; }
   const dataDir = env.DATA_DIR, http = C.makeTransport({ timeoutMs: 60000 }), api = gh(http, env.GH_TOKEN), meta = withGraphAuth(http, env.META_TOKEN || '');
-  const out = (o) => console.log(JSON.stringify(C.redact({ mode, at: C.timeEvidence(now), ...o }), null, 2));
+  const source = env.TRIGGER_SOURCE || 'manual';
+  const out = (o) => console.log(JSON.stringify(C.redact({ mode, source, at: C.timeEvidence(now), ...o }), null, 2));
+  if (mode === 'selftest-dispatch-plan') {
+    const fx = path.join(dataDir, 'outputs', SELFTEST_EP, 'publish_config.json');
+    const fc = fs.existsSync(fx) ? JSON.parse(fs.readFileSync(fx, 'utf8')) : null;
+    if (!fc || !fc.hold || !fc.selftest) { out({ result: 'blocked', reasons: [`selftest fixture ${path.relative(dataDir, fx)} missing or not marked selftest + hold`] }); return 2; }
+    const t0 = Date.now(); let r, err = null;
+    try { r = await api('POST', `/actions/workflows/${BASE.workflow}/dispatches`, { ref: BASE.ref, inputs: { episode: SELFTEST_EP, action: 'plan' } }); } catch (e) { err = e; }
+    if (err || r.status !== 204) { out({ result: `selftest: dispatch ${err ? 'ambiguous (' + C.redact(err.message) + ')' : 'HTTP ' + r.status}; no retry` }); return 3; }
+    const run = await findNewRun(api, t0, SELFTEST_EP, env, 'plan');
+    out({ result: run ? 'selftest: read-only plan dispatched' : 'selftest: 204 but no run seen; list runs, no retry', run }); return run ? 0 : 3;
+  }
   const queue = JSON.parse(fs.readFileSync(path.join(dataDir, env.QUEUE || 'queue/queue.json'), 'utf8'));
   const today = (queue.episodes || []).filter(e => e.publish_at && wibDate(new Date(e.publish_at)) === wibDate(now) && !/WS-EP14\b/.test(e.id));
   if (!today.length) { out({ result: 'nothing scheduled today in the queue' }); return 0; }
@@ -121,12 +137,12 @@ async function main(argv = process.argv.slice(2), env = process.env) {
 
   // live-dispatch: durable intent first; a failing push stops before the request
   const writeMarker = (m) => { fs.mkdirSync(path.dirname(markerFile), { recursive: true }); fs.writeFileSync(markerFile, JSON.stringify(m, null, 2) + '\n'); if (env.MARKER_SYNC) spawnSync('bash', [env.MARKER_SYNC, m.status, path.relative(dataDir, markerFile)], { stdio: ['ignore', 2, 2] }).status === 0 || (() => { throw new Error('marker push failed'); })(); };
-  const m = { episode: EP.episode, publish_at_wib: EP.publishAt, status: 'dispatching', at: new Date().toISOString(), trigger: env.GITHUB_RUN_ID || 'local' };
+  const m = { episode: EP.episode, publish_at_wib: EP.publishAt, status: 'dispatching', at: new Date().toISOString(), trigger: env.GITHUB_RUN_ID || 'local', source };
   try { writeMarker(m); } catch (e) { out({ result: 'blocked', reasons: ['marker: ' + e.message + ' (nothing dispatched)'] }); return 2; }
   const t0 = Date.now(); let r, err = null;
   try { r = await api('POST', `/actions/workflows/${EP.workflow}/dispatches`, { ref: EP.ref, inputs: { episode: EP.episode, action: 'run', confirm: `${EP.episode}-LIVE` } }); } catch (e) { err = e; }
   if (!err && r.status === 204) {
-    const run = await findNewRun(api, t0, EP.episode, env);
+    const run = await findNewRun(api, t0, EP.episode, env, 'run');
     writeMarker({ ...m, status: run ? 'dispatched' : 'dispatch_unconfirmed', run_id: run && run.id, run_url: run && run.html_url });
     out({ result: run ? 'dispatched' : 'dispatch_unconfirmed: 204 but no run seen; reconcile by listing runs, no retry', run, evidence }); return run ? 0 : 3;
   }
@@ -134,16 +150,16 @@ async function main(argv = process.argv.slice(2), env = process.env) {
   writeMarker({ ...m, status: definite ? 'rejected' : 'ambiguous', http: r && r.status, error: err && C.redact(err.message) });
   out({ result: definite ? `rejected (HTTP ${r.status}); nothing dispatched; no retry` : 'ambiguous: stop; reconcile by GET (list runs) before anything else; no retry', evidence }); return 3;
 }
-async function findNewRun(api, t0, episode, env) {
+async function findNewRun(api, t0, episode, env, action) {
   for (let i = 0; i < (+env.FIND_TRIES || 12); i++) {
     const runs = await listRuns(api) || [];
-    const hit = runs.find(x => Date.parse(x.created_at) >= t0 - 5000 && (x.display_title || '').includes(` ${episode} `) && /·\s*run\s*$/.test(x.display_title || ''));
+    const hit = runs.find(x => Date.parse(x.created_at) >= t0 - 5000 && (x.display_title || '').includes(` ${episode} `) && new RegExp(`·\\s*${action}\\s*$`).test(x.display_title || ''));
     if (hit) return { id: hit.id, run_number: hit.run_number, status: hit.status, html_url: hit.html_url, created_at: hit.created_at };
     await new Promise(s => setTimeout(s, +env.FIND_WAIT_MS || 5000));
   }
   return null;
 }
-module.exports = { gates, wibDate, epFor, BASE, conflictCheck, main };
+module.exports = { gates, wibDate, epFor, BASE, conflictCheck, main, SELFTEST_EP };
 if (require.main === module) {
   if ((process.env.HTTPS_PROXY || process.env.https_proxy) && process.env.NODE_USE_ENV_PROXY !== '1') {
     const r = spawnSync(process.execPath, ['--no-warnings', ...process.argv.slice(1)], { stdio: 'inherit', env: { ...process.env, NODE_USE_ENV_PROXY: '1' } });

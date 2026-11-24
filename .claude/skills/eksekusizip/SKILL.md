@@ -37,6 +37,7 @@ Creator (Elang) adalah pembuat editorial plan dan penyedia bahan. Claude adalah 
 - **Produksi + QC:** `automation/production/RUNBOOK.md`.
   - MP4 final ≤ 90 s, VO asli utuh.
   - Jika batas itu mustahil dipenuhi dari sumber: `NEEDS_CREATOR_FIX`. Editorial tidak diubah.
+- **Pemicu publikasi:** routine produksi memicu `episode-autotrigger.yml` (mode `routine-dispatch`) satu kali setelah `READY`, sebelum 20.30 WIB. Cron GitHub tiap 15 menit hanya cadangan. Keduanya melewati gerbang dan penanda yang sama, sehingga `publish-episode` dipicu paling banyak satu kali.
 - **Publikasi** (oleh workflow GitHub setelah status `READY`):
   1. `check-auth` (token, scope, akun, tautan Page↔IG), bentrok, state, dan duplikasi.
   2. Facebook dijadwalkan Meta pada `publish_at`. Disebut **terjadwal** hanya setelah status, waktu, dan cover terbaca balik.

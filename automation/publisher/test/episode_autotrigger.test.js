@@ -46,11 +46,11 @@ const META_OK = [
   ['GET', '/I/content_publishing_limit', 200, { data: [{ quota_usage: 0, config: { quota_total: 100, quota_duration: 86400 } }] }],
   ['GET', '/P/scheduled_posts', 200, { data: [] }], ['GET', '/P/video_reels', 200, { data: [] }], ['GET', '/I/media?', 200, { data: [] }]];
 const RUNS = '/actions/workflows/publish-episode.yml/runs';
-function cli(d, now, routes, mode = 'live-dispatch') {
+function cli(d, now, routes, mode = 'live-dispatch', extra = {}) {
   const log = path.join(d, `f_${Math.random()}.log`);
   const r = spawnSync(process.execPath, [path.resolve(__dirname, '../episode_autotrigger.js'), '--mode', mode, '--now', now], { encoding: 'utf8', env: { ...process.env,
     NODE_OPTIONS: `--require ${path.join(__dirname, 'fake_fetch.js')}`, FAKE_ROUTES: JSON.stringify(routes), FAKE_LOG: log, HTTPS_PROXY: '', https_proxy: '', GITHUB_ACTIONS: 'true',
-    DATA_DIR: d, QUEUE: 'queue/queue.json', MARKER_SYNC: '', GITHUB_REPOSITORY: 'o/r', GH_TOKEN: 'ghs_x', META_TOKEN: 'EAAsecretTOKENvalue1234567890', FIND_TRIES: '2', FIND_WAIT_MS: '0' } });
+    DATA_DIR: d, QUEUE: 'queue/queue.json', MARKER_SYNC: '', GITHUB_REPOSITORY: 'o/r', GH_TOKEN: 'ghs_x', META_TOKEN: 'EAAsecretTOKENvalue1234567890', FIND_TRIES: '2', FIND_WAIT_MS: '0', ...extra } });
   const calls = fs.existsSync(log) ? fs.readFileSync(log, 'utf8').trim().split('\n').filter(Boolean) : [];
   let json = null; try { json = JSON.parse(r.stdout.slice(r.stdout.indexOf('{'))); } catch { /* none */ }
   const mf = path.join(d, 'outputs/WS-EP15/autotrigger_marker.json');
@@ -86,4 +86,41 @@ test('ambiguous dispatch → marker "ambiguous", exit 3, no retry; a run of ANOT
   const mine = { ...other, display_title: 'publish-episode · WS-EP15 · run' };
   assert.deepEqual(ET.gates({ EP: ET.epFor('WS-EP15', '2026-11-25 21:00'), now: new Date(T1630), cfg: { episode: 'WS-EP15', video: { qc: 'PASS' }, schedule: { publish_at_wib: '2026-11-25 21:00' } }, runs: [other], stage: 'cheap' }), []);
   assert.match(ET.gates({ EP: ET.epFor('WS-EP15', '2026-11-25 21:00'), now: new Date(T1630), cfg: { episode: 'WS-EP15', video: { qc: 'PASS' }, schedule: { publish_at_wib: '2026-11-25 21:00' } }, runs: [mine], stage: 'cheap' }).join(), /already started/);
+});
+
+test('workflow: routine-dispatch runs the SAME live gates as cron (source recorded), selftest is a separate read-only mode', () => {
+  const y = fs.readFileSync(WF, 'utf8');
+  assert.match(y, /options: \[dry-run, routine-dispatch, selftest-dispatch-plan\]/);
+  assert.match(y, /MODE: \$\{\{ \(github\.event_name == 'schedule' \|\| inputs\.mode == 'routine-dispatch'\) && 'live-dispatch' \|\| inputs\.mode \}\}/);
+  assert.match(y, /TRIGGER_SOURCE: .*'cron'.*'routine'.*'manual'/);
+  assert.match(y, /concurrency:\s*\n\s*group: episode-autotrigger\s*\n\s*cancel-in-progress: false/);   // routine + cron never run side by side
+});
+
+test('routine first, cron after: one dispatch, marker says source=routine; cron backup then skips; cron first → routine skips', () => {
+  const run = { id: 9, run_number: 1, display_title: 'publish-episode · WS-EP15 · run', status: 'queued', html_url: 'u', created_at: new Date(Date.now() + 60e3).toISOString() };
+  const d = data(), r = cli(d, '2026-11-25T10:20:00Z', [['GET', RUNS, 200, { workflow_runs: [] }, 1], ['POST', '/dispatches', 204, null], ['GET', RUNS, 200, { workflow_runs: [run] }], ...META_OK], 'live-dispatch', { TRIGGER_SOURCE: 'routine' });
+  assert.equal(r.code, 0, r.out); assert.equal(r.marker.source, 'routine'); assert.equal(r.marker.status, 'dispatched'); assert.equal(dispatches(r.calls).length, 1);
+  const c = cli(d, '2026-11-25T10:30:00Z', [['GET', RUNS, 200, { workflow_runs: [run] }], ['POST', '/dispatches', 204, null], ...META_OK], 'live-dispatch', { TRIGGER_SOURCE: 'cron' });
+  assert.equal(c.code, 0); assert.match(c.json.result, /skip: already triggered/); assert.equal(dispatches(c.calls).length, 0);
+  const d2 = data(); fs.writeFileSync(path.join(d2, 'outputs/WS-EP15/autotrigger_marker.json'), JSON.stringify({ status: 'dispatched', at: '2026-11-25T09:30:05Z', source: 'cron', run_id: 5 }));
+  const r2 = cli(d2, '2026-11-25T10:20:00Z', [['GET', RUNS, 200, { workflow_runs: [] }], ['POST', '/dispatches', 204, null], ...META_OK], 'live-dispatch', { TRIGGER_SOURCE: 'routine' });
+  assert.equal(r2.code, 0); assert.match(r2.json.result, /skip/); assert.equal(dispatches(r2.calls).length, 0);
+  // an earlier AMBIGUOUS attempt (any caller) also stops the routine: no automatic retry
+  fs.writeFileSync(path.join(d2, 'outputs/WS-EP15/autotrigger_marker.json'), JSON.stringify({ status: 'ambiguous', at: '2026-11-25T09:30:05Z', source: 'cron' }));
+  const r3 = cli(d2, '2026-11-25T10:20:00Z', [['GET', RUNS, 200, { workflow_runs: [] }], ['POST', '/dispatches', 204, null], ...META_OK], 'live-dispatch', { TRIGGER_SOURCE: 'routine' });
+  assert.equal(dispatches(r3.calls).length, 0); assert.match(JSON.stringify(r3.json.reasons), /already attempted \(ambiguous/);
+});
+
+test('selftest-dispatch-plan: only publish-episode WS-EP999 action=plan, no confirm, no marker, no queue, no Meta; refuses without the held fixture', () => {
+  const d = data(), fx = path.join(d, 'outputs/WS-EP999');
+  const none = cli(d, T1630, [['POST', '/dispatches', 204, null]], 'selftest-dispatch-plan');
+  assert.equal(none.code, 2); assert.equal(dispatches(none.calls).length, 0);
+  fs.mkdirSync(fx, { recursive: true }); fs.writeFileSync(path.join(fx, 'publish_config.json'), JSON.stringify({ episode: 'WS-EP999', selftest: true, hold: 'SELFTEST fixture: never publish' }));
+  const run = { id: 3, run_number: 4, display_title: 'publish-episode · WS-EP999 · plan', status: 'queued', html_url: 'u', created_at: new Date(Date.now() + 60e3).toISOString() };
+  const r = cli(d, T1630, [['POST', '/dispatches', 204, null], ['GET', RUNS, 200, { workflow_runs: [run] }]], 'selftest-dispatch-plan');
+  assert.equal(r.code, 0, r.out); assert.match(r.json.result, /read-only plan dispatched/);
+  const dp = dispatches(r.calls); assert.equal(dp.length, 1);
+  assert.deepEqual(JSON.parse(dp[0].slice(dp[0].indexOf('{'))), { ref: 'main', inputs: { episode: 'WS-EP999', action: 'plan' } });
+  assert.ok(!r.calls.some(c => c.includes('graph.facebook.com'))); assert.equal(r.marker, null);
+  const amb = cli(d, T1630, [['POST', '/dispatches', 0, null]], 'selftest-dispatch-plan'); assert.equal(amb.code, 3); assert.equal(dispatches(amb.calls).length, 1);
 });
