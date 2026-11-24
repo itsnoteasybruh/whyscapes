@@ -110,8 +110,18 @@ async function schedule(ctx, st) {
 }
 async function verify(ctx, st) {
   const p = st.p('facebook'); if (!p.remote_id) return { stop: true, reason: 'nothing uploaded' };
-  const s = await status(ctx, p.remote_id); if (s.error) return { stop: true, reason: 'read-back failed: ' + s.error };
-  const ph = (s.status || {}).publishing_phase || {}, vs = (s.status || {}).video_status;
+  // Meta reports publish_status only after processing ends (24 Nov 2026, EP14 run #4: verify 2 s after finish read
+  // video_status "processing", publish_status null; 1 min later the same Reel read "scheduled" 21:00). So wait, GET only,
+  // while the Reel is still processing and has no publish_status yet. Never re-sends anything.
+  let s, ph, vs;
+  for (let i = 0; ; i++) {
+    s = await status(ctx, p.remote_id); if (s.error) return { stop: true, reason: 'read-back failed: ' + s.error };
+    ph = (s.status || {}).publishing_phase || {}; vs = (s.status || {}).video_status;
+    const settled = ['scheduled', 'published', 'error'].includes(ph.publish_status) || ['error', 'expired'].includes(vs);
+    if (settled || i >= (ctx.fbVerifyTries ?? 20) - 1) break;
+    await st.set('facebook', {}, { step: 'verify-wait', try: i + 1, video_status: vs || null, publish_status: ph.publish_status || null });
+    await ctx.sleep(ctx.fbVerifyMs ?? 15000);
+  }
   let state = p.state;
   if (ph.publish_status === 'published') state = 'PUBLISHED';
   else if (ph.publish_status === 'scheduled' && ph.publish_time) state = 'SCHEDULED';

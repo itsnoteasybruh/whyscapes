@@ -6,7 +6,7 @@
 //        THUMBNAIL.png = social-media post thumbnail ONLY (never the video's opening/closing) · POST.md = post title, caption, hashtags, platforms, publish time.
 // usage: node automation/preflight.js <batchDir> [--queue queue/queue.json] [--report file.md] [--now ISO] [--episodes-root episodes] [--dry]
 // Every episode folder becomes ONE queue entry:
-//   QUEUED              all checks passed → may be claimed for production on its produce_date
+//   QUEUED              all checks passed → claimed for production at 16.00 WIB on its publish date (automation/schedule_rules.js)
 //   NEEDS_CREATOR_FIX   something in the creator's files must be fixed or confirmed by the creator (reasons name the file); never produced/published
 //   PREFLIGHT_INCOMPLETE a check could not run here (e.g. Whisper/tesseract missing): a system problem, not the creator's; never produced
 // Re-running on the same batch after the creator fixed files replaces NEEDS_CREATOR_FIX / PREFLIGHT_INCOMPLETE entries; QUEUED (or later) entries are
@@ -18,11 +18,12 @@ const pos = args.filter((a, i) => !a.startsWith('--') && !VALUED.includes(args[i
 const batchDir = pos[0];
 if (!batchDir) { console.error('usage: preflight.js <batchDir> [--queue file] [--report file] [--now ISO] [--episodes-root dir] [--dry]'); process.exit(2); }
 const ROOT = path.join(__dirname, '..');
+const SR = require('./schedule_rules');
 const queueFile = opt('--queue', 'queue/queue.json'), epRoot = opt('--episodes-root', path.join(ROOT, 'episodes'));
 const reportFile = opt('--report', path.join('queue', 'preflight', path.basename(path.resolve(batchDir)) + '_report.md'));
 const NOW = new Date(opt('--now', new Date().toISOString()));
 const RULES = { files: ['VO.mp3', 'VO_SCRIPT.md', 'BRIEF.md', 'THUMBNAIL.png', 'POST.md'],   // VO length: automation/format_rules.js (final MP4 ≤ 90 s)
-  titleOcrPass: .85, scriptPass: .90, scriptFail: .80, minGapHours: 12, leadHours: 28, produceOffsetDays: 1, produceAt: '17:00',
+  titleOcrPass: .85, scriptPass: .90, scriptFail: .80, minGapHours: SR.RULES.minGapHours, produceOffsetDays: SR.RULES.produceOffsetDays, produceAt: SR.RULES.produceAt,   // automation/schedule_rules.js
   platforms: { instagram: { max: 2200, tags: 30 }, facebook: { max: 63206, tags: 30 }, youtube: { titleMax: 100, max: 5000, tags: 15 }, tiktok: { max: 2200, tags: 30 } } };
 
 const sha = f => crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex');
@@ -161,9 +162,8 @@ for (const name of pk) {
   if (!at && has('POST.md')) add('FIX', 'schedule', P.fm.publish_at ? `publish_at "${P.fm.publish_at}" is not a valid "YYYY-MM-DD HH:MM" (Asia/Jakarta)` : 'no publish date/time ("publish_at:" or "## Jadwal" with YYYY-MM-DD HH:MM WIB)', 'POST.md');
   else if (at) {
     r.publish_at = wibISO(at); r.target_date = wibDate(at); r.produce_date = addDays(r.target_date, -RULES.produceOffsetDays);
-    const lead = (at - NOW) / 3600e3;
-    if (lead <= 0) add('FIX', 'schedule', `publish_at ${r.publish_at} is in the past`, 'POST.md');
-    else if (lead < RULES.leadHours) add('FIX', 'schedule', `only ${lead.toFixed(1)} h before publish_at: production runs H-${RULES.produceOffsetDays} ${RULES.produceAt} WIB, it needs ≥ ${RULES.leadHours} h`, 'POST.md');
+    // schedule_rules: production 16.00 WIB on the publish date; the package must arrive before that and the slot must leave ≥ 5 h
+    for (const pb of SR.intakeTiming(NOW, at).problems) add('FIX', 'schedule', pb, 'POST.md');
     for (const s of slots) { const gap = Math.abs(at - s.at) / 3600e3; if (wibDate(s.at) === r.target_date || gap < RULES.minGapHours) add('FIX', 'schedule', `collides with ${s.id} at ${wibISO(s.at)} (same day or < ${RULES.minGapHours} h apart)`, 'POST.md'); }
   }
   // 8. duplicates (queue, this batch, already produced episodes)

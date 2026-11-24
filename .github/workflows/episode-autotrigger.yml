@@ -1,0 +1,72 @@
+# Episode trigger for EP15+ — every 15 min from 16.30 to 20.15 WIB (cron is UTC; WIB = UTC+7), robust to cron delay or a skipped run:
+# each run re-checks the queue on data/episodes. Only today's episode with status READY (QC PASS by the 16.00 production session)
+# can be dispatched, and only after every gate passes (automation/publisher/episode_autotrigger.js). All live safety stays in
+# publish-episode.yml. Primary caller: the 16.00 production routine (workflow_dispatch mode routine-dispatch, right after READY);
+# these cron runs are the backup. Same concurrency group + marker → one publish-episode run at most. Never acts on WS-EP14 (EP14 has its own workflows). Not READY by 20.00 WIB → the job turns red (GitHub e-mail).
+name: episode-autotrigger (EP15+)
+run-name: "episode-autotrigger · ${{ github.event_name == 'schedule' && 'scheduled' || inputs.mode }}"
+
+on:
+  schedule:
+    - cron: '30,45 9 * * *'          # 16.30, 16.45 WIB
+    - cron: '0,15,30,45 10-12 * * *' # 17.00 … 19.45 WIB
+    - cron: '0,15 13 * * *'          # 20.00, 20.15 WIB
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'dry-run (gates only) | routine-dispatch (16.00 routine after READY: same gates + marker as cron) | selftest-dispatch-plan (read-only)'
+        type: choice
+        options: [dry-run, routine-dispatch, selftest-dispatch-plan]
+        default: dry-run
+
+permissions: {}
+
+concurrency:
+  group: episode-autotrigger
+  cancel-in-progress: false
+
+env:
+  DATA_REF: data/episodes
+
+jobs:
+  gate:
+    if: github.repository == 'itsnoteasybruh/whyscapes'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write                # only to push the trigger marker to DATA_REF
+      actions: write                 # list publish-episode runs + dispatch publish-episode.yml
+    env:
+      META_TOKEN: ${{ secrets.META_TOKEN }}
+      GH_TOKEN: ${{ github.token }}
+      DATA_DIR: ${{ github.workspace }}/data
+      QUEUE: queue/queue.json
+      MARKER_SYNC: ${{ github.workspace }}/.marker_sync.sh
+      MODE: ${{ (github.event_name == 'schedule' || inputs.mode == 'routine-dispatch') && 'live-dispatch' || inputs.mode }}
+      TRIGGER_SOURCE: ${{ github.event_name == 'schedule' && 'cron' || (inputs.mode == 'routine-dispatch' && 'routine' || 'manual') }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { path: code, persist-credentials: false }
+      - name: data branch present?
+        id: data
+        run: |
+          if git ls-remote --exit-code --heads "https://github.com/${GITHUB_REPOSITORY}.git" "$DATA_REF" >/dev/null; then echo "ok=1" >> "$GITHUB_OUTPUT"; else echo "no $DATA_REF branch yet, nothing queued"; fi
+      - uses: actions/checkout@v4
+        if: steps.data.outputs.ok == '1'
+        with: { ref: '${{ env.DATA_REF }}', path: data }
+      - name: ffmpeg (plan measures the MP4)
+        if: steps.data.outputs.ok == '1'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
+      - name: marker sync script
+        if: steps.data.outputs.ok == '1'
+        run: |
+          cat > "$MARKER_SYNC" <<'EOS'
+          set -e; cd "$DATA_DIR"
+          git add -f "$2"
+          git -c user.name="whyscape-publisher" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -q -m "episode autotrigger marker ($1) [skip ci]"
+          for i in 1 2 3; do git pull -q --rebase origin "$DATA_REF" && git push -q origin "HEAD:$DATA_REF" && { echo "marker pushed ($1)" >&2; exit 0; }; sleep $((i * 5)); done
+          echo "::error::could not push the trigger marker" >&2; exit 1
+          EOS
+      - name: gates → dispatch publish-episode (run) only if all pass
+        if: steps.data.outputs.ok == '1'
+        run: node code/automation/publisher/episode_autotrigger.js --mode "$MODE"
