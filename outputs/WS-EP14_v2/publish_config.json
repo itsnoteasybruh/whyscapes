@@ -1,0 +1,51 @@
+{
+  "episode": "WS-EP14",
+  "version": "v2 (VO baru 62,59 s; render r3)",
+  "root": "../..",
+  "video": {
+    "path": "outputs/WS-EP14_v2/WS-EP14_v2.mp4",
+    "expected_md5": "9ecafcabd6d8c09eff65e6fe91ded44d",
+    "qc": "PASS",
+    "qc_file": "episodes/ep14_kulkas_v2/QC.md"
+  },
+  "post_file": "episodes/ep14_kulkas_v2/creator/POST.md",
+  "expected_post_sha256": "e9cc1d1d0a2f2714ffeb441312603e0005ffac5a8ea95920ac2593444171c153",
+  "thumbnail_file": "episodes/ep14_kulkas_v2/creator/THUMBNAIL_received.webp",
+  "schedule": {
+    "publish_at_wib": "2026-11-24 21:00",
+    "platforms": [
+      "facebook",
+      "instagram"
+    ],
+    "creator_instruction": "Keputusan creator 23 Nov 2026 malam: \"Saya setujui slot EP14 24 November 2026 pukul 21.00 WIB di FB dan IG.\" (slot 23 Nov 21.00 tidak terpenuhi: batas persiapan IG 20.30 terlewat).",
+    "status": "READY_PENDING_RUN_24NOV",
+    "note": "`run` hanya dipicu 24 Nov antara ±15.20 dan 20.30 WIB dengan confirm=EP14-LIVE setelah check-auth lolos. Tidak dipercepat, tidak 'publish now', jam tidak digeser tanpa keputusan creator.",
+    "conflict_check": "23 Nov 2026 21.10 WIB (GET, read-only): Facebook Page scheduled_posts = 0, tidak ada Reel berstatus scheduled (terakhir EP12 22 Nov, published); IG media terakhir EP12 22 Nov 21.06; kuota IG 0/100. Tidak ada bentrok untuk 24 Nov 2026 21.00 WIB."
+  },
+  "platforms": {
+    "facebook": {
+      "enabled": true,
+      "page_id": "1421016024432912",
+      "declarations": {
+        "is_ai_generated": true,
+        "source": "master prompt EP14 v2: 'Isi deklarasi AI yang relevan (is_ai_generated bila didukung)'; VO ElevenLabs v4"
+      },
+      "auth": "network secret on graph.facebook.com (user token); Page token derived in-process"
+    },
+    "instagram": {
+      "enabled": true,
+      "ig_user_id": "17841464723522892",
+      "public_video_url": "https://raw.githubusercontent.com/itsnoteasybruh/whyscapes/16e2a9d0af2db6b2b2e4ed26a12be4a93301a29b/outputs/WS-EP14_v2/WS-EP14_v2.mp4",
+      "public_cover_url": "https://raw.githubusercontent.com/itsnoteasybruh/whyscapes/16e2a9d0af2db6b2b2e4ed26a12be4a93301a29b/outputs/WS-EP14_v2/THUMBNAIL_1080x1920.jpg",
+      "share_to_feed": true,
+      "share_to_feed_source": "master prompt EP14 v2: 'set share_to_feed=true'",
+      "auth": "network secret on graph.facebook.com (user token)",
+      "public_url_evidence": "23 Nov 2026 17:19 WIB: container uji 17978551539157451 (REELS, tanpa caption, TIDAK dipublikasikan) dibuat dari kedua URL ini -> status_code FINISHED dalam ±1 menit; kedaluwarsa sendiri 24 jam",
+      "declarations": {
+        "is_ai_generated": true,
+        "source": "master prompt EP14 v2: 'Isi deklarasi AI yang relevan (is_ai_generated bila didukung)'; VO ElevenLabs v4"
+      }
+    }
+  },
+  "scope_note": "Pilot automation: Facebook Reels + Instagram Reels saja. YouTube dikelola manual di YouTube Studio."
+}

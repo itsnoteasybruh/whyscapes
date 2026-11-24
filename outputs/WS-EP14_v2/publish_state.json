@@ -1,0 +1,94 @@
+{
+  "schema": 1,
+  "episode": "WS-EP14",
+  "platforms": {
+    "instagram": {
+      "state": "CREATED",
+      "remote_id": null,
+      "url": null,
+      "history": [
+        {
+          "at": "2026-11-24T10:09:59.576Z",
+          "step": "intent",
+          "state": "CREATING"
+        },
+        {
+          "at": "2026-11-24T10:10:02.503Z",
+          "step": "container",
+          "container_id": "17978680527157451",
+          "state": "CREATED"
+        },
+        {
+          "at": "2026-11-24T10:11:05.042Z",
+          "step": "container-status",
+          "state": "CREATED"
+        }
+      ],
+      "intent_at": "2026-11-24T10:09:59.576Z",
+      "file_sha256": "2057cbafc492398bf6a216377c7068f349ab1d41349bf375f0e042aea4e24e5b",
+      "publish_at": "2026-11-24T14:00:00.000Z",
+      "container_id": "17978680527157451",
+      "container_status": "FINISHED"
+    },
+    "facebook": {
+      "state": "CREATED",
+      "remote_id": "1499850452207824",
+      "url": "/reel/1499850452207824/",
+      "history": [
+        {
+          "at": "2026-11-24T10:11:08.448Z",
+          "step": "intent",
+          "state": "CREATING"
+        },
+        {
+          "at": "2026-11-24T10:11:12.245Z",
+          "step": "start",
+          "video_id": "1499850452207824",
+          "state": "CREATED"
+        },
+        {
+          "at": "2026-11-24T10:11:19.732Z",
+          "step": "upload",
+          "http": 200,
+          "from_byte": 0,
+          "state": "CREATED"
+        },
+        {
+          "at": "2026-11-24T10:11:24.771Z",
+          "step": "thumbnail",
+          "http": 200,
+          "state": "CREATED"
+        },
+        {
+          "at": "2026-11-24T10:11:32.024Z",
+          "step": "finish",
+          "http": 200,
+          "state": "CREATED"
+        },
+        {
+          "at": "2026-11-24T10:11:34.189Z",
+          "step": "verify",
+          "video_status": "processing",
+          "publish_time": null,
+          "cover_preferred": true,
+          "state": "CREATED"
+        }
+      ],
+      "intent_at": "2026-11-24T10:11:08.447Z",
+      "file_sha256": "2057cbafc492398bf6a216377c7068f349ab1d41349bf375f0e042aea4e24e5b",
+      "publish_at": "2026-11-24T14:00:00.000Z",
+      "thumbnail": "set",
+      "evidence": {
+        "video_id": "1499850452207824",
+        "video_status": "processing",
+        "publish_status": null,
+        "publish_time_unix": null,
+        "publish_time_wib": null,
+        "publish_time_matches": false,
+        "cover_preferred": true,
+        "permalink_url": "/reel/1499850452207824/",
+        "checked_at": "2026-11-24T10:11:34.189Z"
+      }
+    }
+  }
+}

@@ -1,0 +1,412 @@
+{
+ "summary": {
+  "master_gain_dB": 3.2,
+  "speech_vs_music_dB(headphone)": 17.3,
+  "speech_vs_music_dB(phone)": 17.2,
+  "speech_vs_sfx_dB(headphone)": 16.7,
+  "speech_vs_sfx_dB(phone)": 13.9,
+  "key_frames_limited_%": 11.6,
+  "detail_frames_limited_%": 8.9,
+  "cues_measured": 56,
+  "cues_lost_on_phone(<-18dB)": 7,
+  "median_cue_vs_bed_phone_dB": {
+   "id": -9.3,
+   "hero": -8.1,
+   "movement": -11.8
+  }
+ },
+ "cues": [
+  {
+   "t": 0.04,
+   "label": "cover pembuka (logo)",
+   "cls": "id",
+   "cue_vs_bed_phone_dB": 17.9,
+   "over_speech": false
+  },
+  {
+   "t": 1.3,
+   "label": "Mpi meraih gagang",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -8.3,
+   "over_speech": true
+  },
+  {
+   "t": 2.97,
+   "label": "pintu kulkas terbuka, lampu & dengung",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -4.7,
+   "over_speech": true
+  },
+  {
+   "t": 4.09,
+   "label": "kotak ditarik dari rak",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -7.5,
+   "over_speech": true
+  },
+  {
+   "t": 6.41,
+   "label": "tutup wadah diangkat: klik",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -6.8,
+   "over_speech": true
+  },
+  {
+   "t": 7.04,
+   "label": "aroma naik dari wadah",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -6.0,
+   "over_speech": true
+  },
+  {
+   "t": 8.28,
+   "label": "Mpi mundur kaget",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -7.8,
+   "over_speech": true
+  },
+  {
+   "t": 9.3,
+   "label": "pintu kulkas menutup",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -9.9,
+   "over_speech": true
+  },
+  {
+   "t": 9.38,
+   "label": "awan pikiran muncul",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -8.5,
+   "over_speech": true
+  },
+  {
+   "t": 11.33,
+   "label": "tanda tanya \"basi?\"",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": 1.2,
+   "over_speech": true
+  },
+  {
+   "t": 12.39,
+   "label": "\"Coba kita ikuti jejaknya\": tapak → portal ke permukaan makanan",
+   "cls": "id",
+   "cue_vs_bed_phone_dB": -23.6,
+   "over_speech": true
+  },
+  {
+   "t": 12.88,
+   "label": "perubahan skala: masuk ke permukaan makanan",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -2.6,
+   "over_speech": true
+  },
+  {
+   "t": 13.6,
+   "label": "label DI KULKAS",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -19.3,
+   "over_speech": true
+  },
+  {
+   "t": 14.11,
+   "label": "tombol muncul",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -18.8,
+   "over_speech": true
+  },
+  {
+   "t": 14.32,
+   "label": "tombol PELAMBAT ditekan",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -20.8,
+   "over_speech": true
+  },
+  {
+   "t": 14.45,
+   "label": "dunia mikro melambat",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -12.7,
+   "over_speech": true
+  },
+  {
+   "t": 15.37,
+   "label": "tombol BERHENTI ditekan … tidak mempan",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -20.3,
+   "over_speech": true
+  },
+  {
+   "t": 15.85,
+   "label": "tombol berhenti dicoret",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": 0.4,
+   "over_speech": true
+  },
+  {
+   "t": 16.61,
+   "label": "dua jalur: hangat cepat vs dingin lambat",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -11.4,
+   "over_speech": true
+  },
+  {
+   "t": 17.65,
+   "label": "jalur dingin: satu pembelahan pelan",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -14.4,
+   "over_speech": true
+  },
+  {
+   "t": 17.81,
+   "label": "jalur dingin mengambil layar",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -16.9,
+   "over_speech": true
+  },
+  {
+   "t": 19.41,
+   "label": "sebagian disorot",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -5.4,
+   "over_speech": true
+  },
+  {
+   "t": 20.41,
+   "label": "sebagian masih tumbuh",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -4.9,
+   "over_speech": true
+  },
+  {
+   "t": 21.45,
+   "label": "panel ENZIM: rantai dipotong",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -14.0,
+   "over_speech": true
+  },
+  {
+   "t": 21.75,
+   "label": "panel UDARA: oksigen menyentuh permukaan",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -11.9,
+   "over_speech": true
+  },
+  {
+   "t": 22.85,
+   "label": "bercak cokelat menyebar",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -9.7,
+   "over_speech": true
+  },
+  {
+   "t": 23.52,
+   "label": "time-lapse permukaan makanan",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -13.6,
+   "over_speech": true
+  },
+  {
+   "t": 24.52,
+   "label": "kartu RASA",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -6.3,
+   "over_speech": true
+  },
+  {
+   "t": 24.7,
+   "label": "kartu WARNA",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -8.4,
+   "over_speech": true
+  },
+  {
+   "t": 26.04,
+   "label": "kartu TEKSTUR",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -8.3,
+   "over_speech": true
+  },
+  {
+   "t": 28.47,
+   "label": "Mpi mencium: tidak ada bau aneh",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -11.8,
+   "over_speech": true
+  },
+  {
+   "t": 29.42,
+   "label": "kartu AMAN? + tanda tanya",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -5.7,
+   "over_speech": true
+  },
+  {
+   "t": 31.15,
+   "label": "lensa: penyebab sakit tak terlihat",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -13.6,
+   "over_speech": true
+  },
+  {
+   "t": 33.19,
+   "label": "label TAK SELALU ADA TANDA",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -11.8,
+   "over_speech": true
+  },
+  {
+   "t": 35.55,
+   "label": "jam: waktu berjalan",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -19.4,
+   "over_speech": true
+  },
+  {
+   "t": 36.2,
+   "label": "\"2 JAM\"",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -10.0,
+   "over_speech": true
+  },
+  {
+   "t": 37.33,
+   "label": "termometer ruang muncul",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -11.1,
+   "over_speech": true
+  },
+  {
+   "t": 38.52,
+   "label": "\"> 32 °C\": termometer naik",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -7.9,
+   "over_speech": true
+  },
+  {
+   "t": 40.22,
+   "label": "\"1 JAM\": batas dipendekkan",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -4.2,
+   "over_speech": true
+  },
+  {
+   "t": 41.59,
+   "label": "menuang ke wadah 1",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -11.8,
+   "over_speech": true
+  },
+  {
+   "t": 42.44,
+   "label": "menuang ke wadah 2",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -13.2,
+   "over_speech": true
+  },
+  {
+   "t": 42.63,
+   "label": "wadah dangkal",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -5.4,
+   "over_speech": true
+  },
+  {
+   "t": 43.53,
+   "label": "penampang: dangkal cepat dingin",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -8.8,
+   "over_speech": true
+  },
+  {
+   "t": 44.92,
+   "label": "termometer kulkas ditaruh",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -17.4,
+   "over_speech": true
+  },
+  {
+   "t": 45.4,
+   "label": "jarum ke 4 °C",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -13.4,
+   "over_speech": true
+  },
+  {
+   "t": 47.88,
+   "label": "label tanggal ditulis",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -12.8,
+   "over_speech": true
+  },
+  {
+   "t": 49.52,
+   "label": "kalender: 3–4 hari",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -13.9,
+   "over_speech": true
+  },
+  {
+   "t": 51.11,
+   "label": "freezer dibuka",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -19.1,
+   "over_speech": true
+  },
+  {
+   "t": 52.14,
+   "label": "bekukan: kristal es",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -6.7,
+   "over_speech": true
+  },
+  {
+   "t": 52.83,
+   "label": "kamera ke kotak semula",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -16.6,
+   "over_speech": true
+  },
+  {
+   "t": 53.46,
+   "label": "lensa: proses melambat",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -10.3,
+   "over_speech": true
+  },
+  {
+   "t": 55.09,
+   "label": "jam: waktu tetap berjalan",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -6.4,
+   "over_speech": true
+  },
+  {
+   "t": 59.1,
+   "label": "tanda tanya cegukan",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -10.4,
+   "over_speech": true
+  },
+  {
+   "t": 59.93,
+   "label": "gelembung komentar",
+   "cls": "hero",
+   "cue_vs_bed_phone_dB": -14.2,
+   "over_speech": true
+  },
+  {
+   "t": 62.26,
+   "label": "jejak oranye keluar layar",
+   "cls": "movement",
+   "cue_vs_bed_phone_dB": -8.6,
+   "over_speech": true
+  },
+  {
+   "t": 63.65,
+   "label": "cover penutup (logo)",
+   "cls": "id",
+   "cue_vs_bed_phone_dB": -9.3,
+   "over_speech": true
+  }
+ ]
+}
