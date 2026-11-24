@@ -1,0 +1,11 @@
+{
+  "episode": "WS-EP999",
+  "selftest": true,
+  "hold": "SELFTEST fixture (not an episode): only action=plan is ever dispatched for it; never publish",
+  "root": ".",
+  "video": { "path": "selftest.mp4", "qc": "SELFTEST" },
+  "post_file": "POST.md",
+  "thumbnail_file": "selftest_thumb.png",
+  "schedule": { "publish_at_wib": "2099-01-01 21:00", "creator_instruction": "none: selftest fixture", "platforms": [] },
+  "platforms": {}
+}
