@@ -29,6 +29,21 @@
       "publish_at": "2026-11-24T14:00:00.000Z",
       "container_id": "17978680527157451",
       "container_status": "FINISHED"
+    },
+    "facebook": {
+      "state": "CREATING",
+      "remote_id": null,
+      "url": null,
+      "history": [
+        {
+          "at": "2026-11-24T10:11:08.448Z",
+          "step": "intent",
+          "state": "CREATING"
+        }
+      ],
+      "intent_at": "2026-11-24T10:11:08.447Z",
+      "file_sha256": "2057cbafc492398bf6a216377c7068f349ab1d41349bf375f0e042aea4e24e5b",
+      "publish_at": "2026-11-24T14:00:00.000Z"
     }
   }
 }
