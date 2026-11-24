@@ -9,7 +9,12 @@ Angka di dokumen ini adalah nilai yang benar-benar dipakai di kode. Jika dokumen
 ---
 
 ## 0. Aturan umum (berlaku untuk semua episode)
-- **Format video:** vertikal 1080×1920, 30 fps, durasi 1–2 menit. Durasi video **mengikuti VO**. VO tidak boleh dipotong, dipercepat, atau diganti.
+- **Format video:** vertikal 1080×1920, 30 fps. Durasi video **mengikuti VO**. VO tidak boleh dipotong, dipercepat, atau diganti.
+- **Durasi baku (keputusan creator, 22 Nov 2026; berlaku EP14-revisi dan seterusnya):** MP4 final **maksimal 90 detik**, target produksi **80–85 detik**.
+  - Dengan VO mulai 1,0 s di balik cover dan ekor logo 2,3 s, VO harus ≤ 86,7 s (target VO 76,7–81,7 s).
+  - VO yang terlalu panjang diperbaiki creator lewat naskah/VO baru. Tidak boleh dipercepat atau dipotong.
+  - MP4 di atas 90 s tidak boleh diunggah. Publisher menolaknya setelah mengukur file final (`automation/format_rules.js`).
+  - Episode lama (EP01–EP13, EP14 versi 112,47 s) tidak memenuhi aturan ini dan tidak dijadwalkan ulang tanpa revisi.
 - **Larangan di layar:**
   - Tidak ada watermark, @handle, atau header permanen.
   - Logo hanya muncul di pembuka dan penutup.

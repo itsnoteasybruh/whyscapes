@@ -1,0 +1,41 @@
+{
+  "episode": "WS-EP14",
+  "root": "../..",
+  "video": {
+    "path": "outputs/WS-EP14/WS-EP14.mp4",
+    "expected_md5": "12074b85f35b6486ded67ed52f999ebc",
+    "qc": "PASS"
+  },
+  "post_file": "episodes/ep14_kulkas/creator/POST.md",
+  "expected_post_sha256": "8edd1436274e8ac777aae488e47655fcef80ef64d77127db2c5ecc1601aa8779",
+  "thumbnail_file": "episodes/ep14_kulkas/creator/THUMBNAIL_received_via_chat.webp",
+  "schedule": {
+    "publish_at_wib": null,
+    "platforms": [
+      "facebook",
+      "instagram"
+    ],
+    "note": "slot 22 Nov 21:00 WIB lewat dan dibatalkan; menunggu tanggal/jam baru + persetujuan konten final dari creator"
+  },
+  "platforms": {
+    "facebook": {
+      "enabled": true,
+      "page_id": "1421016024432912",
+      "declarations": {
+        "is_ai_generated": null,
+        "source": "belum diberikan creator"
+      },
+      "auth": "network secret on graph.facebook.com (user token); Page token derived in-process"
+    },
+    "instagram": {
+      "enabled": true,
+      "ig_user_id": "17841464723522892",
+      "public_video_url": null,
+      "public_cover_url": null,
+      "share_to_feed": null,
+      "auth": "network secret on graph.facebook.com (user token)"
+    }
+  },
+  "hold": "creator 22 Nov 2026: MP4 112,47 s melebihi format baku 90 s; jangan dijadwalkan, diunggah, atau dipublikasikan. Naskah dan render direvisi dulu (tidak dipercepat).",
+  "scope_note": "Pilot automation: Facebook Reels + Instagram Reels saja (keputusan creator 22 Nov 2026). YouTube dikelola manual di YouTube Studio."
+}

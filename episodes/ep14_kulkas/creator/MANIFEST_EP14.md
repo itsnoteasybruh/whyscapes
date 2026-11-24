@@ -41,3 +41,6 @@ EP14 **belum terjadwal dan belum tayang** di platform mana pun. Tidak ada bukti 
 - Cek judul thumbnail (OCR) vs POST: **1,0** ("MAKANAN BISA BASI DI KULKAS?" = "Makanan Bisa Basi di Kulkas?") ✅. Gambar berisi wordmark WHYSCAPE + Mpi + kulkas: konsisten dengan episode ini.
 - **Instruksi creator di chat** (POST.md belum memuatnya, file tidak diubah): platform = Facebook Page Reels, Instagram Reels, YouTube Shorts; tayang **2026-11-22 21:00 WIB** (= 14:00Z, unix 1795356000).
 - Kit unggah: `outputs/WS-EP14/PUBLISH_KIT.md`.
+
+## 22 Nov 2026 ±22.30 WIB: EP14 ditahan
+Keputusan creator: format baku MP4 ≤ 90 s (target 80–85 s). EP14 versi sekarang (112,47 s) tidak dijadwalkan, diunggah, atau dipublikasikan sampai naskah/VO dan render direvisi. POST.md dan thumbnail tetap tersimpan apa adanya.

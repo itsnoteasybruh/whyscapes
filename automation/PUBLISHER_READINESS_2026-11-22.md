@@ -1,5 +1,22 @@
 # Kesiapan publisher (Facebook, Instagram, YouTube): audit 22 Nov 2026
 
+> **SCOPE DIUBAH 22 Nov 2026 (keputusan creator): pilot automation hanya Facebook Reels + Instagram Reels.** YouTube dikeluarkan dari automation dan dikelola manual di YouTube Studio. Adapter `youtube.js`, helper koneksi `tools/yt_connect.py`, layanan `cloud/oauth_server.js`, tes, secret `yt-*`, SA `whyscape-oauth`, API YouTube di `deploy.sh`, dan salinan sumber `sources/youtube_*` / `sources/google_oauth_*` sudah dihapus (masih ada di riwayat git). Bagian YouTube di bawah adalah catatan historis audit, **bukan** status sistem saat ini.
+
+> **KOREKSI 22 Nov 2026 ±20.00 WIB.** Sumber resmi dibaca langsung (salinan di `automation/publisher/sources/`). Klaim saya sebelumnya dikoreksi sebagai berikut.
+> - **YouTube "proyek API belum diaudit → unggahan dikunci private": SALAH, ditarik.** Revision history YouTube Data API, **2 November 2026**: *"Videos uploaded through the videos.insert method from unverified API projects are no longer restricted to private viewing mode. This change reverses the policy announced on July 28, 2020…"* Audit **bukan** syarat agar unggahan bisa tayang publik. Belum ada hasil uji akun nyata.
+> - **Thumbnail Shorts lewat API: DIDUKUNG.** Revision history, **3 November 2026**: *"The thumbnails.set method now supports uploading custom thumbnails for YouTube Shorts after video processing is complete."* Referensi `thumbnails.set`: dipanggil setelah `processingDetails.processingStatus` = `succeeded`; JPEG/PNG; maks 50 MB. Belum diuji pada akun nyata.
+> - **YouTube 16 Nov 2026:** `paidProductPlacementDetails.hasPaidProductPlacement` tidak lagi default `false`, jadi harus dideklarasikan eksplisit (deklarasi creator).
+> - **Facebook "Reels 90 detik": BENAR untuk alur yang dipakai** (Reels Publishing API, `POST /{page-id}/video_reels`). Dokumen Meta: *"Duration | 3 to 90 seconds"*; error 1363128 *"Reels duration must be between 3 and 90 seconds."* EP14 = 112,47 s, jadi **ditolak di alur ini**. Format EP14 tidak diubah. Alur lain (video Halaman biasa) adalah keputusan creator dan belum diimplementasikan.
+> - **Instagram Reels lewat API: 3 detik – 15 menit** (EP14 lolos). Cover = `cover_url` **JPEG di URL publik**. Video lewat `video_url` publik atau upload resumable (butuh Facebook Login for Business). Dokumen tidak menyediakan jadwal publish; publikasi harus dipicu tepat 21.00 WIB oleh routine.
+> - **Facebook jadwal:** `video_state=SCHEDULED` + `scheduled_publish_time` (unix), harus **> 10 menit dan ≤ 29 hari** dari sekarang. Batas 30 posting API / 24 jam.
+> - **Pembaruan ±22.00 WIB (GET saja):**
+>   - Network secret `graph.facebook.com` berfungsi. Token pengguna "Whyscape Automation" (izin `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, `instagram_basic`, `instagram_content_publish`, `business_management`).
+>   - Page `Whyscape.Id` (1421016024432912) terbaca. Token Page bisa diturunkan dan dikenali sebagai Page.
+>   - Instagram `whyscape.id` (17841464723522892) terbaca dan terhubung ke Page itu. Kuota publikasi 0/100 per 24 jam.
+>   - `rupload.facebook.com` dan `graph-video.facebook.com` masih diblokir proxy.
+> - Bagian di bawah yang bertentangan dengan koreksi ini tidak berlaku lagi.
+
+
 **Kesimpulan: publisher BELUM siap.** Tidak ada satu pun platform yang bisa dipakai memposting atau menjadwalkan dari sistem ini sekarang.
 - EP14 **tidak terjadwal dan tidak tayang** di mana pun. Tidak ada bukti dari platform, dan tidak ada yang dicoba diposting.
 - Tidak ada jadwal aktif yang dibuat.

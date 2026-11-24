@@ -1,5 +1,7 @@
 # EP14 (WS-EP14) — Laporan QC
 
+> **22 Nov 2026 ±22.30 WIB:** QC teknis tetap PASS, tetapi MP4 112,47 s **tidak memenuhi format baku Whyscape (≤ 90 s, target 80–85 s)**. Episode ditahan untuk revisi naskah/VO dan render ulang; tidak boleh diunggah atau dipublikasikan.
+
 **Status: PASS (teknis & sinkron), dengan 2 catatan untuk produser** (lihat "Sisa risiko"). File diuji: `out/EP14_final.mp4` = `outputs/WS-EP14/WS-EP14.mp4`, md5 `12074b85f35b6486ded67ed52f999ebc`.
 
 Semua angka di bawah ini diukur di sesi cloud ini. Tidak ada angka yang diperkirakan.
