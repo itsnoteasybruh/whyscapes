@@ -313,3 +313,23 @@ test('gha_wait: the 20.30 preparation deadline (30 min before a 21.00 slot) is e
   assert.equal(Wt.plan(cfg, new Date('2026-11-23T13:29:00Z'), 340, 30).ok, true);                  // 20.29 WIB
   assert.match(Wt.plan(cfg, new Date('2026-11-23T13:31:00Z'), 340, 30).reason, /preparation deadline/);   // 20.31 WIB
 });
+
+test('Facebook verify (EP14 run #4, 24 Nov 2026): Reel still "processing" right after finish → wait by GET until Meta reports scheduled; never re-sends; gives up after the limit', async () => {
+  const d = tmp(), st = new C.State(path.join(d, 's.json'), 'E'), pa = C.parseWIB('2026-11-25 21:00');
+  st.set('facebook', { state: 'CREATED', remote_id: 'FV', thumbnail: 'set', intent_at: new Date().toISOString() }, {});
+  const pageTok = { m: (m, u) => u.endsWith('/P?fields=access_token'), res: { status: 200, json: { access_token: 'EAAPAGETOKENqqqqqqqqqqqqqqqqqqqqqq' } } };
+  const processing = { status: 200, json: { status: { video_status: 'processing', publishing_phase: { status: 'not_started' } } } };
+  const scheduled = { status: 200, json: { status: { video_status: 'ready', publishing_phase: { status: 'complete', publish_status: 'scheduled', publish_time: String(Math.floor(pa / 1000)) } }, permalink_url: '/reel/FV/' } };
+  const mk = seq => { let n = 0; const f = fake([pageTok,
+    { m: (m, u) => m === 'GET' && u.includes('/FV?'), res: () => seq[Math.min(n++, seq.length - 1)] },
+    { m: (m, u) => m === 'GET' && u.includes('/FV/thumbnails'), res: { status: 200, json: { data: [{ id: 'T', is_preferred: true }] } } },
+    { m: m => m === 'POST', res: () => { throw new Error('verify must never POST'); } }]); return f; };
+  let slept = 0; const c = f => ({ ...ctxFor(d, f.http, { page_id: 'P', declarations: { is_ai_generated: true } }, { publishAt: pa }), sleep: async () => { slept++; }, fbVerifyTries: 5 });
+  const f1 = mk([processing, processing, scheduled]);
+  const ok = await FB.verify(c(f1), st);
+  assert.ok(!ok.stop, JSON.stringify(ok)); assert.equal(ok.state, 'SCHEDULED'); assert.equal(ok.evidence.publish_time_wib, '2026-11-25T21:00:00+07:00'); assert.equal(slept, 2);
+  assert.equal(st.p('facebook').history.filter(h => h.step === 'verify-wait').length, 2);
+  st.set('facebook', { state: 'CREATED' }, {}); slept = 0;
+  const never = await FB.verify(c(mk([processing])), st);
+  assert.equal(never.stop, true); assert.match(never.reason, /not SCHEDULED/); assert.equal(slept, 4);
+});
