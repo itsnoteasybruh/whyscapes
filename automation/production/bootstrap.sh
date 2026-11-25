@@ -6,6 +6,8 @@ set -e
 export DEBIAN_FRONTEND=noninteractive
 cd "$(dirname "$0")/../.."
 command -v 7z >/dev/null && command -v unrar-free >/dev/null || { apt-get install -y -qq unrar-free p7zip-full >/dev/null 2>&1 || { apt-get update -qq && apt-get install -y -qq unrar-free p7zip-full >/dev/null; }; }
+# RAR5 needs RARLAB unrar (p7zip here has no RAR codec): best effort, the check below reports it
+command -v unrar-nonfree >/dev/null || apt-get install -y -qq unrar >/dev/null 2>&1 || { apt-get update -qq >/dev/null 2>&1 && apt-get install -y -qq unrar >/dev/null 2>&1; } || true
 # ONE Python for install, checks and the pipeline (25 Nov 2026: a routine container had python3 = 3.11 but pip = 3.13, so the
 # packages went to 3.13 and the 3.11 check failed). The pins need Python >= 3.12 (numpy 2.5.3 / scipy 1.18.1 ship no 3.11 wheel).
 # Pick python3 if it is >= 3.12, else the newest python3.13 / python3.12 on PATH; install with "$PY -m pip" (never a bare pip);
@@ -30,7 +32,7 @@ if [ ! -s "$M/turbo-encoder.int8.onnx" ]; then
 fi
 [ -d node_modules/playwright ] || npm i --no-save --silent playwright@1.63.0
 ok=1
-for c in node python3 ffmpeg ffprobe 7z; do command -v $c >/dev/null && echo "ok $c" || { echo "MISSING $c"; ok=0; }; done
+for c in node python3 ffmpeg ffprobe 7z unrar-nonfree; do command -v $c >/dev/null && echo "ok $c" || { echo "MISSING $c"; ok=0; }; done
 # the checks use the SAME interpreter that was installed into, and prove that a fresh shell's "python3" is that interpreter
 P3=$(bash -c 'readlink -f "$(command -v python3)"')
 [ "$P3" = "$PY" ] && echo "ok python3 -> $PY" || { echo "MISSING python3 -> $PY (a new shell resolves python3 to $P3; put $SHIM_DIR first in PATH)"; ok=0; }

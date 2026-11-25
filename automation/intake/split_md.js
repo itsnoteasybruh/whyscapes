@@ -61,7 +61,9 @@ function splitEpisodeMd(md) {
   out.publish_at_wib = schedLine ? parseWhen(schedLine) : null;
   out.schedule_line = schedLine ? schedLine.trim() : null;
   if (!out.publish_at_wib) problems.push({ part: 'schedule', msg: 'no target date + time (e.g. "Target tayang: 25 Nov 2026, 21.00 WIB")' });
-  const chanLine = md.split('\n').find(l => /\b(kanal|platforms?)\b/i.test(l)) || '';
+  // the channel line must NAME a channel: a sentence that merely mentions "platform" (e.g. a status note) is not it (EP15, 25 Nov 2026)
+  const labelled = md.split('\n').filter(l => /\b(kanal|platforms?)\b/i.test(l));
+  const chanLine = labelled.find(l => /\b(facebook|fb|instagram|ig|youtube)\b/i.test(l)) || labelled[0] || '';
   out.channels = [['facebook', /\b(facebook|fb)\b/i], ['instagram', /\b(instagram|ig)\b/i]].filter(([, re]) => re.test(chanLine)).map(([c]) => c);
   out.youtube_manual = /\byoutube\b/i.test(chanLine);
   if (!out.channels.length) problems.push({ part: 'channels', msg: 'no channel line naming Facebook and/or Instagram ("Kanal: Facebook Reels, Instagram Reels")' });

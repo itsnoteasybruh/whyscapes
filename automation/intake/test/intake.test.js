@@ -102,3 +102,13 @@ test('intake: more than five archives refused; a package received after 16.00 WI
   const late = run([a, '--now', '2026-11-25T09:05:00Z', '--batch', 'late'], root);     // 25 Nov 16.05 WIB
   const e = late.json.episodes[0]; assert.equal(e.status, 'HOLD_NEEDS_CREATOR_DECISION'); assert.match(e.problems.map(p => p.msg).join(), /after production start/); assert.equal(e.publish_at_wib, '2026-11-25 21:00');
 });
+
+test('channels: a status line that only mentions "platform" is skipped; the line that names the channels is used (EP15 MD layout)', () => {
+  const md = ['# Whyscape EP15 — Kenapa?', '', '- Jadwal tayang target: Rabu, 25 Nov 2026, 21.00 WIB (Asia/Jakarta).',
+    '- Status: forecast editorial. Naskah VO disetujui; produksi, QC, dan penjadwalan platform belum dilakukan.',
+    '- Kanal pilot: Facebook Reels dan Instagram Reels. YouTube hanya manual di luar otomasi pilot.', '', '## VO final (AIDA)', '', 'Teks.'].join('\n');
+  const r = SM.splitEpisodeMd(md);
+  assert.deepEqual(r.channels, ['facebook', 'instagram']); assert.equal(r.youtube_manual, true); assert.equal(r.publish_at_wib, '2026-11-25 21:00');
+  assert.ok(r.problems.some(p => p.part === 'visual'), 'a missing visual direction is still reported, never invented');
+  assert.ok(!r.problems.some(p => p.part === 'channels'));
+});
