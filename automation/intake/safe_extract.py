@@ -61,7 +61,14 @@ def extract(path, dest):
         with zipfile.ZipFile(path) as z: z.extractall(dest)
     else:
         r = subprocess.run(['7z', 'x', '-y', '-snl-', f'-o{dest}', path], capture_output=True, text=True)
-        if r.returncode != 0: return {'ok': False, 'files': [], 'problems': ['7z extract failed: ' + (r.stderr or r.stdout)[-300:]]}
+        # p7zip without the non-free RAR codec lists RAR5 but cannot extract it ("Unsupported Method", 25 Nov 2026, EP15).
+        # Fallback: RARLAB unrar on the SAME already-checked entry list; the post-extraction link/escape check below still applies.
+        if r.returncode != 0 and low.endswith('.rar') and 'Unsupported Method' in (r.stdout + r.stderr) and shutil.which('unrar-nonfree' if shutil.which('unrar-nonfree') else 'unrar'):
+            shutil.rmtree(dest, ignore_errors=True); os.makedirs(dest, exist_ok=True)
+            u = shutil.which('unrar-nonfree') or shutil.which('unrar')
+            r = subprocess.run([u, 'x', '-idq', '-y', '-o+', '-ol-', path, dest + os.sep], capture_output=True, text=True)
+            if r.returncode != 0: return {'ok': False, 'files': [], 'problems': ['unrar extract failed: ' + (r.stderr or r.stdout)[-300:]]}
+        elif r.returncode != 0: return {'ok': False, 'files': [], 'problems': ['7z extract failed: ' + (r.stderr or r.stdout)[-300:]]}
     real = os.path.realpath(dest)
     files = []
     for root, dirs, names in os.walk(dest):
