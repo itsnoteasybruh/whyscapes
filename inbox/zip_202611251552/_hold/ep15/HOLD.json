@@ -1,0 +1,30 @@
+{
+  "archive": "episode_15_cegukan_25_nov.rar",
+  "folder": ".",
+  "source": {
+    "md": "episode_15_cegukan_25_nov.md",
+    "mp3": "vo_episode_15_cegukan_25_nov.mp3",
+    "thumbnail": "thumbnail_episode_15_cegukan_25_nov.png"
+  },
+  "problems": [
+    {
+      "part": "visual",
+      "msg": "no visual direction section (\"## Arahan visual\")"
+    }
+  ],
+  "id": "WS-EP15",
+  "publish_at_wib": "2026-11-25 21:00",
+  "schedule_line": "- Jadwal tayang target: Rabu, 25 Nov 2026, 21.00 WIB (Asia/Jakarta).",
+  "channels": [
+    "facebook",
+    "instagram"
+  ],
+  "title": "Bunyi “Hik!” Saat Cegukan Datang dari Mana?",
+  "produce_at": "2026-11-25T09:00:00.000Z",
+  "source_sha256": {
+    "md": "488a4fd38a1000490584951954e8bf83d330fbfb6026f75fcebd1fee91a767f4",
+    "mp3": "4a2b6e0bcf808a0fd98f271243bf49d7607daef0fa126254cbbe1622df78d262",
+    "thumbnail": "f8fdbdf3262105a7cfd3c9c58c31ffa9a6f792313248e379c3214d76409e364d"
+  },
+  "status": "HOLD_NEEDS_CREATOR_DECISION"
+}
