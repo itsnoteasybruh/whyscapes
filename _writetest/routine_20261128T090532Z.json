@@ -1,0 +1,14 @@
+{
+  "kind": "routine_writetest",
+  "utc": "2026-11-28T09:05:32Z",
+  "wib": "2026-11-28T16:05:32+07:00",
+  "session": "session_01PX1FGXNoK3DDWGzmRC3gTX",
+  "main_sha": "602e61d"
+}
+{
+  "kind": "routine_writetest",
+  "utc": "session_01PX1FGXNoK3DDWGzmRC3gTX",
+  "wib": "",
+  "session": "session_01PX1FGXNoK3DDWGzmRC3gTX",
+  "main_sha": "602e61d"
+}
